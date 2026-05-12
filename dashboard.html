@@ -6,98 +6,193 @@
   <title>Seller Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-page="dashboard">
-  <header class="topbar">
-    <div class="container nav">
-      <div class="brand">₹ Crypto Sell to INR Desk</div>
-      <nav>
-        <span class="nav-user-pill">Seller Dashboard</span>
-        <button id="logout-btn" class="link-btn">Logout</button>
+<body data-page="seller-dashboard">
+  <div class="panel-shell">
+    <aside class="sidebar seller-sidebar">
+      <div class="sidebar-brand">₹ Crypto Sell to INR Desk</div>
+      <nav class="sidebar-menu">
+        <button class="side-link active" data-target="seller-overview">Dashboard</button>
+        <button class="side-link" data-target="seller-sell">Create Sell Request</button>
+        <button class="side-link" data-target="seller-payouts">Payout Accounts</button>
+        <button class="side-link" data-target="seller-orders">My Orders</button>
+        <button class="side-link" data-target="seller-referrals">Referrals &amp; Earnings</button>
+        <button class="side-link" data-target="seller-profile">Profile &amp; KYC</button>
       </nav>
-    </div>
-  </header>
-  <main class="container page-space">
-    <div class="page-head">
-      <div>
-        <span class="eyebrow">Seller area</span>
-        <h1>Seller Dashboard</h1>
-        <p class="lead">See available quotes, create orders, and track your sell activity.</p>
+      <div class="sidebar-foot">
+        <button id="logout-btn" class="btn btn-secondary btn-block">Logout</button>
       </div>
-      <div class="card inline-stat"><span id="profile-name">Loading...</span><small id="profile-meta"></small></div>
-    </div>
+    </aside>
 
-    <section class="dashboard-grid">
-      <div class="card glass">
-        <h3>Create Sell Request</h3>
-        <div class="field-grid">
-          <div>
-            <label>Coin</label>
-            <select id="sell-coin"></select>
-          </div>
-          <div>
-            <label>Network</label>
-            <select id="sell-network"></select>
-          </div>
-          <div>
-            <label>Crypto Amount</label>
-            <input id="sell-amount" type="number" min="0" step="0.0001" placeholder="Enter amount" />
-          </div>
-          <div>
-            <label>Primary Bank Account</label>
-            <select id="bank-account-select"></select>
-          </div>
+    <div class="panel-main">
+      <header class="panel-topbar">
+        <div>
+          <div class="panel-title">Seller Dashboard</div>
+          <div class="panel-subtitle">Quotes, payout methods, orders and referrals in one place.</div>
         </div>
-        <button id="show-quotes-btn" class="btn btn-primary">Show Available Quotes</button>
-        <p id="quote-calc-message" class="status-text"></p>
-      </div>
-
-      <div class="card">
-        <h3>Latest Order Summary</h3>
-        <div id="latest-order-box" class="empty-state">No recent order yet.</div>
-      </div>
-    </section>
-
-    <section class="card page-section">
-      <div class="section-head">
-        <h3>Available Quotes</h3>
-        <small>Quotes will appear after you enter coin, network and amount.</small>
-      </div>
-      <div id="quotes-container" class="quote-cards"></div>
-    </section>
-
-    <section class="card page-section">
-      <div class="section-head">
-        <h3>Your Sell Orders</h3>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Coin</th>
-              <th>Amount</th>
-              <th>Rate</th>
-              <th>Estimated INR</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody id="orders-body"></tbody>
-        </table>
-      </div>
-    </section>
-  
-    <section class="container section-grid dashboard-links">
-      <div class="card">
-        <h3>Quick Actions</h3>
-        <div class="hero-actions">
-          <a class="btn btn-secondary" href="referrals.html">Open Referral Dashboard</a>
+        <div class="topbar-actions">
+          <span class="nav-user-pill" id="seller-top-name">Loading...</span>
         </div>
-        <p class="tiny-note">Referral page alag rakhi gayi hai. User login ke baad aap dashboard se hi usse open kar sakte ho.</p>
-      </div>
-    </section>
+      </header>
 
-  </main>
+      <main class="panel-content">
+        <section id="seller-overview" class="panel-section active">
+          <div class="stats-grid seller-stat-grid" id="seller-stats"></div>
+          <div class="grid-2 top-gap">
+            <div class="card">
+              <div class="section-head"><h3>Latest Order</h3></div>
+              <div id="latest-order-box" class="empty-state">No recent order yet.</div>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>Quick Status</h3></div>
+              <div class="kv-list" id="seller-quick-status"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="seller-sell" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Create Sell Request</h3></div>
+              <div class="field-grid">
+                <div><label>Coin</label><select id="sell-coin"></select></div>
+                <div><label>Network</label><select id="sell-network"></select></div>
+                <div><label>Crypto Amount</label><input id="sell-amount" type="number" step="0.0001" placeholder="Enter amount" /></div>
+                <div><label>Payout Account</label><select id="bank-account-select"></select></div>
+              </div>
+              <div class="tiny-note">First add a bank account or UPI ID in the Payout Accounts section, then select it here.</div>
+              <div class="top-gap-sm">
+                <button id="show-quotes-btn" class="btn btn-primary">Show Available Quotes</button>
+              </div>
+              <p id="quote-calc-message" class="status-text"></p>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>Selected Payout Destination</h3></div>
+              <div id="selected-payout-summary" class="empty-state">Select a payout account to see details here.</div>
+            </div>
+          </div>
+          <div class="card top-gap">
+            <div class="section-head"><h3>Available Quotes</h3></div>
+            <div id="quotes-container" class="quote-cards quote-cards-3"></div>
+            <div id="quotes-empty" class="empty-state">Quotes will appear after you enter coin, network, amount and payout account.</div>
+          </div>
+        </section>
+
+        <section id="seller-payouts" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Add / Edit Payout Account</h3></div>
+              <input type="hidden" id="payout-edit-id" />
+              <div class="field-grid">
+                <div>
+                  <label>Payment Method</label>
+                  <select id="payout-method">
+                    <option value="bank">Bank Account</option>
+                    <option value="upi">UPI ID</option>
+                  </select>
+                </div>
+                <div><label>Label</label><input id="payout-label" placeholder="Example: Main Bank / Personal UPI" /></div>
+                <div><label>Account Holder Name</label><input id="payout-holder" placeholder="Enter name" /></div>
+                <div><label>Bank Name</label><input id="payout-bank-name" placeholder="Enter bank name" /></div>
+                <div><label>Account Number</label><input id="payout-account-number" placeholder="Enter account number" /></div>
+                <div><label>IFSC Code</label><input id="payout-ifsc" placeholder="Enter IFSC" /></div>
+                <div><label>UPI ID</label><input id="payout-upi" placeholder="example@upi" /></div>
+                <div class="toggle-field"><label><input id="payout-primary" type="checkbox" /> Make primary payout account</label></div>
+              </div>
+              <div class="action-row top-gap-sm">
+                <button id="save-payout-account" class="btn btn-primary">Save Payout Account</button>
+                <button id="reset-payout-form" class="btn btn-secondary">Clear</button>
+              </div>
+              <p id="payout-message" class="status-text"></p>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>Payout Help</h3></div>
+              <ul class="clean-list">
+                <li>User can add bank account or UPI ID here.</li>
+                <li>Primary payout method will be selected by default during sell request.</li>
+                <li>Admin panel will see exact payout destination inside orders.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card top-gap">
+            <div class="section-head"><h3>Saved Payout Accounts</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Method</th><th>Label</th><th>Destination</th><th>Primary</th><th>Verified</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody id="payout-accounts-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="seller-orders" class="panel-section">
+          <div class="card">
+            <div class="section-head"><h3>Your Sell Orders</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Order</th><th>Coin / Network</th><th>Amount</th><th>Locked Rate</th><th>INR</th><th>Payout To</th><th>Status</th><th>Created</th></tr>
+                </thead>
+                <tbody id="orders-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="seller-referrals" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Your Referral Information</h3></div>
+              <label>Your Referral Code</label>
+              <div class="copy-box" id="ref-code-box">-</div>
+              <div class="action-row top-gap-sm">
+                <button id="copy-ref-code" class="btn btn-secondary">Copy Code</button>
+              </div>
+              <label class="top-gap-sm">Your Referral Link</label>
+              <div class="copy-box" id="ref-link-box">-</div>
+              <div class="action-row top-gap-sm">
+                <button id="copy-ref-link" class="btn btn-primary">Copy Link</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>Referral Summary</h3></div>
+              <div class="stats-grid stats-grid-2 compact-stats">
+                <div class="mini-stat"><strong id="stat-total-referrals">0</strong><span>Total Referrals</span></div>
+                <div class="mini-stat"><strong id="stat-active-referrals">0</strong><span>Active Referrals</span></div>
+                <div class="mini-stat"><strong id="stat-ref-earnings">₹0.00</strong><span>Referral Earnings</span></div>
+                <div class="mini-stat"><strong id="stat-pending-rewards">₹0.00</strong><span>Pending Rewards</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card top-gap">
+            <div class="section-head"><h3>Referral Rewards</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Referred User</th><th>Order</th><th>Reward %</th><th>Reward INR</th><th>Status</th><th>Created</th></tr>
+                </thead>
+                <tbody id="referrals-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="seller-profile" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Profile</h3></div>
+              <div class="kv-list" id="profile-box"></div>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>KYC Status</h3></div>
+              <div class="empty-state" id="kyc-status-box"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>

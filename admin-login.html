@@ -3,35 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login - Crypto Sell to INR Desk</title>
+  <title>Admin Login</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="admin-login">
   <header class="topbar">
     <div class="container nav">
-      <div class="brand">₹ Crypto Sell to INR Desk</div>
+      <div class="brand">₹ Crypto Sell to INR Desk Admin</div>
       <nav>
         <a href="index.html">Home</a>
         <a href="login.html">Seller Login</a>
-              </nav>
+        <a href="admin-login.html">Admin Login</a>
+      </nav>
     </div>
   </header>
 
-  <main class="container auth-layout">
-    <section>
-      <span class="eyebrow">Restricted area</span>
+  <main class="container auth-shell admin-auth-shell">
+    <section class="auth-copy">
+      <span class="eyebrow">Control center</span>
       <h1>Admin Login</h1>
-      <p class="lead">Access quote controls, rates, wallets, users and order management from the admin control center.</p>
-      <div class="badges">
-        <span>Admin Only</span>
-        <span>Rates & Quotes</span>
-        <span>Wallet Control</span>
-      </div>
+      <p class="lead">Open the admin control panel for rates, users, payout destination details, quotes, wallets and order actions.</p>
     </section>
 
-    <section class="card glass auth-card">
+    <section class="card auth-card">
       <div class="form-group">
-        <label>Admin Email</label>
+        <label>Email</label>
         <input id="admin-email" type="email" placeholder="Enter admin email" />
       </div>
       <div class="form-group">
@@ -40,7 +36,6 @@
       </div>
       <button id="admin-login-btn" class="btn btn-primary btn-block">Login to Admin Panel</button>
       <p id="admin-auth-message" class="status-text"></p>
-      <p class="tiny-note">Only users with role <strong>admin</strong> can access the admin panel.</p>
     </section>
   </main>
 

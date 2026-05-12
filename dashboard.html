@@ -1,59 +1,97 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dashboard | Crypto Sell to INR Desk</title><link rel="stylesheet" href="styles.css"></head>
-<body>
-<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Seller dashboard</small></div></a><nav class="nav-links"><a href="index.html">Home</a><a href="login.html">Login</a><a class="active" href="dashboard.html">Dashboard</a><a href="referrals.html">Referrals</a><a href="admin.html">Admin</a></nav><a class="btn btn-primary" href="referrals.html">Referral Dashboard</a></div></header>
-<section class="page-header"><div class="container"><h1>Seller Dashboard</h1><p class="section-lead">User login ke baad yahin par quotes, active order, bank payout status, and order history dikhेंगे.</p></div></section>
-<section class="section" style="padding-top:0"><div class="container dashboard-layout">
-<div style="display:grid;gap:18px">
-  <div class="card panel">
-    <div class="card-title"><h2>Available Sell Quotes</h2><span class="status green">User-visible</span></div>
-    <div class="grid-2">
-      <div class="field"><label>Coin</label><select class="select"><option>USDT</option><option>BTC</option><option>ETH</option><option>SOL</option></select></div>
-      <div class="field"><label>Network</label><select class="select"><option>TRC20</option><option>ERC20</option><option>Native</option></select></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seller Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="dashboard">
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk</div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="admin.html">Admin</a>
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </nav>
     </div>
-    <div class="grid-2">
-      <div class="field"><label>Amount</label><input id="sellAmount" class="input" value="25000"></div>
-      <div class="field"><label>Estimated INR</label><div class="input" id="estimateINR" style="display:flex;align-items:center">₹20,78,750</div></div>
+  </header>
+  <main class="container page-space">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Seller area</span>
+        <h1>Seller Dashboard</h1>
+        <p class="lead">See available quotes, create orders, and track your sell activity.</p>
+      </div>
+      <div class="card inline-stat"><span id="profile-name">Loading...</span><small id="profile-meta"></small></div>
     </div>
-    <button class="btn btn-outline" data-fill-estimate>Refresh Quotes</button>
-    <div class="quote-options" style="margin-top:18px">
-      <div class="quote-option recommended"><div class="quote-row"><div><strong>Standard Quote</strong><div class="muted small">Best rate • Payout in 30–60 min</div></div><span class="status green">Recommended</span></div><div class="quote-metrics"><div class="metric"><div class="muted small">Rate</div><div class="value">₹83.15</div></div><div class="metric"><div class="muted small">You Receive</div><div class="value" style="font-size:22px">₹20,78,750</div></div><div class="metric"><div class="muted small">Fee</div><div class="value" style="font-size:22px">0.30%</div></div></div><div class="quote-row"><span class="muted">Quote valid for 02:14</span><button class="btn btn-primary">Lock Quote</button></div></div>
-      <div class="quote-option"><div class="quote-row"><div><strong>Fast Payout</strong><div class="muted small">10–15 min</div></div><button class="btn btn-ghost">Select Quote</button></div><div class="quote-row"><span>₹82.40</span><span>Priority payout</span><span>0.50%</span></div></div>
-      <div class="quote-option"><div class="quote-row"><div><strong>Priority Settlement</strong><div class="muted small">Verified users</div></div><button class="btn btn-ghost">Select Quote</button></div><div class="quote-row"><span>₹81.95</span><span>Under 10 min</span><span>0.70%</span></div></div>
-      <div class="quote-option"><div class="quote-row"><div><strong>Bulk OTC Quote</strong><div class="muted small">Custom desk for large volumes</div></div><button class="btn btn-ghost">Request</button></div><div class="quote-row"><span>₹50L+ equivalent</span><span>Dedicated desk</span></div></div>
-    </div>
-  </div>
 
-  <div class="card panel">
-    <div class="card-title"><h2>Active Order</h2><span class="status amber">Awaiting Confirmations</span></div>
-    <div class="grid-2">
-      <div class="note"><strong>Order ID</strong><br>SL-2026-10482</div>
-      <div class="note"><strong>Selected Quote</strong><br>Standard Quote</div>
-      <div class="note"><strong>Amount Sold</strong><br><span id="selectedAmountPreview">25,000 USDT</span></div>
-      <div class="note"><strong>Expected INR</strong><br>₹20,78,750</div>
-    </div>
-    <div style="margin-top:16px" class="field"><label>Deposit Wallet</label><div style="display:flex;gap:10px"><input class="input" value="TDkP7XhF9v2J9mYd7RwQh8sGf3uLk9Z2bq" readonly><button class="btn btn-outline" data-copy="TDkP7XhF9v2J9mYd7RwQh8sGf3uLk9Z2bq">Copy</button></div></div>
-    <div class="field"><label>Confirmations: 12 / 20</label><div class="progress"><span style="width:60%"></span></div></div>
-  </div>
+    <section class="dashboard-grid">
+      <div class="card glass">
+        <h3>Create Sell Request</h3>
+        <div class="field-grid">
+          <div>
+            <label>Coin</label>
+            <select id="sell-coin"></select>
+          </div>
+          <div>
+            <label>Network</label>
+            <select id="sell-network"></select>
+          </div>
+          <div>
+            <label>Crypto Amount</label>
+            <input id="sell-amount" type="number" min="0" step="0.0001" placeholder="Enter amount" />
+          </div>
+          <div>
+            <label>Primary Bank Account</label>
+            <select id="bank-account-select"></select>
+          </div>
+        </div>
+        <button id="show-quotes-btn" class="btn btn-primary">Show Available Quotes</button>
+        <p id="quote-calc-message" class="status-text"></p>
+      </div>
 
-  <div class="card panel">
-    <div class="card-title"><h2>Recent Sell Orders</h2><a class="link" href="referrals.html">View referrals</a></div>
-    <table class="table"><thead><tr><th>Order ID</th><th>Coin</th><th>Amount</th><th>Rate</th><th>Status</th></tr></thead><tbody>
-      <tr><td>SL-10482</td><td>USDT</td><td>25,000</td><td>₹83.15</td><td><span class="status amber">Confirmations</span></td></tr>
-      <tr><td>SL-10469</td><td>BTC</td><td>0.25</td><td>₹60,75,000</td><td><span class="status green">Completed</span></td></tr>
-      <tr><td>SL-10451</td><td>ETH</td><td>3.0</td><td>₹2,21,450</td><td><span class="status green">Completed</span></td></tr>
-    </tbody></table>
-  </div>
-</div>
-<div class="sidebar-stats">
-  <div class="stat-grid">
-    <div class="card kpi"><div class="muted">Total Orders</div><div class="value">18</div></div>
-    <div class="card kpi"><div class="muted">Completed</div><div class="value">15</div></div>
-    <div class="card kpi"><div class="muted">INR Received</div><div class="value">₹31L+</div></div>
-    <div class="card kpi"><div class="muted">Pending</div><div class="value">₹20L+</div></div>
-  </div>
-  <div class="card panel"><div class="card-title"><h2>Quick Actions</h2></div><div class="quick-actions"><a class="btn btn-primary" href="#">New Sell Order</a><a class="btn btn-outline" href="referrals.html">Referral Page</a><a class="btn btn-ghost" href="admin.html">Admin Preview</a></div></div>
-  <div class="card panel"><div class="card-title"><h2>Recent Activity</h2></div><p class="muted">Quote locked • KYC verified • Deposit address generated • Payout pending</p></div>
-</div>
-</div></section>
-<footer class="footer"><div class="container"><p class="muted">This page intentionally shows that user dashboard includes visible quotes, as you requested.</p></div></footer>
-<script src="script.js"></script></body></html>
+      <div class="card">
+        <h3>Latest Order Summary</h3>
+        <div id="latest-order-box" class="empty-state">No recent order yet.</div>
+      </div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-head">
+        <h3>Available Quotes</h3>
+        <small>Quotes will appear after you enter coin, network and amount.</small>
+      </div>
+      <div id="quotes-container" class="quote-cards"></div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-head">
+        <h3>Your Sell Orders</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Coin</th>
+              <th>Amount</th>
+              <th>Rate</th>
+              <th>Estimated INR</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.example.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

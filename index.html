@@ -1,82 +1,97 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto Sell to INR Desk</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header class="topbar">
-  <div class="container nav">
-    <a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Seller-facing OTC prototype</small></div></a>
-    <nav class="nav-links">
-      <a class="active" href="index.html">Home</a><a href="#how">How It Works</a><a href="#quotes">Quotes</a><a href="login.html">Login</a><a href="dashboard.html">Dashboard</a><a href="admin.html">Admin</a>
-    </nav>
-    <a class="btn btn-primary" href="login.html">Get Sell Quote</a>
-  </div>
-</header>
-<section class="hero">
-  <div class="container hero-grid">
-    <div>
-      <span class="kicker">● India-focused seller flow</span>
-      <h1>Sell <span class="highlight">USDT, BTC, ETH & SOL</span> for INR</h1>
-      <p class="lead">Verified OTC-style quote selection, bank payout tracking, seller dashboard, referral system, and admin controls for rates, users, and wallets.</p>
-      <div class="badges">
-        <span class="badge">KYC Required</span><span class="badge">Secure Settlement</span><span class="badge">Bulk OTC Support</span>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div>
+        <span class="eyebrow">Seller-first OTC platform</span>
+        <h1>Sell USDT, BTC, ETH & SOL for INR</h1>
+        <p class="lead">Supabase-connected starter for login, quotes, sell orders, referrals, admin rates, wallets and order management.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="login.html">Seller Login</a>
+          <a class="btn btn-secondary" href="admin.html">Admin Panel</a>
+        </div>
+        <div class="badges">
+          <span>KYC Required</span>
+          <span>Quote Selection</span>
+          <span>Referral System</span>
+          <span>Wallet Management</span>
+        </div>
       </div>
-      <div class="root-files">All main files are kept in the root folder, so you can upload directly after unzip.</div>
-    </div>
-    <div class="card quote-card" id="quotes">
-      <div class="card-title"><h3>Sell Quote Engine</h3><span class="status green">Live Preview</span></div>
-      <div class="grid-2">
-        <div class="field"><label>Coin</label><select class="select"><option>USDT</option><option>BTC</option><option>ETH</option><option>SOL</option></select></div>
-        <div class="field"><label>Network</label><select class="select"><option>TRC20</option><option>ERC20</option><option>Native</option></select></div>
+      <div class="card glass quote-preview">
+        <h3>Quote Engine Preview</h3>
+        <div class="field-grid">
+          <div><label>Coin</label><div class="fake-input">USDT</div></div>
+          <div><label>Network</label><div class="fake-input">TRC20</div></div>
+          <div><label>Amount</label><div class="fake-input">25,000 USDT</div></div>
+          <div><label>Estimated INR</label><div class="fake-input">₹20,78,750</div></div>
+        </div>
+        <div class="quote-cards compact">
+          <div class="mini-card"><strong>Standard</strong><span>Best rate</span></div>
+          <div class="mini-card"><strong>Fast Payout</strong><span>10–15 min</span></div>
+          <div class="mini-card"><strong>Priority</strong><span>Verified users</span></div>
+          <div class="mini-card"><strong>Bulk OTC</strong><span>50L+</span></div>
+        </div>
       </div>
-      <div class="field"><label>Amount</label><input id="sellAmount" class="input" value="25000"></div>
-      <div class="field"><label>Estimated INR</label><input class="input" id="estimateINRinput" value="₹20,78,750" readonly></div>
-      <div class="field"><label>Bank Account</label><select class="select"><option>HDFC Bank •••• 5678</option><option>ICICI Bank •••• 9124</option></select></div>
-      <button class="btn btn-primary" style="width:100%" data-fill-estimate>Show Sell Quotes</button>
-      <div class="quote-options" style="margin-top:16px">
-        <div class="quote-option recommended"><div class="quote-row"><strong>Standard Quote</strong><span class="status green">Recommended</span></div><div class="quote-row"><span>Rate ₹83.15</span><span>30–60 min</span><a class="btn btn-outline" href="login.html">Select</a></div></div>
-        <div class="quote-option"><div class="quote-row"><strong>Fast Payout</strong><span class="muted">10–15 min</span></div><div class="quote-row"><span>Rate ₹82.40</span><a class="btn btn-ghost" href="login.html">Select</a></div></div>
-        <div class="quote-option"><div class="quote-row"><strong>Bulk OTC</strong><span class="muted">Custom handling</span></div><div class="quote-row"><span>₹50L+ / ₹1Cr+</span><a class="btn btn-ghost" href="login.html">Request</a></div></div>
+    </section>
+
+    <section class="container section-grid">
+      <div class="card">
+        <h3>What is included</h3>
+        <ul class="clean-list">
+          <li>Seller login/register with Supabase Auth</li>
+          <li>Dashboard with live quotes and sell order creation</li>
+          <li>Referral dashboard and earnings tracking</li>
+          <li>Admin control for quotes, rates, wallets, users and orders</li>
+          <li>Supabase SQL schema included in this zip</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Before GitHub upload</h3>
+        <ul class="clean-list">
+          <li>Create Supabase project</li>
+          <li>Run <code>supabase-schema.sql</code></li>
+          <li>Copy <code>supabase-config.example.js</code> to <code>supabase-config.js</code></li>
+          <li>Paste your Supabase URL and anon key</li>
+          <li>Upload all root files to GitHub</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <strong>Crypto Sell to INR Desk</strong>
+        <p>GitHub + Cloudflare + Supabase starter.</p>
+      </div>
+      <div>
+        <p>Use this as a real starter base, not just a mockup.</p>
       </div>
     </div>
-  </div>
-</section>
-<section class="section">
-  <div class="container">
-    <h2>What this zip includes</h2>
-    <p class="section-lead">A cleaner multi-page prototype you can upload to GitHub, Cloudflare Pages, or Hostinger as a front-end base.</p>
-    <div class="feature-grid">
-      <div class="card feature"><div class="icon">1</div><h3>Landing Page</h3><p class="muted">Hero, quote preview, supported coins, FAQs style structure.</p></div>
-      <div class="card feature"><div class="icon">2</div><h3>Login / Register</h3><p class="muted">Seller auth UI with referral code field in register preview.</p></div>
-      <div class="card feature"><div class="icon">3</div><h3>Seller Dashboard</h3><p class="muted">Quotes, active order, tracking, history and quick actions.</p></div>
-      <div class="card feature"><div class="icon">4</div><h3>Admin Panel</h3><p class="muted">Quotes, rates, users, wallets, logs and everyday control layout.</p></div>
-    </div>
-  </div>
-</section>
-<section class="section" id="how">
-  <div class="container">
-    <h2>How seller flow works</h2>
-    <div class="steps">
-      <div class="card step"><div class="num">1</div><h3>Login</h3><p class="muted">Seller logs in or creates account with referral code if available.</p></div>
-      <div class="card step"><div class="num">2</div><h3>See Quotes</h3><p class="muted">Dashboard shows standard, fast, priority and bulk quote options.</p></div>
-      <div class="card step"><div class="num">3</div><h3>Send Crypto</h3><p class="muted">After quote lock, seller gets wallet address and tracking view.</p></div>
-      <div class="card step"><div class="num">4</div><h3>Receive INR</h3><p class="muted">Payout status and history appear inside the account dashboard.</p></div>
-    </div>
-    <div class="coins"><span class="coin">USDT</span><span class="coin">BTC</span><span class="coin">ETH</span><span class="coin">SOL</span></div>
-    <div class="card cta-strip"><div><strong>Next build stage:</strong> real backend, auth, database, KYC workflow, wallet logic and payout APIs.</div><a class="btn btn-primary" href="dashboard.html">Open Dashboard</a></div>
-  </div>
-</section>
-<footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Front-end prototype</small></div></a><p>This zip is ready for static hosting preview and kept simple for root-folder upload.</p></div>
-    <div><h4>Pages</h4><p><a href="index.html">Home</a><br><a href="login.html">Login</a><br><a href="dashboard.html">Dashboard</a></p></div>
-    <div><h4>More</h4><p><a href="referrals.html">Referrals</a><br><a href="admin.html">Admin</a></p></div>
-    <div><h4>Note</h4><p>Prototype only. No real backend or payment flow is connected yet.</p></div>
-  </div>
-</footer>
-<script src="script.js"></script>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.example.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

@@ -1,31 +1,77 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Referrals | Crypto Sell to INR Desk</title><link rel="stylesheet" href="styles.css"></head>
-<body>
-<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Referral system</small></div></a><nav class="nav-links"><a href="index.html">Home</a><a href="login.html">Login</a><a href="dashboard.html">Dashboard</a><a class="active" href="referrals.html">Referrals</a><a href="admin.html">Admin</a></nav><a class="btn btn-primary" href="dashboard.html">Back to Dashboard</a></div></header>
-<section class="page-header"><div class="container"><h1>Referral Dashboard</h1><p class="section-lead">Invite sellers and track referral performance, rewards, and pending earnings.</p></div></section>
-<section class="section" style="padding-top:0"><div class="container referral-box">
-<div style="display:grid;gap:18px">
-  <div class="card panel"><div class="card-title"><h2>Your Referral Info</h2></div>
-    <div class="field"><label>Referral Code</label><div style="display:flex;gap:10px"><input class="input" value="SELL2INR786" readonly><button class="btn btn-outline" data-copy="SELL2INR786">Copy</button></div></div>
-    <div class="field"><label>Referral Link</label><div style="display:flex;gap:10px"><input class="input" value="https://example.com/register?ref=SELL2INR786" readonly><button class="btn btn-outline" data-copy="https://example.com/register?ref=SELL2INR786">Copy</button></div></div>
-    <div class="share-row"><button class="btn btn-primary">WhatsApp</button><button class="btn btn-outline">Telegram</button><button class="btn btn-ghost">Copy Link</button></div>
-  </div>
-  <div class="card panel"><div class="card-title"><h2>Referred Users</h2></div>
-    <table class="table"><thead><tr><th>User</th><th>KYC</th><th>Volume</th><th>Reward</th></tr></thead><tbody>
-      <tr><td>Raj Sharma</td><td><span class="status green">Verified</span></td><td>₹1,24,500</td><td>₹311</td></tr>
-      <tr><td>Ankit Verma</td><td><span class="status green">Verified</span></td><td>₹85,600</td><td>₹214</td></tr>
-      <tr><td>Pooja Mehta</td><td><span class="status amber">Pending</span></td><td>₹0</td><td>₹0</td></tr>
-    </tbody></table>
-  </div>
-</div>
-<div style="display:grid;gap:18px">
-  <div class="stat-grid">
-    <div class="card kpi"><div class="muted">Total Referrals</div><div class="value">128</div></div>
-    <div class="card kpi"><div class="muted">Active Referrals</div><div class="value">87</div></div>
-    <div class="card kpi"><div class="muted">Referral Earnings</div><div class="value">₹2.48L</div></div>
-    <div class="card kpi"><div class="muted">Pending Rewards</div><div class="value">₹18.9K</div></div>
-  </div>
-  <div class="card panel"><div class="card-title"><h2>How it works</h2></div><p class="muted">Invite sellers → they register with your code → complete KYC → finish verified sell order → reward appears here.</p><div class="quick-actions"><button class="btn btn-primary">Invite New User</button><button class="btn btn-outline">Download Report</button><button class="btn btn-ghost">View Terms</button></div></div>
-</div>
-</div></section>
-<footer class="footer"><div class="container"><p class="muted">Referral system UI included as requested.</p></div></footer>
-<script src="script.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referral Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="referrals">
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk</div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="referrals.html">Referrals</a>
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-space">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Seller growth</span>
+        <h1>Referral Dashboard</h1>
+        <p class="lead">Invite sellers and track referral earnings.</p>
+      </div>
+    </div>
+
+    <section class="dashboard-grid ref-grid">
+      <div class="card glass">
+        <h3>Your Referral Info</h3>
+        <div class="info-stack">
+          <div><label>Referral Code</label><div id="ref-code-box" class="copy-box">Loading...</div></div>
+          <div><label>Referral Link</label><div id="ref-link-box" class="copy-box">Loading...</div></div>
+        </div>
+        <div class="action-row">
+          <button id="copy-ref-code" class="btn btn-secondary">Copy Code</button>
+          <button id="copy-ref-link" class="btn btn-primary">Copy Link</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="card stat-card"><strong id="stat-total-referrals">0</strong><span>Total Referrals</span></div>
+        <div class="card stat-card"><strong id="stat-active-referrals">0</strong><span>Active Referrals</span></div>
+        <div class="card stat-card"><strong id="stat-ref-earnings">₹0</strong><span>Referral Earnings</span></div>
+        <div class="card stat-card"><strong id="stat-pending-rewards">₹0</strong><span>Pending Rewards</span></div>
+      </div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-head">
+        <h3>Referral Rewards</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Referred User</th>
+              <th>Order ID</th>
+              <th>Reward %</th>
+              <th>Reward INR</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="referrals-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.example.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

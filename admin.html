@@ -1,37 +1,116 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin | Crypto Sell to INR Desk</title><link rel="stylesheet" href="styles.css"></head>
-<body>
-<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Admin control center</small></div></a><nav class="nav-links"><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="referrals.html">Referrals</a><a class="active" href="admin.html">Admin</a></nav><a class="btn btn-primary" href="#">Create New Quote</a></div></header>
-<section class="page-header"><div class="container"><h1>Admin Panel</h1><p class="section-lead">Quotes create/edit, live rates, user management, and everyday wallet changing controls.</p></div></section>
-<section class="section" style="padding-top:0"><div class="container admin-layout">
-  <aside class="card sidebar"><strong>Navigation</strong><div class="side-links"><a class="active" href="#">Dashboard</a><a href="#quotes">Quotes & Rates</a><a href="#users">User Management</a><a href="#wallets">Wallet Management</a><a href="#logs">Audit Logs</a></div><div class="root-files">Admin page is also in root folder: admin.html</div></aside>
-  <main class="admin-main">
-    <div class="admin-top">
-      <div class="card kpi"><div class="muted">Active Orders</div><div class="value">128</div></div>
-      <div class="card kpi"><div class="muted">Pending Confirmations</div><div class="value">34</div></div>
-      <div class="card kpi"><div class="muted">Completed Payouts</div><div class="value">256</div></div>
-      <div class="card kpi"><div class="muted">Pending KYC</div><div class="value">19</div></div>
-      <div class="card kpi"><div class="muted">Today's Volume</div><div class="value">₹2.48Cr</div></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="admin">
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk Admin</div>
+      <nav>
+        <a href="dashboard.html">Seller Dashboard</a>
+        <a href="admin.html">Admin</a>
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </nav>
     </div>
-    <div class="card panel" id="quotes"><div class="card-title"><h2>Quote Management</h2><div class="quick-actions"><button class="btn btn-primary">Create Quote</button><button class="btn btn-outline">Update Rates</button></div></div>
-      <table class="table"><thead><tr><th>Quote Type</th><th>Status</th><th>Buy Rate</th><th>Spread</th><th>Payout Time</th><th>Action</th></tr></thead><tbody>
-        <tr><td>Standard Quote</td><td><span class="status green">Enabled</span></td><td>₹83.15</td><td>0.25%</td><td>30–60 min</td><td><button class="btn btn-ghost">Edit</button></td></tr>
-        <tr><td>Fast Payout</td><td><span class="status green">Enabled</span></td><td>₹82.40</td><td>0.50%</td><td>10–15 min</td><td><button class="btn btn-ghost">Edit</button></td></tr>
-        <tr><td>Bulk OTC Quote</td><td><span class="status green">Enabled</span></td><td>Custom</td><td>Custom</td><td>Custom</td><td><button class="btn btn-ghost">Edit</button></td></tr>
-      </tbody></table>
+  </header>
+
+  <main class="container page-space">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Control center</span>
+        <h1>Admin Panel</h1>
+        <p class="lead">Manage quotes, rates, wallets, users and orders.</p>
+      </div>
+      <div class="card inline-stat"><span id="admin-name">Loading...</span><small>Admin role required</small></div>
     </div>
-    <div class="split">
-      <div class="card panel"><div class="card-title"><h2>Live Rate Management</h2></div><table class="table"><thead><tr><th>Coin</th><th>Rate</th><th>Spread</th><th>Last Updated</th></tr></thead><tbody><tr><td>USDT</td><td>₹83.15</td><td>0.25%</td><td>Today 11:24 AM</td></tr><tr><td>BTC</td><td>₹60,75,000</td><td>0.40%</td><td>Today 11:24 AM</td></tr><tr><td>ETH</td><td>₹2,21,450</td><td>0.45%</td><td>Today 11:24 AM</td></tr><tr><td>SOL</td><td>₹12,850</td><td>0.60%</td><td>Today 11:24 AM</td></tr></tbody></table></div>
-      <div class="card panel" id="users"><div class="card-title"><h2>User Management</h2></div><table class="table"><thead><tr><th>User</th><th>KYC</th><th>Status</th><th>Action</th></tr></thead><tbody><tr><td>Rahul Kumar</td><td><span class="status green">Verified</span></td><td><span class="status green">Active</span></td><td>View / Edit</td></tr><tr><td>Amit Sharma</td><td><span class="status amber">Pending</span></td><td><span class="status amber">Inactive</span></td><td>Approve / Block</td></tr><tr><td>Sunil Kumar</td><td><span class="status red">Suspended</span></td><td><span class="status red">Blocked</span></td><td>Review</td></tr></tbody></table></div>
-    </div>
-    <div class="card panel" id="wallets"><div class="card-title"><h2>Wallet Management</h2><div class="quick-actions"><button class="btn btn-primary">Change Wallet</button><button class="btn btn-outline">Rotate Daily</button><button class="btn btn-ghost">Add Wallet</button></div></div>
-      <table class="table"><thead><tr><th>Coin / Network</th><th>Active Wallet</th><th>Last Changed</th><th>Status</th><th>Action</th></tr></thead><tbody>
-        <tr><td>USDT / TRC20</td><td>TXf9...a7b3c9d8</td><td>Today 08:10 AM</td><td><span class="status green">Active</span></td><td>Change / Deactivate</td></tr>
-        <tr><td>USDT / ERC20</td><td>0x8d7...1a2b3c</td><td>Today 08:10 AM</td><td><span class="status green">Active</span></td><td>Change / Deactivate</td></tr>
-        <tr><td>BTC</td><td>bc1q...7k9m2n</td><td>Today 08:10 AM</td><td><span class="status green">Active</span></td><td>Change / Deactivate</td></tr>
-      </tbody></table>
-    </div>
-    <div class="card panel" id="logs"><div class="card-title"><h2>Recent Activity / Audit Log</h2></div><table class="table"><thead><tr><th>Action</th><th>Details</th><th>Time</th></tr></thead><tbody><tr><td>Quote edited</td><td>Standard Quote changed from ₹82.90 to ₹83.15</td><td>11:24 AM</td></tr><tr><td>Wallet updated</td><td>USDT TRC20 wallet changed</td><td>11:20 AM</td></tr><tr><td>User approved</td><td>Rahul Kumar KYC verified</td><td>11:18 AM</td></tr></tbody></table></div>
+
+    <section class="stats-grid admin-stats" id="admin-stats"></section>
+
+    <section class="admin-grid">
+      <div class="card page-section">
+        <div class="section-head"><h3>Quote Templates</h3></div>
+        <div class="mini-form-grid">
+          <input id="qt-name" placeholder="Quote name" />
+          <select id="qt-type">
+            <option value="standard">standard</option>
+            <option value="fast_payout">fast_payout</option>
+            <option value="priority">priority</option>
+            <option value="bulk_otc">bulk_otc</option>
+          </select>
+          <input id="qt-payout" placeholder="Payout time label" />
+          <input id="qt-spread" type="number" step="0.0001" placeholder="Extra spread %" />
+          <button id="add-quote-template" class="btn btn-primary">Add Quote</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Payout</th><th>Spread</th><th>Status</th></tr></thead>
+            <tbody id="admin-quotes-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Coin Rates</h3></div>
+        <div class="mini-form-grid">
+          <input id="rate-coin" placeholder="Coin symbol" />
+          <input id="rate-network" placeholder="Network" />
+          <input id="rate-buy" type="number" step="0.0001" placeholder="Buy rate INR" />
+          <input id="rate-spread" type="number" step="0.0001" placeholder="Spread %" />
+          <button id="add-coin-rate" class="btn btn-primary">Save Rate</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Coin</th><th>Network</th><th>Buy Rate</th><th>Spread</th><th>Status</th></tr></thead>
+            <tbody id="admin-rates-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Wallet Management</h3></div>
+        <div class="mini-form-grid">
+          <input id="wallet-coin" placeholder="Coin symbol" />
+          <input id="wallet-network" placeholder="Network" />
+          <input id="wallet-address" placeholder="Wallet address" />
+          <input id="wallet-label" placeholder="Label" />
+          <button id="add-wallet" class="btn btn-primary">Add Wallet</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Coin</th><th>Network</th><th>Wallet</th><th>Rotate Daily</th><th>Status</th></tr></thead>
+            <tbody id="admin-wallets-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Users</h3></div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>KYC</th><th>Role</th><th>Status</th></tr></thead>
+            <tbody id="admin-users-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-head"><h3>Sell Orders</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Order</th><th>User</th><th>Coin</th><th>Amount</th><th>INR</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="admin-orders-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
-</div></section>
-<footer class="footer"><div class="container"><p class="muted">This is the admin preview page for control of quotes, rates, users, and daily wallet changing.</p></div></footer>
-<script src="script.js"></script></body></html>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.example.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

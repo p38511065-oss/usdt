@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="admin">
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk Admin</div>
+      <nav>
+        <a href="dashboard.html">Seller Dashboard</a>
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-space">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Control center</span>
+        <h1>Admin Panel</h1>
+        <p class="lead">Manage quotes, rates, wallets, users and orders.</p>
+      </div>
+      <div class="card inline-stat"><span id="admin-name">Loading...</span><small>Admin role required</small></div>
+    </div>
+
+    <section class="stats-grid admin-stats" id="admin-stats"></section>
+
+    <section class="admin-grid">
+      <div class="card page-section">
+        <div class="section-head"><h3>Quote Templates</h3></div>
+        <div class="mini-form-grid">
+          <input id="qt-name" placeholder="Quote name" />
+          <select id="qt-type">
+            <option value="standard">standard</option>
+            <option value="fast_payout">fast_payout</option>
+            <option value="priority">priority</option>
+            <option value="bulk_otc">bulk_otc</option>
+          </select>
+          <input id="qt-payout" placeholder="Payout time label" />
+          <input id="qt-spread" type="number" step="0.0001" placeholder="Extra spread %" />
+          <button id="add-quote-template" class="btn btn-primary">Add Quote</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Payout</th><th>Spread</th><th>Status</th></tr></thead>
+            <tbody id="admin-quotes-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Coin Rates</h3></div>
+        <div class="mini-form-grid">
+          <input id="rate-coin" placeholder="Coin symbol" />
+          <input id="rate-network" placeholder="Network" />
+          <input id="rate-buy" type="number" step="0.0001" placeholder="Buy rate INR" />
+          <input id="rate-spread" type="number" step="0.0001" placeholder="Spread %" />
+          <button id="add-coin-rate" class="btn btn-primary">Save Rate</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Coin</th><th>Network</th><th>Buy Rate</th><th>Spread</th><th>Status</th></tr></thead>
+            <tbody id="admin-rates-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Wallet Management</h3></div>
+        <div class="mini-form-grid">
+          <input id="wallet-coin" placeholder="Coin symbol" />
+          <input id="wallet-network" placeholder="Network" />
+          <input id="wallet-address" placeholder="Wallet address" />
+          <input id="wallet-label" placeholder="Label" />
+          <button id="add-wallet" class="btn btn-primary">Add Wallet</button>
+        </div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Coin</th><th>Network</th><th>Wallet</th><th>Rotate Daily</th><th>Status</th></tr></thead>
+            <tbody id="admin-wallets-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card page-section">
+        <div class="section-head"><h3>Users</h3></div>
+        <div class="table-wrap small-table">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>KYC</th><th>Role</th><th>Status</th></tr></thead>
+            <tbody id="admin-users-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-head"><h3>Sell Orders</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Order</th><th>User</th><th>Coin</th><th>Amount</th><th>INR</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="admin-orders-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

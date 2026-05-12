@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Login | Crypto Sell to INR Desk</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><div class="brand-mark">₹</div><div>Crypto Sell to INR Desk<small>Seller login</small></div></a><nav class="nav-links"><a href="index.html">Home</a><a class="active" href="login.html">Login</a><a href="dashboard.html">Dashboard</a><a href="referrals.html">Referrals</a><a href="admin.html">Admin</a></nav><a class="btn btn-primary" href="dashboard.html">Go to Dashboard</a></div></header>
+<section class="page-header"><div class="container"><h1>Seller Login</h1><p class="section-lead">Access sell orders, live quotes, payouts, and referrals from one account.</p></div></section>
+<section class="section" style="padding-top:0"><div class="container split">
+<div>
+  <span class="kicker">● Secure seller access</span>
+  <h2 style="font-size:42px;margin:16px 0 10px">Login or register to see your <span class="highlight">quote dashboard</span></h2>
+  <p class="section-lead">After login, user dashboard will show quote cards, active order tracking, history, and referral earnings preview.</p>
+  <div class="badges"><span class="badge">KYC Required</span><span class="badge">Secure Login</span><span class="badge">24/7 Support</span></div>
+  <div class="feature-grid" style="grid-template-columns:1fr 1fr;margin-top:18px"><div class="card feature"><h3>Fast Quote Access</h3><p class="muted">User sees available sell quotes after login.</p></div><div class="card feature"><h3>Referral Ready</h3><p class="muted">Registration includes referral code support.</p></div></div>
+</div>
+<div class="card auth-wrap">
+  <div class="tabs"><button class="tab-btn" data-tab="login-panel">Login</button><button class="tab-btn" data-tab="register-panel">Register</button></div>
+  <div id="login-panel" class="tab-panel">
+    <div class="field"><label>Mobile Number or Email</label><input class="input" placeholder="Enter mobile or email"></div>
+    <div class="field"><label>Password</label><input class="input" type="password" placeholder="Enter password"></div>
+    <div class="field"><label>OTP (Optional)</label><div style="display:flex;gap:10px"><input class="input" placeholder="6-digit OTP"><button class="btn btn-outline">Send OTP</button></div></div>
+    <div class="checkbox-row"><label><input type="checkbox"> Remember me</label><a class="link" href="#">Forgot password?</a></div>
+    <a class="btn btn-primary" style="width:100%" href="dashboard.html">Login to Dashboard</a>
+    <p class="muted small" style="margin-top:14px">This is a prototype login flow for UI preview.</p>
+  </div>
+  <div id="register-panel" class="tab-panel" style="display:none">
+    <div class="grid-2"><div class="field"><label>Full Name</label><input class="input" placeholder="Enter name"></div><div class="field"><label>Mobile Number</label><input class="input" placeholder="Enter mobile"></div></div>
+    <div class="field"><label>Email</label><input class="input" placeholder="Enter email"></div>
+    <div class="field"><label>Create Password</label><input class="input" type="password" placeholder="Create password"></div>
+    <div class="field"><label>Referral Code</label><input class="input" placeholder="Optional referral code"></div>
+    <a class="btn btn-primary" style="width:100%" href="dashboard.html">Create New Account</a>
+  </div>
+</div>
+</div></section>
+<footer class="footer"><div class="container"><p class="muted">Root files only: index.html, login.html, dashboard.html, referrals.html, admin.html, styles.css, script.js.</p></div></footer>
+<script src="script.js"></script></body></html>

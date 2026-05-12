@@ -86,3 +86,6 @@ th { color: var(--muted); font-size: 13px; }
   .auth-card { justify-self: stretch; max-width: none; }
   .page-head, .footer-grid, .nav { flex-direction: column; align-items: stretch; }
 }
+
+
+.nav-user-pill{display:inline-flex;align-items:center;padding:8px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.06);color:#dfe7ff;font-size:14px;}

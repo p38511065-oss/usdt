@@ -73,6 +73,29 @@
     return profile;
   }
 
+
+  async function loadAdminLoginPage() {
+    const btn = document.getElementById('admin-login-btn');
+    const msg = document.getElementById('admin-auth-message');
+    btn?.addEventListener('click', async () => {
+      msg.textContent = 'Logging in...';
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        msg.textContent = error.message;
+        return;
+      }
+      const profile = await getProfile();
+      if (profile?.role !== 'admin') {
+        msg.textContent = 'This account is not an admin account. Redirecting to seller dashboard...';
+        setTimeout(() => window.location.href = 'dashboard.html', 900);
+        return;
+      }
+      window.location.href = 'admin.html';
+    });
+  }
+
   async function loadLoginPage() {
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
@@ -464,6 +487,7 @@
   }
 
   if (page === 'login') loadLoginPage();
+  if (page === 'admin-login') loadAdminLoginPage();
   if (page === 'dashboard') loadDashboardPage();
   if (page === 'referrals') loadReferralsPage();
   if (page === 'admin') loadAdminPage();

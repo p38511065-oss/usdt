@@ -13,7 +13,7 @@
     const note = document.createElement('div');
     note.className = 'container';
     note.style.padding = '16px 0';
-    note.innerHTML = '<div class="card">Add your Supabase URL and anon key in <code>supabase-config.js</code> or replace <code>supabase-config.example.js</code> values before using this app.</div>';
+    note.innerHTML = '<div class="card">Supabase config is missing in <code>supabase-config.js</code>. Please check that file if the app does not connect.</div>';
     document.body.prepend(note);
     return;
   }

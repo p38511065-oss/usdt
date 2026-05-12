@@ -1,4 +1,4 @@
-Crypto Sell to INR Desk - Supabase Root Package
+Crypto Sell to INR Desk - Supabase Starter
 
 Files included:
 - index.html
@@ -10,14 +10,12 @@ Files included:
 - styles.css
 - main.js
 - supabase-config.js
-- supabase-config.example.js
 - supabase-schema.sql
 
-Important:
-1. Run supabase-schema.sql in Supabase SQL Editor.
-2. supabase-config.js already contains the current Supabase URL and anon key you provided.
-3. Seller login: login.html
-4. Admin login: admin-login.html
-5. admin.html is protected and only opens for users whose profile role is admin.
+Supabase is already configured in supabase-config.js for this build.
 
-Before public launch, rotate your anon key if needed and review all policies/security.
+Before deploy:
+1. Make sure your Supabase schema is already run.
+2. Upload all root files to GitHub or hosting.
+3. Use login.html for seller login.
+4. Use admin-login.html for admin login.

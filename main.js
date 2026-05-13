@@ -257,6 +257,45 @@
     updatePayoutFieldVisibility();
   }
 
+
+  async function findMatchingActiveWallet(client, coin, network) {
+    const { data, error } = await client
+      .from('wallet_pools')
+      .select('*')
+      .eq('is_active', true)
+      .eq('coin_symbol', coin)
+      .eq('network', network)
+      .order('created_at', { ascending: false });
+    if (error) return null;
+    if (data && data.length) return data[0];
+    const fallback = await client
+      .from('wallet_pools')
+      .select('*')
+      .eq('is_active', true)
+      .eq('coin_symbol', coin)
+      .order('created_at', { ascending: false });
+    if (fallback.error) return null;
+    return (fallback.data || [])[0] || null;
+  }
+
+  async function ensureOrderWalletAssignment(order) {
+    if (!order || order.deposit_wallet_address) return order;
+    const activeWallet = await findMatchingActiveWallet(sellerClient, order.coin_symbol, order.network);
+    if (!activeWallet) return order;
+    const patch = {
+      deposit_wallet_address: activeWallet.wallet_address || null,
+      deposit_wallet_qr_url: activeWallet.qr_data_url || activeWallet.qr_image_url || activeWallet.qr_code_url || null
+    };
+    const { data, error } = await sellerClient
+      .from('sell_orders')
+      .update(patch)
+      .eq('id', order.id)
+      .select()
+      .single();
+    if (error) return order;
+    return data || { ...order, ...patch };
+  }
+
   function onPayoutSelectorChange() {
     const opt = qs('bank-account-select')?.selectedOptions?.[0];
     if (!opt || !opt.value) return setHtml('selected-payout-summary', 'No payout method selected.');
@@ -276,7 +315,9 @@
       box.innerHTML = 'जब आप quote confirm करोगे, यहाँ wallet address, QR और TX hash submit करने का option दिखेगा.';
       return;
     }
+    order = await ensureOrderWalletAssignment(order);
     const qr = order.deposit_wallet_qr_url || order.qr_image_url || order.qr_code_url || '';
+    const walletMissing = !order.deposit_wallet_address;
     box.innerHTML = `
       <div class="grid-2">
         <div>
@@ -297,7 +338,7 @@
             <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="${escapeHtml(order.tx_hash || '')}" /></div>
             <div class="inline-end"><button id="mark-crypto-sent" class="btn btn-primary">I Have Sent Crypto</button></div>
           </div>
-          <p id="deposit-order-message" class="status-text"></p>
+          <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active admin wallet is assigned for this coin/network yet. Please contact support or wait for admin wallet setup.' : ''}</p>
           <div class="tiny-note top-gap-sm">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
         </div>
         <div>
@@ -500,7 +541,7 @@
       if (!payout) return setText('quote-calc-message', 'Please select a valid payout method.');
       const rateRow = (rates || []).find((r) => r.coin_symbol === coin && r.network === network);
       if (!rateRow) return setText('quote-calc-message', 'No active rate found for this coin/network.');
-      const activeWallet = (wallets || []).find((w) => w.coin_symbol === coin && w.network === network) || (wallets || []).find((w) => w.coin_symbol === coin);
+      const activeWallet = await findMatchingActiveWallet(sellerClient, coin, network);
       const available = (templates || []).filter((t) => {
         const hasSelected = selectedSellerQuote && t.quote_type === selectedSellerQuote.quote_type;
         const matchesTemplateAmount = amount >= Number(t.min_amount_usdt || 0) && (!t.max_amount_usdt || amount <= Number(t.max_amount_usdt));
@@ -554,6 +595,7 @@
             deposit_wallet_qr_url: activeWallet?.qr_data_url || activeWallet?.qr_image_url || activeWallet?.qr_code_url || null,
             status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
           };
+          if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please try again later or contact support.');
           const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
           if (error) return setText('quote-calc-message', error.message);
           await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: tpl.quote_type });

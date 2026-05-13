@@ -11,3 +11,9 @@ Quote Slab Selection Fix:
 - Higher amount slabs and open-ended max amount slabs now remain selectable.
 - Sell Request matching uses quote_slabs consistently instead of template min/max fallback.
 - USDT/TRC20 active wallet is checked before order creation.
+
+Merged fix:
+- Quote slab selection bug fix preserved
+- Deposit page UX improvements preserved
+- Small inline copy icons for wallet and amount
+- TX hash submit now shows smoother submitting/success feedback

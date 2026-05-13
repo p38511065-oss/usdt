@@ -73,19 +73,23 @@
       return false;
     }
   }
-  async function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
+  function flashInlineCopyState(btn, ok, copiedLabel = '✓') {
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.classList.remove('copied');
+    btn.innerHTML = ok ? copiedLabel : '!';
+    if (ok) btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.classList.remove('copied');
+    }, 1400);
+  }
+  function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const btn = qs(buttonId);
     if (!btn) return;
     btn.addEventListener('click', async () => {
       const ok = await copyText(text);
-      const original = btn.innerHTML;
-      btn.classList.remove('copied');
-      btn.innerHTML = ok ? copiedLabel : '!';
-      if (ok) btn.classList.add('copied');
-      setTimeout(() => {
-        btn.innerHTML = original;
-        btn.classList.remove('copied');
-      }, 1400);
+      flashInlineCopyState(btn, ok, copiedLabel);
     });
   }
 
@@ -470,6 +474,7 @@
       if (message) {
         message.textContent = 'Submitting transaction hash...';
         message.classList.add('pending');
+        message.classList.remove('error');
       }
       const nextStatus = order.status === 'awaiting_kyc' ? 'awaiting_kyc' : 'awaiting_confirmations';
       const { error } = await sellerClient.from('sell_orders').update({ tx_hash: txHash, status: nextStatus }).eq('id', order.id);
@@ -641,6 +646,43 @@
     });
   }
 
+
+  function normalizeSlabRow(s, templates = []) {
+    const tpl = (templates || []).find((t) => t.id === s.quote_template_id || t.quote_type === s.quote_type) || {};
+    const minVal = Number(s.min_amount ?? s.min_crypto_amount ?? 0);
+    const rawMax = s.max_amount ?? s.max_crypto_amount;
+    return {
+      ...s,
+      quote_slab_id: s.id,
+      quote_template_id: s.quote_template_id || tpl.id || null,
+      quote_type: s.quote_type || tpl.quote_type || 'standard',
+      quote_name: tpl.quote_name || s.quote_name || s.quote_type || 'Quote',
+      description: tpl.description || s.description || 'Sell directly from this quote slab.',
+      payout_time_label: tpl.payout_time_label || s.payout_time_label || '-',
+      coin_symbol: String(s.coin_symbol || '').toUpperCase(),
+      network: String(s.network || '').toUpperCase(),
+      min_amount: minVal,
+      max_amount: rawMax === null || rawMax === undefined || rawMax === '' ? null : Number(rawMax),
+      rate_inr: Number(s.rate_inr || 0),
+      spread_percent: Number(s.spread_percent || 0),
+      is_enabled: s.is_enabled !== false
+    };
+  }
+
+  function slabMatchesAmount(slab, amount) {
+    const min = Number(slab.min_amount ?? slab.min_crypto_amount ?? 0);
+    const rawMax = slab.max_amount ?? slab.max_crypto_amount;
+    const max = rawMax === null || rawMax === undefined || rawMax === '' ? null : Number(rawMax);
+    return amount >= min && (max === null || amount <= max);
+  }
+
+  function slabRangeLabel(slab) {
+    const min = Number(slab.min_amount ?? slab.min_crypto_amount ?? 0);
+    const rawMax = slab.max_amount ?? slab.max_crypto_amount;
+    const max = rawMax === null || rawMax === undefined || rawMax === '' ? null : Number(rawMax);
+    return `${min} - ${max === null ? 'Unlimited' : max}`;
+  }
+
   async function loadRatesAndQuotes(profile) {
     const [{ data: rates }, { data: templates }, { data: slabs }, { data: wallets }] = await Promise.all([
       sellerClient.from('coin_rates').select('*').eq('is_active', true),
@@ -651,12 +693,13 @@
     const coinSelect = qs('sell-coin');
     const networkSelect = qs('sell-network');
     if (!coinSelect || !networkSelect) return;
-    const uniqueCoins = [...new Set((rates || []).map((r) => r.coin_symbol))];
+    const normalizedSlabsForSelect = (slabs || []).map((s) => normalizeSlabRow(s, templates));
+    const uniqueCoins = [...new Set([...(rates || []).map((r) => String(r.coin_symbol || '').toUpperCase()), ...normalizedSlabsForSelect.map((s) => s.coin_symbol)].filter(Boolean))];
     coinSelect.innerHTML = uniqueCoins.map((coin) => `<option value="${escapeHtml(coin)}">${escapeHtml(coin)}</option>`).join('');
     const fillNetworks = () => {
-      const coin = coinSelect.value;
-      const nets = (rates || []).filter((r) => r.coin_symbol === coin).map((r) => r.network);
-      networkSelect.innerHTML = [...new Set(nets)].map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      const coin = String(coinSelect.value || '').toUpperCase();
+      const nets = [...new Set([...(rates || []).filter((r) => String(r.coin_symbol || '').toUpperCase() === coin).map((r) => String(r.network || '').toUpperCase()), ...normalizedSlabsForSelect.filter((s) => s.coin_symbol === coin).map((s) => s.network)].filter(Boolean))];
+      networkSelect.innerHTML = nets.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
     };
     coinSelect.addEventListener('change', fillNetworks);
     fillNetworks();
@@ -667,78 +710,98 @@
       const amount = Number(val('sell-amount'));
       const payoutId = val('bank-account-select');
       if (!coin || !network || !amount || !payoutId) return setText('quote-calc-message', 'Please select coin, network, amount and payout method.');
+
       const payoutAccounts = await renderPayoutAccounts(profile.id);
       const payout = (payoutAccounts || []).find((x) => x.id === payoutId);
       if (!payout) return setText('quote-calc-message', 'Please select a valid payout method.');
-      const rateRow = (rates || []).find((r) => r.coin_symbol === coin && r.network === network);
-      if (!rateRow) return setText('quote-calc-message', 'No active rate found for this coin/network.');
+
       const activeWallet = await findMatchingActiveWallet(sellerClient, coin, network);
-      const available = (templates || []).filter((t) => {
-        const hasSelected = selectedSellerQuote && t.quote_type === selectedSellerQuote.quote_type;
-        const matchesTemplateAmount = amount >= Number(t.min_amount_usdt || 0) && (!t.max_amount_usdt || amount <= Number(t.max_amount_usdt));
-        return hasSelected || matchesTemplateAmount;
-      });
+      if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please contact support.');
+
+      const normalizedSlabs = (slabs || []).map((s) => normalizeSlabRow(s, templates));
+      let matchingSlabs = normalizedSlabs.filter((s) =>
+        s.is_enabled &&
+        s.coin_symbol === coin &&
+        s.network === network &&
+        slabMatchesAmount(s, amount)
+      );
+
+      // If user came from Available Quotes, never lose that slab.
+      // This fixes higher amount / open-ended slabs showing as Not Available.
+      if (selectedSellerQuote) {
+        const selected = normalizeSlabRow(selectedSellerQuote, templates);
+        const sameSlab = selected.quote_slab_id && matchingSlabs.some((s) => s.quote_slab_id === selected.quote_slab_id);
+        if (selected.coin_symbol === coin && selected.network === network && slabMatchesAmount(selected, amount) && !sameSlab) {
+          matchingSlabs.unshift(selected);
+        }
+      }
+
       const container = qs('quotes-container');
       const empty = qs('quotes-empty');
       container.innerHTML = '';
-      if (!available.length) {
+      if (!matchingSlabs.length) {
         empty.style.display = 'block';
-        empty.textContent = 'No quote template matches this amount.';
+        const nextHigher = normalizedSlabs
+          .filter((s) => s.is_enabled && s.coin_symbol === coin && s.network === network && amount < Number(s.min_amount || 0))
+          .sort((a, b) => Number(a.min_amount || 0) - Number(b.min_amount || 0))[0];
+        empty.textContent = nextHigher
+          ? `No slab matched this amount. Add ${Number(nextHigher.min_amount || 0) - amount} ${coin} more to unlock ${Number(nextHigher.rate_inr || 0).toFixed(4)} rate.`
+          : 'No active quote slab matches this amount.';
         return;
       }
       empty.style.display = 'none';
-      available.forEach((tpl, index) => {
-        const slab = (slabs || []).find((s) => s.quote_type === tpl.quote_type && s.coin_symbol === coin && s.network === network && amount >= Number(s.min_amount || s.min_crypto_amount || 0) && (!(s.max_amount || s.max_crypto_amount) || amount <= Number(s.max_amount || s.max_crypto_amount)));
-        const finalRate = slab ? Number(slab.rate_inr) : Math.max(0, Number(rateRow.buy_rate_inr) - Number(rateRow.spread_percent || 0) - Number(tpl.extra_spread_percent || 0));
-        const estimated = amount * finalRate;
-        const slabMin = Number(slab?.min_amount || slab?.min_crypto_amount || 0);
-        const slabMax = slab?.max_amount || slab?.max_crypto_amount;
-        const isSelected = selectedSellerQuote && selectedSellerQuote.quote_type === tpl.quote_type;
-        const card = document.createElement('div');
-        card.className = 'quote-card' + ((isSelected || index === 0) ? ' recommended' : '');
-        card.innerHTML = `
-          <div class="badge ${(isSelected || index === 0) ? '' : 'neutral'}">${isSelected ? 'Chosen Quote' : index === 0 ? 'Recommended' : 'Available'}</div>
-          <h4>${escapeHtml(tpl.quote_name)}</h4>
-          <p>${escapeHtml(tpl.description || 'Editable quote option')}</p>
-          <div class="kv-list">
-            <div class="kv-row"><span>Rate</span><strong>${Number(finalRate).toFixed(4)}</strong></div>
-            <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(estimated)}</strong></div>
-            <div class="kv-row"><span>Payout Time</span><strong>${escapeHtml(tpl.payout_time_label)}</strong></div>
-            <div class="kv-row"><span>Amount Slab</span><strong>${slab ? `${slabMin} - ${slabMax ? Number(slabMax) : 'Unlimited'}` : 'Default rate'}</strong></div>
-          </div>
-          <div class="action-row top-gap-sm"><button class="btn btn-primary select-quote">Select Quote</button></div>`;
-        card.querySelector('.select-quote').addEventListener('click', async () => {
-          const payload = {
-            user_id: profile.id,
-            bank_account_id: payout.id,
-            quote_template_id: tpl.id,
-            quote_slab_id: slab?.id || null,
-            coin_symbol: coin,
-            network,
-            crypto_amount: amount,
-            locked_rate_inr: finalRate,
-            spread_percent: Number(slab?.spread_percent || tpl.extra_spread_percent || 0),
-            estimated_inr_payout: estimated,
-            payout_method: payout.payment_method,
-            payout_label: payoutDestinationLabel(payout),
-            payout_details: payout,
-            deposit_wallet_address: activeWallet?.wallet_address || null,
-            deposit_wallet_qr_url: activeWallet?.qr_data_url || activeWallet?.qr_image_url || activeWallet?.qr_code_url || null,
-            status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
-          };
-          if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please try again later or contact support.');
-          const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
-          if (error) return setText('quote-calc-message', error.message);
-          await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: tpl.quote_type });
-          setText('quote-calc-message', `Order created. Deposit to wallet: ${activeWallet?.wallet_address || 'Admin will assign wallet soon'}`);
-          selectedSellerQuote = null;
-          setSelectedQuoteBanner();
-          await loadSellerStats(profile);
-          document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-          renderDepositOrderBox(order);
+
+      matchingSlabs
+        .sort((a, b) => (selectedSellerQuote?.quote_slab_id === a.quote_slab_id ? -1 : 0) || Number(b.rate_inr || 0) - Number(a.rate_inr || 0))
+        .forEach((slab, index) => {
+          const finalRate = Number(slab.rate_inr || 0);
+          const estimated = amount * finalRate;
+          const isSelected = selectedSellerQuote && (selectedSellerQuote.quote_slab_id === slab.quote_slab_id || selectedSellerQuote.id === slab.id);
+          const card = document.createElement('div');
+          card.className = 'quote-card' + ((isSelected || index === 0) ? ' recommended' : '');
+          card.innerHTML = `
+            <div class="badge ${(isSelected || index === 0) ? '' : 'neutral'}">${isSelected ? 'Chosen Quote' : index === 0 ? 'Recommended' : 'Available'}</div>
+            <h4>${escapeHtml(slab.quote_name || slab.quote_type || 'Quote')}</h4>
+            <p>${escapeHtml(slab.description || 'Admin-created quote slab')}</p>
+            <div class="kv-list">
+              <div class="kv-row"><span>Rate</span><strong>${Number(finalRate).toFixed(4)}</strong></div>
+              <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(estimated)}</strong></div>
+              <div class="kv-row"><span>Payout Time</span><strong>${escapeHtml(slab.payout_time_label || '-')}</strong></div>
+              <div class="kv-row"><span>Amount Slab</span><strong>${escapeHtml(slabRangeLabel(slab))}</strong></div>
+            </div>
+            <div class="action-row top-gap-sm"><button class="btn btn-primary select-quote">Confirm Sell Request</button></div>`;
+
+          card.querySelector('.select-quote').addEventListener('click', async () => {
+            const payload = {
+              user_id: profile.id,
+              bank_account_id: payout.id,
+              quote_template_id: slab.quote_template_id || null,
+              quote_slab_id: slab.quote_slab_id || slab.id || null,
+              coin_symbol: coin,
+              network,
+              crypto_amount: amount,
+              locked_rate_inr: finalRate,
+              spread_percent: Number(slab.spread_percent || 0),
+              estimated_inr_payout: estimated,
+              payout_method: payout.payment_method,
+              payout_label: payoutDestinationLabel(payout),
+              payout_details: payout,
+              deposit_wallet_address: activeWallet.wallet_address,
+              deposit_wallet_qr_url: activeWallet.qr_data_url || activeWallet.qr_image_url || activeWallet.qr_code_url || null,
+              status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
+            };
+            const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
+            if (error) return setText('quote-calc-message', error.message);
+            await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: slab.quote_type, quote_slab_id: slab.quote_slab_id || slab.id });
+            setText('quote-calc-message', `Order created. Send ${amount} ${coin} to the shown wallet.`);
+            selectedSellerQuote = null;
+            setSelectedQuoteBanner();
+            await loadSellerStats(profile);
+            document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+            renderDepositOrderBox(order);
+          });
+          container.appendChild(card);
         });
-        container.appendChild(card);
-      });
     });
     qs('refresh-quotes-btn')?.addEventListener('click', () => renderAvailableQuotesPage());
     qs('quotes-amount')?.addEventListener('input', () => renderAvailableQuotesPage());
@@ -757,7 +820,7 @@
       if (hint) hint.innerHTML = 'Choose a slab to continue with sell request.';
       return;
     }
-    const slabLabel = `${Number(selectedSellerQuote.min_amount || 0)} - ${selectedSellerQuote.max_amount ? Number(selectedSellerQuote.max_amount) : 'Unlimited'} ${selectedSellerQuote.coin_symbol}`;
+    const slabLabel = `${Number(selectedSellerQuote.min_amount ?? selectedSellerQuote.min_crypto_amount ?? 0)} - ${(selectedSellerQuote.max_amount ?? selectedSellerQuote.max_crypto_amount) ? Number(selectedSellerQuote.max_amount ?? selectedSellerQuote.max_crypto_amount) : 'Unlimited'} ${selectedSellerQuote.coin_symbol}`;
     const html = `<div class="kv-row"><span>Chosen Quote</span><strong>${escapeHtml(selectedSellerQuote.quote_name || selectedSellerQuote.quote_type || 'Quote')}</strong></div>
       <div class="kv-row"><span>Coin / Network</span><strong>${escapeHtml(selectedSellerQuote.coin_symbol)} / ${escapeHtml(selectedSellerQuote.network)}</strong></div>
       <div class="kv-row"><span>Slab</span><strong>${escapeHtml(slabLabel)}</strong></div>
@@ -772,14 +835,14 @@
     const coinSelect = qs('sell-coin');
     if (coinSelect) coinSelect.dispatchEvent(new Event('change'));
     if (qs('sell-network')) qs('sell-network').value = quote.network || '';
-    if (qs('sell-amount') && !Number(qs('sell-amount').value)) qs('sell-amount').value = Number(quote.min_amount || 0);
+    if (qs('sell-amount')) qs('sell-amount').value = Number(quote.min_amount ?? quote.min_crypto_amount ?? 0);
     setSelectedQuoteBanner();
     document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-    setText('quote-calc-message', 'Chosen quote prefilled. Add amount and payout method, then search matching quotes or continue.');
+    setText('quote-calc-message', 'Chosen quote prefilled. Select payout method and click Search Matching Quotes to confirm this slab.');
   }
 
   function buildQuoteCard(quote, amount) {
-    const qualifies = amount ? amount >= Number(quote.min_amount || 0) && (!quote.max_amount || amount <= Number(quote.max_amount)) : false;
+    const qualifies = amount ? slabMatchesAmount(quote, amount) : false;
     const higherUnlock = amount && amount < Number(quote.min_amount || 0) ? `Add ${Number(quote.min_amount || 0) - amount} ${quote.coin_symbol} to unlock this rate.` : '';
     return `<div class="quote-card${qualifies ? ' recommended' : ''}">
       <div class="badge ${qualifies ? '' : 'neutral'}">${qualifies ? 'You qualify' : 'Available'}</div>

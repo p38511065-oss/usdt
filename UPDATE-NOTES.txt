@@ -5,3 +5,9 @@ Updated:
 - Improved dashboard/admin visual design
 - Landing page still uses landing-home.js and existing main.js
 - Existing working logic preserved as much as possible
+
+Quote Slab Selection Fix:
+- Available Quotes -> Sell Request now carries selected slab directly.
+- Higher amount slabs and open-ended max amount slabs now remain selectable.
+- Sell Request matching uses quote_slabs consistently instead of template min/max fallback.
+- USDT/TRC20 active wallet is checked before order creation.

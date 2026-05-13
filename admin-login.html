@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="admin-login">
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">₹ Crypto Sell to INR Desk Admin</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Seller Login</a>
+        <a href="admin-login.html">Admin Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container auth-shell admin-auth-shell">
+    <section class="auth-copy">
+      <span class="eyebrow">Control center</span>
+      <h1>Admin Login</h1>
+      <p class="lead">Open the admin control panel for rates, users, payout destination details, quotes, wallets and order actions.</p>
+    </section>
+
+    <section class="card auth-card">
+      <div class="form-group">
+        <label>Email</label>
+        <input id="admin-email" type="email" placeholder="Enter admin email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="admin-password" type="password" placeholder="Enter password" />
+      </div>
+      <button id="admin-login-btn" class="btn btn-primary btn-block">Login to Admin Panel</button>
+      <p id="admin-auth-message" class="status-text"></p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

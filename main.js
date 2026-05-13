@@ -124,7 +124,30 @@
     qs('#payout-view-modal')?.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
-  function openPayoutDetailsModal(details) {
+  
+  function encodePayoutDataAttr(row) {
+    try {
+      return escapeHtml(JSON.stringify(buildPayoutDetails(row)));
+    } catch (e) {
+      return '';
+    }
+  }
+  window.showPayoutDetailsFromData = function(el) {
+    try {
+      const raw = el?.getAttribute('data-payout');
+      if (!raw) {
+        alert('Payout details not found');
+        return false;
+      }
+      const parsed = JSON.parse(raw);
+      openPayoutDetailsModal(parsed);
+      return false;
+    } catch (e) {
+      alert('Payout details could not be opened');
+      return false;
+    }
+  };
+function openPayoutDetailsModal(details) {
     const modal = ensurePayoutModal();
     const body = qs('#payout-modal-body');
     if (!body) return;
@@ -490,7 +513,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
               <div class="summary-row"><span>Exact Amount</span><strong class="summary-copy-wrap">${escapeHtml(String(order.crypto_amount || '-'))}<button id="copy-deposit-amount" class="mini-copy inline-copy" title="Copy amount">⧉</button></strong></div>
               <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
               <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
-              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" class="mini-view-btn" title="View payout details">View</button></strong></div>
+              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
               <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
               <div class="summary-row"><span>TX Hash</span><strong class="code-small">${escapeHtml(order.tx_hash || '-')}</strong></div>
               <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
@@ -519,7 +542,6 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       </div>`;
     bindInlineCopy('copy-deposit-address', order.deposit_wallet_address || '', '✓');
     bindInlineCopy('copy-deposit-amount', String(order.crypto_amount || ''), '✓');
-    qs('view-payout-details')?.addEventListener('click', () => openPayoutDetailsModal(buildPayoutDetails(order)));
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
       const txHash = val('deposit-tx-hash');
       if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
@@ -1437,9 +1459,9 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
       <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
       <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>
-      <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
+      <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
     setHtml('admin-order-timeline', buildOrderTimeline(row));
-    qs('admin-view-payout-details')?.addEventListener('click', () => openPayoutDetailsModal(buildPayoutDetails(row)));
+
   }
 
   function adminOrderActionButtons(row) {
@@ -1547,7 +1569,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         </td>
         <td>${fmtInr(row.estimated_inr_payout)}</td>
         <td>
-          <div class="payout-cell-line"><strong>${escapeHtml(payout.label)}</strong><button class="mini-view-btn js-payout-view" data-id="${row.id}">View</button></div>
+          <div class="payout-cell-line"><strong>${escapeHtml(payout.label)}</strong><button class="mini-view-btn js-payout-view" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);">View</button></div>
           <div class="tiny-note">${escapeHtml(payout.value || '-')}</div>
         </td>
         <td><div>${chip(statusMeta.label, statusMeta.cls)}</div><div class="tiny-note top-gap-xs">${escapeHtml(statusMeta.sub)}</div></td>
@@ -1693,24 +1715,42 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       if (payoutBtn) {
         e.preventDefault();
         e.stopPropagation();
-        const id = payoutBtn.getAttribute('data-id');
-        const row = (window.__adminOrderRows || []).find((r) => r.id === id);
-        if (row) {
-          openPayoutDetailsModal(buildPayoutDetails(row));
+        const raw = payoutBtn.getAttribute('data-payout');
+        if (raw) {
+          try {
+            openPayoutDetailsModal(JSON.parse(raw));
+          } catch (err) {
+            alert('Payout details not found');
+          }
         } else {
-          alert('Payout details not found');
+          const id = payoutBtn.getAttribute('data-id');
+          const row = (window.__adminOrderRows || []).find((r) => r.id === id);
+          if (row) {
+            openPayoutDetailsModal(buildPayoutDetails(row));
+          } else {
+            alert('Payout details not found');
+          }
         }
         return;
       }
       const detailBtn = e.target.closest('#admin-view-payout-details');
       if (detailBtn) {
         e.preventDefault();
-        const id = detailBtn.getAttribute('data-id');
-        const row = (window.__adminOrderRows || []).find((r) => r.id === id);
-        if (row) {
-          openPayoutDetailsModal(buildPayoutDetails(row));
+        const raw = detailBtn.getAttribute('data-payout');
+        if (raw) {
+          try {
+            openPayoutDetailsModal(JSON.parse(raw));
+          } catch (err) {
+            alert('Payout details not found');
+          }
         } else {
-          alert('Payout details not found');
+          const id = detailBtn.getAttribute('data-id');
+          const row = (window.__adminOrderRows || []).find((r) => r.id === id);
+          if (row) {
+            openPayoutDetailsModal(buildPayoutDetails(row));
+          } else {
+            alert('Payout details not found');
+          }
         }
       }
     });

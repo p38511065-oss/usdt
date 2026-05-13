@@ -19,3 +19,5 @@ Merged fix:
 - TX hash submit now shows smoother submitting/success feedback
 
 - Added payout details View modal for seller and admin panels
+
+- Fixed payout View buttons with inline modal trigger fallback

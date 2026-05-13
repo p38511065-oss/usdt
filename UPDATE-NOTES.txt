@@ -1,0 +1,7 @@
+Combined upgrade package based on your uploaded working zip.
+Updated:
+- Premium landing page
+- Seller/admin workspace banner styling
+- Improved dashboard/admin visual design
+- Landing page still uses landing-home.js and existing main.js
+- Existing working logic preserved as much as possible

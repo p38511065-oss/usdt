@@ -17,3 +17,5 @@ Merged fix:
 - Deposit page UX improvements preserved
 - Small inline copy icons for wallet and amount
 - TX hash submit now shows smoother submitting/success feedback
+
+- Added payout details View modal for seller and admin panels

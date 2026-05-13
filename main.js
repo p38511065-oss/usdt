@@ -84,7 +84,67 @@
       btn.classList.remove('copied');
     }, 1400);
   }
-  function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
+  
+  function buildPayoutDetails(row) {
+    return {
+      method: row.payout_method || row.payout_type || (row.payout_upi_id ? 'upi' : 'bank'),
+      label: row.payout_label || row.label || row.account_holder_name || row.payout_account_holder_name || 'Payout Account',
+      holder: row.payout_account_holder_name || row.account_holder_name || '-',
+      bank: row.payout_bank_name || row.bank_name || '-',
+      account: row.payout_account_number || row.account_number || '-',
+      ifsc: row.payout_ifsc_code || row.ifsc_code || '-',
+      upi: row.payout_upi_id || row.upi_id || '-'
+    };
+  }
+  function ensurePayoutModal() {
+    let modal = qs('#payout-view-modal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'payout-view-modal';
+    modal.className = 'modal-overlay hidden';
+    modal.innerHTML = `
+      <div class="modal-card payout-modal-card">
+        <div class="modal-head">
+          <div>
+            <div class="modal-eyebrow">Payment Method View</div>
+            <h3>Payout Details</h3>
+          </div>
+          <button class="modal-close" id="close-payout-modal">✕</button>
+        </div>
+        <div id="payout-modal-body" class="modal-body"></div>
+      </div>`;
+    document.body.appendChild(modal);
+    qs('#close-payout-modal')?.addEventListener('click', closePayoutDetailsModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closePayoutDetailsModal();
+    });
+    return modal;
+  }
+  function closePayoutDetailsModal() {
+    qs('#payout-view-modal')?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+  function openPayoutDetailsModal(details) {
+    const modal = ensurePayoutModal();
+    const body = qs('#payout-modal-body');
+    if (!body) return;
+    body.innerHTML = `
+      <div class="payout-view-grid">
+        <div class="payout-view-row"><span>Payment Type</span><strong>${escapeHtml(String(details.method || '-').toUpperCase())}</strong></div>
+        <div class="payout-view-row"><span>Label</span><strong>${escapeHtml(details.label || '-')}</strong></div>
+        <div class="payout-view-row"><span>Holder Name</span><strong>${escapeHtml(details.holder || '-')}</strong></div>
+        ${details.method === 'upi' ? `
+          <div class="payout-view-row"><span>UPI ID</span><strong>${escapeHtml(details.upi || '-')}</strong></div>
+        ` : `
+          <div class="payout-view-row"><span>Bank Name</span><strong>${escapeHtml(details.bank || '-')}</strong></div>
+          <div class="payout-view-row"><span>Account Number</span><strong>${escapeHtml(details.account || '-')}</strong></div>
+          <div class="payout-view-row"><span>IFSC Code</span><strong>${escapeHtml(details.ifsc || '-')}</strong></div>
+        `}
+      </div>`;
+    modal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const btn = qs(buttonId);
     if (!btn) return;
     btn.addEventListener('click', async () => {
@@ -430,7 +490,7 @@
               <div class="summary-row"><span>Exact Amount</span><strong class="summary-copy-wrap">${escapeHtml(String(order.crypto_amount || '-'))}<button id="copy-deposit-amount" class="mini-copy inline-copy" title="Copy amount">⧉</button></strong></div>
               <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
               <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
-              <div class="summary-row"><span>Payout Method</span><strong>${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}</strong></div>
+              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" class="mini-view-btn" title="View payout details">View</button></strong></div>
               <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
               <div class="summary-row"><span>TX Hash</span><strong class="code-small">${escapeHtml(order.tx_hash || '-')}</strong></div>
               <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
@@ -459,6 +519,7 @@
       </div>`;
     bindInlineCopy('copy-deposit-address', order.deposit_wallet_address || '', '✓');
     bindInlineCopy('copy-deposit-amount', String(order.crypto_amount || ''), '✓');
+    qs('view-payout-details')?.addEventListener('click', () => openPayoutDetailsModal(buildPayoutDetails(order)));
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
       const txHash = val('deposit-tx-hash');
       if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
@@ -1375,8 +1436,10 @@
       <div class="summary-row"><span>Method</span><strong>${escapeHtml((payout.method || 'bank').toUpperCase())}</strong></div>
       <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
       <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
-      <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>`);
+      <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>
+      <div class="top-gap-sm"><button id="admin-view-payout-details" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
     setHtml('admin-order-timeline', buildOrderTimeline(row));
+    qs('admin-view-payout-details')?.addEventListener('click', () => openPayoutDetailsModal(buildPayoutDetails(row)));
   }
 
   function adminOrderActionButtons(row) {
@@ -1481,13 +1544,14 @@
         </td>
         <td>${fmtInr(row.estimated_inr_payout)}</td>
         <td>
-          <div><strong>${escapeHtml(payout.label)}</strong></div>
+          <div class="payout-cell-line"><strong>${escapeHtml(payout.label)}</strong><button class="mini-view-btn js-payout-view" data-id="${row.id}">View</button></div>
           <div class="tiny-note">${escapeHtml(payout.value || '-')}</div>
         </td>
         <td><div>${chip(statusMeta.label, statusMeta.cls)}</div><div class="tiny-note top-gap-xs">${escapeHtml(statusMeta.sub)}</div></td>
         <td>${fmtDate(row.created_at)}</td>
         <td>${adminOrderActionButtons(row)}</td>`;
-      tr.querySelector('.js-copy-order')?.addEventListener('click', (e) => { e.stopPropagation(); copyText(row.id); });
+      tr.querySelector('.js-copy-order')?.addEventListener('click', async (e) => { e.stopPropagation(); const ok = await copyText(row.id); flashInlineCopyState(e.currentTarget, ok, '✓'); });
+      tr.querySelectorAll('.js-payout-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); openPayoutDetailsModal(buildPayoutDetails(row)); }));
       tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); renderAdminOrderDetail(row); selectAdminOrderRow(tr); }));
       tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget); }));
       tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget); }));

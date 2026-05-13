@@ -64,6 +64,38 @@
       reader.readAsDataURL(file);
     });
   }
+  function sanitizeFileName(name) {
+    return String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+  }
+  async function uploadKycFile(client, userId, file, kind) {
+    if (!file) return null;
+    const ext = (file.name || '').split('.').pop() || 'jpg';
+    const filePath = `${userId}/${Date.now()}-${kind}-${sanitizeFileName(file.name || `doc.${ext}`)}`;
+    const { error } = await client.storage.from('kyc-documents').upload(filePath, file, {
+      upsert: true,
+      cacheControl: '3600',
+      contentType: file.type || undefined
+    });
+    if (error) throw error;
+    return filePath;
+  }
+  async function getKycAssetUrl(client, value) {
+    if (!value) return null;
+    const v = String(value);
+    if (v.startsWith('data:') || v.startsWith('blob:') || v.startsWith('http://') || v.startsWith('https://')) return v;
+    const { data, error } = await client.storage.from('kyc-documents').createSignedUrl(v, 60 * 60);
+    if (error) {
+      console.warn('signed url failed', error.message);
+      return null;
+    }
+    return data?.signedUrl || null;
+  }
+  async function resolveKycImage(client, row, kind) {
+    if (!row) return null;
+    if (kind === 'front') return await getKycAssetUrl(client, row.document_front_url || row.front_image_data);
+    if (kind === 'back') return await getKycAssetUrl(client, row.document_back_url || row.back_image_data);
+    return await getKycAssetUrl(client, row.selfie_url || row.selfie_image_data);
+  }
   function copyText(text) {
     if (!navigator.clipboard) return;
     navigator.clipboard.writeText(text || '');
@@ -357,48 +389,74 @@
     const statusText = latest ? `Current KYC status: <strong>${escapeHtml(latest.status)}</strong>${latest.review_note ? `<br><span class="tiny-note">${escapeHtml(latest.review_note)}</span>` : ''}` : `Current KYC status: <strong>${escapeHtml(profile.kyc_status)}</strong>`;
     setHtml('kyc-status-box', statusText);
     if (latest) {
+      const [frontSrc, backSrc, selfieSrc] = await Promise.all([
+        resolveKycImage(sellerClient, latest, 'front'),
+        resolveKycImage(sellerClient, latest, 'back'),
+        resolveKycImage(sellerClient, latest, 'selfie')
+      ]);
       setHtml('kyc-preview-box', `
-        <div class="doc-card">Front<br>${previewImageBox(latest.front_image_data)}</div>
-        <div class="doc-card">Back<br>${previewImageBox(latest.back_image_data)}</div>
-        <div class="doc-card">Selfie<br>${previewImageBox(latest.selfie_image_data)}</div>`);
+        <div class="doc-card">Front<br>${previewImageBox(frontSrc)}</div>
+        <div class="doc-card">Back<br>${previewImageBox(backSrc)}</div>
+        <div class="doc-card">Selfie<br>${previewImageBox(selfieSrc)}</div>`);
       qs('kyc-edit-id').value = latest.id;
       qs('kyc-full-name').value = latest.full_name || profile.full_name || '';
       qs('kyc-dob').value = latest.dob || '';
-      qs('kyc-id-type').value = latest.id_type || 'aadhaar';
-      qs('kyc-id-number').value = latest.id_number || '';
-      qs('kyc-address').value = latest.address || '';
+      qs('kyc-id-type').value = latest.id_type || latest.document_type || 'aadhaar';
+      qs('kyc-id-number').value = latest.id_number || latest.document_number || '';
+      if (qs('kyc-address')) qs('kyc-address').value = latest.address || latest.address_line_1 || '';
     }
-    qs('submit-kyc-btn')?.addEventListener('click', async () => {
-      setText('kyc-message', 'Submitting KYC...');
-      const payload = {
-        user_id: profile.id,
-        full_name: val('kyc-full-name') || profile.full_name || '',
-        dob: val('kyc-dob') || null,
-        id_type: val('kyc-id-type'),
-        id_number: val('kyc-id-number'),
-        address: val('kyc-address'),
-        status: 'pending',
-        review_note: null
-      };
-      if (!payload.full_name || !payload.id_number || !payload.address) return setText('kyc-message', 'Please fill required KYC fields.');
-      const front = qs('kyc-front-file')?.files?.[0];
-      const back = qs('kyc-back-file')?.files?.[0];
-      const selfie = qs('kyc-selfie-file')?.files?.[0];
-      if (front) payload.front_image_data = await readFileAsDataUrl(front);
-      if (back) payload.back_image_data = await readFileAsDataUrl(back);
-      if (selfie) payload.selfie_image_data = await readFileAsDataUrl(selfie);
-      let result;
-      if (val('kyc-edit-id')) {
-        result = await sellerClient.from('kyc_submissions').update(payload).eq('id', val('kyc-edit-id')).select().single();
-      } else {
-        result = await sellerClient.from('kyc_submissions').insert(payload).select().single();
+    const submitBtn = qs('submit-kyc-btn');
+    if (!submitBtn || submitBtn.dataset.bound === '1') return;
+    submitBtn.dataset.bound = '1';
+    submitBtn.addEventListener('click', async () => {
+      try {
+        setText('kyc-message', 'Submitting KYC...');
+        const payload = {
+          user_id: profile.id,
+          full_name: val('kyc-full-name') || profile.full_name || '',
+          dob: val('kyc-dob') || null,
+          id_type: val('kyc-id-type'),
+          id_number: val('kyc-id-number'),
+          document_type: val('kyc-id-type'),
+          document_number: val('kyc-id-number'),
+          address: val('kyc-address'),
+          status: 'pending',
+          review_note: null
+        };
+        if (!payload.full_name || !payload.id_number) return setText('kyc-message', 'Please fill required KYC fields.');
+        const front = qs('kyc-front-file')?.files?.[0];
+        const back = qs('kyc-back-file')?.files?.[0];
+        const selfie = qs('kyc-selfie-file')?.files?.[0];
+        if (!val('kyc-edit-id') && (!front || !back || !selfie)) {
+          return setText('kyc-message', 'Please upload front, back and selfie documents.');
+        }
+        if (front) {
+          const path = await uploadKycFile(sellerClient, profile.id, front, 'front');
+          payload.document_front_url = path;
+        }
+        if (back) {
+          const path = await uploadKycFile(sellerClient, profile.id, back, 'back');
+          payload.document_back_url = path;
+        }
+        if (selfie) {
+          const path = await uploadKycFile(sellerClient, profile.id, selfie, 'selfie');
+          payload.selfie_url = path;
+        }
+        let result;
+        if (val('kyc-edit-id')) {
+          result = await sellerClient.from('kyc_submissions').update(payload).eq('id', val('kyc-edit-id')).select().single();
+        } else {
+          result = await sellerClient.from('kyc_submissions').insert(payload).select().single();
+        }
+        if (result.error) return setText('kyc-message', result.error.message);
+        await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id);
+        await audit('kyc_submitted', 'kyc_submissions', result.data.id, { status: 'pending' });
+        setText('kyc-message', 'KYC submitted successfully with documents.');
+        await loadKycSection(await getProfile(sellerClient));
+        renderProfileBoxes(await getProfile(sellerClient));
+      } catch (e) {
+        setText('kyc-message', e.message || 'KYC upload failed.');
       }
-      if (result.error) return setText('kyc-message', result.error.message);
-      await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id);
-      await audit('kyc_submitted', 'kyc_submissions', result.data.id, { status: 'pending' });
-      setText('kyc-message', 'KYC submitted successfully.');
-      await loadKycSection(await getProfile(sellerClient));
-      renderProfileBoxes(await getProfile(sellerClient));
     });
   }
 
@@ -920,9 +978,18 @@
             <button class="btn btn-danger btn-xs kyc-reject">Reject</button>
           </div>
         </td>`;
-      tr.querySelector('.view-front').addEventListener('click', () => row.front_image_data && window.open(row.front_image_data, '_blank'));
-      tr.querySelector('.view-back').addEventListener('click', () => row.back_image_data && window.open(row.back_image_data, '_blank'));
-      tr.querySelector('.view-selfie').addEventListener('click', () => row.selfie_image_data && window.open(row.selfie_image_data, '_blank'));
+      tr.querySelector('.view-front').addEventListener('click', async () => {
+        const src = await resolveKycImage(adminClient, row, 'front');
+        if (src) window.open(src, '_blank'); else alert('Front document not available');
+      });
+      tr.querySelector('.view-back').addEventListener('click', async () => {
+        const src = await resolveKycImage(adminClient, row, 'back');
+        if (src) window.open(src, '_blank'); else alert('Back document not available');
+      });
+      tr.querySelector('.view-selfie').addEventListener('click', async () => {
+        const src = await resolveKycImage(adminClient, row, 'selfie');
+        if (src) window.open(src, '_blank'); else alert('Selfie not available');
+      });
       tr.querySelector('.kyc-approve').addEventListener('click', async () => {
         await adminClient.from('kyc_submissions').update({ status: 'verified', review_note: 'Approved by admin' }).eq('id', row.id);
         await adminClient.from('profiles').update({ kyc_status: 'verified' }).eq('id', row.user_id);

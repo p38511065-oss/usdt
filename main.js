@@ -257,6 +257,45 @@
     updatePayoutFieldVisibility();
   }
 
+
+  async function findMatchingActiveWallet(client, coin, network) {
+    const { data, error } = await client
+      .from('wallet_pools')
+      .select('*')
+      .eq('is_active', true)
+      .eq('coin_symbol', coin)
+      .eq('network', network)
+      .order('created_at', { ascending: false });
+    if (error) return null;
+    if (data && data.length) return data[0];
+    const fallback = await client
+      .from('wallet_pools')
+      .select('*')
+      .eq('is_active', true)
+      .eq('coin_symbol', coin)
+      .order('created_at', { ascending: false });
+    if (fallback.error) return null;
+    return (fallback.data || [])[0] || null;
+  }
+
+  async function ensureOrderWalletAssignment(order) {
+    if (!order || order.deposit_wallet_address) return order;
+    const activeWallet = await findMatchingActiveWallet(sellerClient, order.coin_symbol, order.network);
+    if (!activeWallet) return order;
+    const patch = {
+      deposit_wallet_address: activeWallet.wallet_address || null,
+      deposit_wallet_qr_url: activeWallet.qr_data_url || activeWallet.qr_image_url || activeWallet.qr_code_url || null
+    };
+    const { data, error } = await sellerClient
+      .from('sell_orders')
+      .update(patch)
+      .eq('id', order.id)
+      .select()
+      .single();
+    if (error) return order;
+    return data || { ...order, ...patch };
+  }
+
   function onPayoutSelectorChange() {
     const opt = qs('bank-account-select')?.selectedOptions?.[0];
     if (!opt || !opt.value) return setHtml('selected-payout-summary', 'No payout method selected.');
@@ -270,147 +309,129 @@
       </div>`);
   }
   function getOrderTrackingMeta(order) {
-    const status = order?.status || 'draft';
+    const status = String(order?.status || '').toLowerCase();
     const hasTx = !!order?.tx_hash;
-    const map = {
-      draft: 0,
-      quote_selected: 0,
-      awaiting_kyc: 1,
-      awaiting_transfer: hasTx ? 2 : 1,
-      awaiting_confirmations: 2,
-      payout_in_progress: 4,
-      completed: 6,
-      cancelled: -1,
-      rejected: -1
-    };
-    const currentStep = map[status] ?? 0;
     const steps = [
-      { title: 'Crypto Sent
-Successfully', key: 1, time: hasTx ? fmtShortTime(order.updated_at || order.created_at) : '—', state: currentStep >= 1 ? 'done' : 'idle' },
-      { title: 'Waiting for
-Admin Review', key: 2, time: currentStep >= 2 ? fmtShortTime(order.updated_at || order.created_at) : '—', state: currentStep >= 2 ? 'done' : currentStep === 1 ? 'active' : 'idle' },
-      { title: 'Crypto Received
-Successfully', key: 3, time: currentStep >= 4 ? fmtShortTime(order.updated_at || order.created_at) : '—', state: currentStep >= 4 ? 'done' : currentStep === 2 ? 'active' : 'idle' },
-      { title: 'Waiting for
-INR Payment', key: 4, time: currentStep >= 4 ? 'Estimated: 10-20 mins' : '—', state: currentStep === 4 ? 'active' : currentStep > 4 ? 'done' : 'idle' },
-      { title: 'Amount Sent
-Successfully', key: 5, time: currentStep >= 6 ? fmtShortTime(order.completed_at || order.updated_at || order.created_at) : '—', state: currentStep >= 6 ? 'done' : 'idle' },
-      { title: 'Amount Successfully
-Received in Your Account', key: 6, time: currentStep >= 6 ? fmtShortTime(order.completed_at || order.updated_at || order.created_at) : '—', state: currentStep >= 6 ? 'done' : 'idle' }
+      { key: 1, title: 'Crypto Sent Successfully', subtitle: hasTx ? 'TX hash submitted' : 'Waiting for crypto', state: hasTx ? 'done' : 'active' },
+      { key: 2, title: 'Waiting for Admin Review', subtitle: 'Blockchain verification', state: 'pending' },
+      { key: 3, title: 'Crypto Received Successfully', subtitle: 'Transfer confirmed', state: 'pending' },
+      { key: 4, title: 'Waiting for INR Payment', subtitle: 'Payout in progress', state: 'pending' },
+      { key: 5, title: 'Amount Sent Successfully', subtitle: 'Bank payout sent', state: 'pending' },
+      { key: 6, title: 'Amount Successfully Received', subtitle: 'Credited to your account', state: 'pending' }
     ];
-    let message = 'Please send crypto to the wallet below to start your order.';
-    if (status === 'awaiting_transfer' && hasTx) message = "Great! We've received your transaction hash. Our team is verifying the transfer.";
-    if (status === 'awaiting_confirmations') message = "Great! We've received your crypto. Our team is verifying the transaction. You will receive INR payment shortly after confirmation.";
-    if (status === 'payout_in_progress') message = 'Crypto received successfully. INR payout is being processed to your selected account.';
-    if (status === 'completed') message = 'Amount successfully received in your account. This order is now complete.';
-    if (status === 'cancelled' || status === 'rejected') message = 'This order has been stopped. Please contact support for help.';
-    return { currentStep, steps, message, status };
-  }
 
-  function renderOrderTimeline(order, meta) {
-    const items = [
-      { title: 'Crypto sent by seller', note: order.tx_hash ? `You have sent ${escapeHtml(String(order.crypto_amount || '-'))} ${escapeHtml(order.coin_symbol || '')} to our wallet address.` : 'Waiting for transaction hash from seller.', done: !!order.tx_hash, time: order.tx_hash ? fmtShortTime(order.updated_at || order.created_at) : '--:--' },
-      { title: 'Admin is verifying blockchain transfer', note: 'We have detected your transaction and our team is confirming it on the blockchain.', done: ['awaiting_confirmations','payout_in_progress','completed'].includes(order.status), time: ['awaiting_confirmations','payout_in_progress','completed'].includes(order.status) ? fmtShortTime(order.updated_at || order.created_at) : '--:--' },
-      { title: 'Crypto received successfully', note: 'Your crypto has been confirmed. Now we will initiate your INR payout.', done: ['payout_in_progress','completed'].includes(order.status), highlight: ['payout_in_progress','completed'].includes(order.status), time: ['payout_in_progress','completed'].includes(order.status) ? fmtShortTime(order.updated_at || order.created_at) : '--:--' },
-      { title: 'Payout will be sent to bank account', note: 'You will receive INR in your bank account shortly.', done: order.status === 'completed', time: order.status === 'completed' ? fmtShortTime(order.completed_at || order.updated_at || order.created_at) : '--:--' },
-      { title: 'Amount successfully received', note: 'Please check your bank account and confirm.', done: order.status === 'completed', time: order.status === 'completed' ? fmtShortTime(order.completed_at || order.updated_at || order.created_at) : '--:--' }
-    ];
-    return items.map((item, idx) => `
-      <div class="timeline-item ${item.done ? 'done' : ''} ${item.highlight ? 'highlight' : ''}">
-        <div class="timeline-line ${idx === items.length - 1 ? 'last' : ''}"></div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-copy">
-          <div class="timeline-title-row"><strong>${item.title}</strong><span>${item.time}</span></div>
-          <div class="tiny-note">${item.note}</div>
-        </div>
-      </div>`).join('');
+    if (!hasTx && ['draft', 'quote_selected', 'awaiting_transfer', 'awaiting_kyc'].includes(status)) {
+      steps[0].state = 'active';
+    }
+    if (hasTx || ['awaiting_confirmations', 'payout_in_progress', 'completed'].includes(status)) {
+      steps[0].state = 'done';
+      steps[1].state = 'done';
+    }
+    if (['payout_in_progress', 'completed'].includes(status)) {
+      steps[2].state = 'done';
+      steps[3].state = status === 'completed' ? 'done' : 'active';
+    }
+    if (status === 'completed') {
+      steps[4].state = 'done';
+      steps[5].state = 'done';
+    }
+    if (status === 'cancelled' || status === 'rejected') {
+      const idx = hasTx ? 1 : 0;
+      steps[idx].state = 'active';
+    }
+
+    let banner = 'Select a quote, submit your order, and then send crypto to the assigned wallet.';
+    if (!hasTx && ['awaiting_transfer', 'quote_selected', 'awaiting_kyc'].includes(status)) banner = 'Your order is created. Please send crypto to the wallet below and submit your TX hash.';
+    if (status === 'awaiting_confirmations') banner = 'Great! Crypto sent successfully. We are verifying the blockchain transfer.';
+    if (status === 'payout_in_progress') banner = 'Crypto received successfully. Waiting for INR payment to your selected payout account.';
+    if (status === 'completed') banner = 'Amount successfully received in your account. This order is complete.';
+
+    return { steps, banner, status };
   }
 
   async function renderDepositOrderBox(order) {
     const box = qs('deposit-order-box');
     if (!box) return;
     if (!order) {
-      box.innerHTML = '<div class="empty-state">जब आप quote confirm करोगे, यहाँ professional order tracking card, wallet address, QR और TX hash submit करने का option दिखेगा.</div>';
+      box.innerHTML = '<div class="empty-state">जब आप quote confirm करोगे, यहाँ wallet address, QR, TX hash और full order tracking दिखाई देगी.</div>';
       return;
     }
+    order = await ensureOrderWalletAssignment(order);
     const qr = order.deposit_wallet_qr_url || order.qr_image_url || order.qr_code_url || '';
-    const meta = getOrderTrackingMeta(order);
-    const stepsHtml = meta.steps.map((step) => `
-      <div class="tracking-step ${step.state}">
-        <div class="step-number">${step.key}</div>
-        <div class="tracking-card ${step.state}">
-          <div class="tracking-icon">${step.state === 'done' ? '✓' : step.state === 'active' ? '⋯' : '🔒'}</div>
-          <div class="tracking-title">${step.title.replace(/\n/g, '<br>')}</div>
-          <div class="tracking-time">${step.time}</div>
+    const walletMissing = !order.deposit_wallet_address;
+    const tracking = getOrderTrackingMeta(order);
+    const progressMarkup = tracking.steps.map((step, idx) => `
+      <div class="track-step ${step.state}">
+        <div class="track-step-number">${idx + 1}</div>
+        <div class="track-step-card">
+          <div class="track-step-title">${escapeHtml(step.title)}</div>
+          <div class="track-step-subtitle">${escapeHtml(step.subtitle)}</div>
         </div>
       </div>`).join('');
-    const placed = fmtDate(order.created_at || new Date().toISOString());
-    const payoutDestination = escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-');
+
+    const timeline = [
+      { title: 'Order placed', note: 'Sell request created successfully.', ts: fmtDate(order.created_at) },
+      { title: 'Crypto sent by seller', note: order.tx_hash ? `TX Hash: ${escapeHtml(order.tx_hash)}` : 'Waiting for TX hash from seller.', ts: order.tx_hash ? fmtDate(order.updated_at || order.created_at) : '--' },
+      { title: 'Admin is reviewing transaction', note: 'We verify blockchain transfer before payout.', ts: ['awaiting_confirmations', 'payout_in_progress', 'completed'].includes(tracking.status) ? fmtDate(order.updated_at || order.created_at) : '--' },
+      { title: 'Payout will be sent to bank / UPI', note: escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-'), ts: ['payout_in_progress', 'completed'].includes(tracking.status) ? fmtDate(order.updated_at || order.created_at) : '--' },
+      { title: 'Amount successfully received', note: 'Please check your payout destination and confirm.', ts: tracking.status === 'completed' ? fmtDate(order.completed_at || order.updated_at || order.created_at) : '--' }
+    ].map((item, i) => `<div class="timeline-row ${i < 3 && ['awaiting_confirmations','payout_in_progress','completed'].includes(tracking.status) || i === 0 || (i===1 && order.tx_hash) || (i===3 && ['payout_in_progress','completed'].includes(tracking.status)) || (i===4 && tracking.status==='completed') ? 'done' : ''}">
+      <div class="timeline-dot"></div>
+      <div class="timeline-copy"><strong>${item.title}</strong><span>${item.note}</span></div>
+      <div class="timeline-time">${item.ts}</div>
+    </div>`).join('');
+
     box.innerHTML = `
-      <div class="order-tracker-shell">
-        <div class="order-tracker-head">
+      <div class="order-track-shell">
+        <div class="order-track-head">
           <div>
-            <div class="order-tracker-title">Order Tracking</div>
-            <div class="panel-subtitle">Track your order progress in real-time. We'll notify you at every step.</div>
+            <div class="order-track-title">Order Tracking</div>
+            <div class="order-track-subtitle">Track your order progress in real-time. We will notify you at every step.</div>
           </div>
-          <div class="status-chip ${order.status === 'completed' ? 'active' : 'pending'}">${order.status === 'completed' ? 'Completed' : 'In Progress'}</div>
+          <div class="order-track-meta"><span class="status-pill in-progress">${escapeHtml(String(order.status || '').replaceAll('_', ' '))}</span></div>
         </div>
-
-        <div class="order-id-strip">
-          <div><strong>Order ID:</strong> <span class="code-small">${escapeHtml(order.id || '-')}</span></div>
-          <div class="tiny-note">Placed on ${placed}</div>
+        <div class="order-track-card">
+          <div class="order-track-topline">
+            <div><strong>Order ID:</strong> <span class="code-small">${escapeHtml(order.id || '-')}</span></div>
+            <div class="muted">Placed on ${fmtDate(order.created_at)}</div>
+          </div>
+          <div class="track-steps-grid">${progressMarkup}</div>
+          <div class="track-banner">${tracking.banner}</div>
         </div>
-
-        <div class="tracking-rail">${stepsHtml}</div>
-
-        <div class="order-banner ${order.status === 'completed' ? 'success' : ''}">
-          ${meta.message}
-        </div>
-
-        <div class="order-grid-2">
+        <div class="track-bottom-grid">
           <div class="order-summary-card">
-            <div class="section-head"><h3>Order Summary</h3><span class="badge">Secure Order</span></div>
-            <div class="kv-list compact-kv">
-              <div class="kv-row"><span>Order ID</span><strong class="code-small">${escapeHtml(order.id || '-')}</strong></div>
-              <div class="kv-row"><span>Coin / Network</span><strong>${escapeHtml(order.coin_symbol || '-')} / ${escapeHtml(order.network || '-')}</strong></div>
-              <div class="kv-row"><span>Exact Amount</span><strong>${escapeHtml(String(order.crypto_amount || '-'))} ${escapeHtml(order.coin_symbol || '')}</strong></div>
-              <div class="kv-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
-              <div class="kv-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
-              <div class="kv-row"><span>Payout Method</span><strong>${payoutDestination}</strong></div>
-              <div class="kv-row"><span>Wallet Address</span><strong class="code-small break-anywhere">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}</strong></div>
-              <div class="kv-row"><span>TX Hash</span><strong class="code-small break-anywhere">${escapeHtml(order.tx_hash || 'Not submitted yet')}</strong></div>
-              <div class="kv-row"><span>Current Status</span><strong class="status-text-bright">${escapeHtml(meta.status.replaceAll('_', ' '))}</strong></div>
+            <div class="summary-title">Order Summary</div>
+            <div class="summary-list">
+              <div class="summary-row"><span>Coin / Network</span><strong>${escapeHtml(order.coin_symbol || '-')} / ${escapeHtml(order.network || '-')}</strong></div>
+              <div class="summary-row"><span>Exact Amount</span><strong>${escapeHtml(String(order.crypto_amount || '-'))}</strong></div>
+              <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
+              <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
+              <div class="summary-row"><span>Payout Method</span><strong>${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}</strong></div>
+              <div class="summary-row"><span>Wallet Address</span><strong class="code-small">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}</strong></div>
+              <div class="summary-row"><span>TX Hash</span><strong class="code-small">${escapeHtml(order.tx_hash || '-')}</strong></div>
+              <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
             </div>
-            <div class="action-row top-gap-sm">
+            <div class="deposit-cta-row">
               <button id="copy-deposit-address" class="btn btn-secondary">Copy Wallet</button>
               <button id="copy-deposit-amount" class="btn btn-secondary">Copy Amount</button>
             </div>
-            <div class="top-gap-sm field-grid order-tracker-actions">
-              <div class="span-2"><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="${escapeHtml(order.tx_hash || '')}" /></div>
-              <div class="span-2 action-row">
-                <button id="mark-crypto-sent" class="btn btn-primary">I Have Sent Crypto</button>
-                <button id="open-qr-modal" class="btn btn-secondary">View QR</button>
-              </div>
+            <div class="top-gap-sm field-grid">
+              <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="${escapeHtml(order.tx_hash || '')}" /></div>
+              <div class="inline-end"><button id="mark-crypto-sent" class="btn btn-primary">I Have Sent Crypto</button></div>
             </div>
-            <p id="deposit-order-message" class="status-text top-gap-sm"></p>
-            <div class="tiny-note top-gap-sm highlight-note">Do not cancel the order. Our team will never ask for extra payment or your private keys.</div>
+            <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active admin wallet is assigned for this coin/network yet. Please contact support or wait for admin wallet setup.' : ''}</p>
+            <div class="deposit-warning">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
           </div>
-
           <div class="activity-card">
-            <div class="section-head"><h3>Activity Timeline</h3><span class="tiny-note">Live</span></div>
-            <div class="timeline-wrap">${renderOrderTimeline(order, meta)}</div>
-            <div class="top-gap-sm qr-inline-box ${qr ? '' : 'empty-state'}">${qr ? `<img src="${escapeHtml(qr)}" alt="Wallet QR" />` : 'QR not available yet. Use wallet address manually.'}</div>
-            <div class="action-row top-gap-sm"><button id="contact-support-order" class="btn btn-secondary btn-block">Need help? Contact Support</button></div>
+            <div class="summary-title">Activity Timeline</div>
+            <div class="timeline-list">${timeline}</div>
+            <div class="summary-title top-gap-sm">Scan QR</div>
+            ${qr ? `<div class="image-preview-box fancy-qr"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
           </div>
         </div>
       </div>`;
     qs('copy-deposit-address')?.addEventListener('click', () => copyText(order.deposit_wallet_address || ''));
     qs('copy-deposit-amount')?.addEventListener('click', () => copyText(String(order.crypto_amount || '')));
-    qs('open-qr-modal')?.addEventListener('click', () => {
-      if (!qr) return setText('deposit-order-message', 'QR not available yet. Use wallet address manually.');
-      window.open(qr, '_blank');
-    });
-    qs('contact-support-order')?.addEventListener('click', () => document.querySelector('.side-link[data-target="seller-profile"]')?.click());
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
       const txHash = val('deposit-tx-hash');
       if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
@@ -418,7 +439,7 @@ Received in Your Account', key: 6, time: currentStep >= 6 ? fmtShortTime(order.c
       const { error } = await sellerClient.from('sell_orders').update({ tx_hash: txHash, status: nextStatus }).eq('id', order.id);
       if (error) return setText('deposit-order-message', error.message);
       await audit('crypto_sent_marked', 'sell_orders', order.id, { tx_hash: txHash });
-      setText('deposit-order-message', 'Crypto sent successfully. Admin review will start shortly.');
+      setText('deposit-order-message', 'TX hash saved. Admin can now review this transfer.');
       const profile = await getProfile(sellerClient);
       await loadSellerStats(profile);
       const refreshed = await sellerClient.from('sell_orders').select('*').eq('id', order.id).single();
@@ -483,7 +504,7 @@ Received in Your Account', key: 6, time: currentStep >= 6 ? fmtShortTime(order.c
           <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(latest.estimated_inr_payout)}</strong></div>
           <div class="kv-row"><span>Deposit Wallet</span><strong class="code-small">${escapeHtml(latest.deposit_wallet_address || '-')}</strong></div>
         </div>
-        <div class="action-row top-gap-sm"><button id="open-latest-order" class="btn btn-primary btn-xs">Open Order Tracking</button></div>`);
+        <div class="action-row top-gap-sm"><button id="open-latest-order" class="btn btn-primary btn-xs">Open Deposit Step</button></div>`);
       qs('open-latest-order')?.addEventListener('click', () => {
         document.querySelector('.side-link[data-target="seller-sell"]')?.click();
         renderDepositOrderBox(latest);
@@ -604,7 +625,7 @@ Received in Your Account', key: 6, time: currentStep >= 6 ? fmtShortTime(order.c
       if (!payout) return setText('quote-calc-message', 'Please select a valid payout method.');
       const rateRow = (rates || []).find((r) => r.coin_symbol === coin && r.network === network);
       if (!rateRow) return setText('quote-calc-message', 'No active rate found for this coin/network.');
-      const activeWallet = (wallets || []).find((w) => w.coin_symbol === coin && w.network === network) || (wallets || []).find((w) => w.coin_symbol === coin);
+      const activeWallet = await findMatchingActiveWallet(sellerClient, coin, network);
       const available = (templates || []).filter((t) => {
         const hasSelected = selectedSellerQuote && t.quote_type === selectedSellerQuote.quote_type;
         const matchesTemplateAmount = amount >= Number(t.min_amount_usdt || 0) && (!t.max_amount_usdt || amount <= Number(t.max_amount_usdt));
@@ -658,6 +679,7 @@ Received in Your Account', key: 6, time: currentStep >= 6 ? fmtShortTime(order.c
             deposit_wallet_qr_url: activeWallet?.qr_data_url || activeWallet?.qr_image_url || activeWallet?.qr_code_url || null,
             status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
           };
+          if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please try again later or contact support.');
           const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
           if (error) return setText('quote-calc-message', error.message);
           await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: tpl.quote_type });

@@ -1,6 +1,5 @@
 create extension if not exists pgcrypto;
 
--- enums
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
     CREATE TYPE public.app_role AS ENUM ('seller', 'admin');
@@ -45,9 +44,7 @@ create table if not exists public.profiles (
 
 create or replace function public.is_admin()
 returns boolean language sql stable as $$
-  select exists (
-    select 1 from public.profiles where id = auth.uid() and role = 'admin'
-  );
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin');
 $$;
 
 create or replace function public.handle_new_user()
@@ -63,7 +60,8 @@ begin
     coalesce(new.raw_user_meta_data ->> 'mobile', ''),
     'seller',
     v_referral_code
-  );
+  )
+  on conflict (id) do nothing;
   return new;
 end; $$;
 
@@ -89,7 +87,6 @@ create table if not exists public.bank_accounts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 drop trigger if exists trg_bank_accounts_updated_at on public.bank_accounts;
 create trigger trg_bank_accounts_updated_at before update on public.bank_accounts for each row execute function public.set_updated_at();
 
@@ -105,7 +102,6 @@ create table if not exists public.coin_rates (
   updated_at timestamptz not null default now(),
   unique (coin_symbol, network)
 );
-
 drop trigger if exists trg_coin_rates_updated_at on public.coin_rates;
 create trigger trg_coin_rates_updated_at before update on public.coin_rates for each row execute function public.set_updated_at();
 
@@ -123,9 +119,23 @@ create table if not exists public.quote_templates (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 drop trigger if exists trg_quote_templates_updated_at on public.quote_templates;
 create trigger trg_quote_templates_updated_at before update on public.quote_templates for each row execute function public.set_updated_at();
+
+create table if not exists public.quote_slabs (
+  id uuid primary key default gen_random_uuid(),
+  quote_type public.quote_type not null,
+  coin_symbol text not null,
+  network text not null,
+  min_amount numeric(18,8) not null default 0,
+  max_amount numeric(18,8),
+  rate_inr numeric(18,8) not null,
+  is_enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_quote_slabs_updated_at on public.quote_slabs;
+create trigger trg_quote_slabs_updated_at before update on public.quote_slabs for each row execute function public.set_updated_at();
 
 create table if not exists public.wallet_pools (
   id uuid primary key default gen_random_uuid(),
@@ -141,7 +151,6 @@ create table if not exists public.wallet_pools (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 drop trigger if exists trg_wallet_pools_updated_at on public.wallet_pools;
 create trigger trg_wallet_pools_updated_at before update on public.wallet_pools for each row execute function public.set_updated_at();
 
@@ -169,9 +178,27 @@ create table if not exists public.sell_orders (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 drop trigger if exists trg_sell_orders_updated_at on public.sell_orders;
 create trigger trg_sell_orders_updated_at before update on public.sell_orders for each row execute function public.set_updated_at();
+
+create table if not exists public.kyc_submissions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  full_name text,
+  dob date,
+  id_type text,
+  id_number text,
+  address text,
+  front_image_data text,
+  back_image_data text,
+  selfie_image_data text,
+  status public.kyc_status not null default 'pending',
+  review_note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+drop trigger if exists trg_kyc_submissions_updated_at on public.kyc_submissions;
+create trigger trg_kyc_submissions_updated_at before update on public.kyc_submissions for each row execute function public.set_updated_at();
 
 create table if not exists public.referral_rewards (
   id uuid primary key default gen_random_uuid(),
@@ -185,7 +212,6 @@ create table if not exists public.referral_rewards (
   updated_at timestamptz not null default now(),
   unique (referred_user_id, order_id)
 );
-
 drop trigger if exists trg_referral_rewards_updated_at on public.referral_rewards;
 create trigger trg_referral_rewards_updated_at before update on public.referral_rewards for each row execute function public.set_updated_at();
 
@@ -203,12 +229,13 @@ alter table public.profiles enable row level security;
 alter table public.bank_accounts enable row level security;
 alter table public.coin_rates enable row level security;
 alter table public.quote_templates enable row level security;
+alter table public.quote_slabs enable row level security;
 alter table public.wallet_pools enable row level security;
 alter table public.sell_orders enable row level security;
+alter table public.kyc_submissions enable row level security;
 alter table public.referral_rewards enable row level security;
 alter table public.audit_logs enable row level security;
 
--- policies
 DO $$ BEGIN
   EXECUTE 'drop policy if exists profiles_select_own_or_admin on public.profiles';
   EXECUTE 'create policy profiles_select_own_or_admin on public.profiles for select using (id = auth.uid() or public.is_admin())';
@@ -234,6 +261,11 @@ DO $$ BEGIN
   EXECUTE 'drop policy if exists quote_templates_admin_all on public.quote_templates';
   EXECUTE 'create policy quote_templates_admin_all on public.quote_templates for all using (public.is_admin()) with check (public.is_admin())';
 
+  EXECUTE 'drop policy if exists quote_slabs_select_authenticated on public.quote_slabs';
+  EXECUTE 'create policy quote_slabs_select_authenticated on public.quote_slabs for select to authenticated using (is_enabled = true or public.is_admin())';
+  EXECUTE 'drop policy if exists quote_slabs_admin_all on public.quote_slabs';
+  EXECUTE 'create policy quote_slabs_admin_all on public.quote_slabs for all using (public.is_admin()) with check (public.is_admin())';
+
   EXECUTE 'drop policy if exists wallet_pools_admin_all on public.wallet_pools';
   EXECUTE 'create policy wallet_pools_admin_all on public.wallet_pools for all using (public.is_admin()) with check (public.is_admin())';
   EXECUTE 'drop policy if exists wallet_pools_select_authenticated on public.wallet_pools';
@@ -245,6 +277,13 @@ DO $$ BEGIN
   EXECUTE 'create policy sell_orders_insert_own_or_admin on public.sell_orders for insert with check (user_id = auth.uid() or public.is_admin())';
   EXECUTE 'drop policy if exists sell_orders_update_own_or_admin on public.sell_orders';
   EXECUTE 'create policy sell_orders_update_own_or_admin on public.sell_orders for update using (user_id = auth.uid() or public.is_admin()) with check (user_id = auth.uid() or public.is_admin())';
+
+  EXECUTE 'drop policy if exists kyc_submissions_select_own_or_admin on public.kyc_submissions';
+  EXECUTE 'create policy kyc_submissions_select_own_or_admin on public.kyc_submissions for select using (user_id = auth.uid() or public.is_admin())';
+  EXECUTE 'drop policy if exists kyc_submissions_insert_own_or_admin on public.kyc_submissions';
+  EXECUTE 'create policy kyc_submissions_insert_own_or_admin on public.kyc_submissions for insert with check (user_id = auth.uid() or public.is_admin())';
+  EXECUTE 'drop policy if exists kyc_submissions_update_own_or_admin on public.kyc_submissions';
+  EXECUTE 'create policy kyc_submissions_update_own_or_admin on public.kyc_submissions for update using (user_id = auth.uid() or public.is_admin()) with check (user_id = auth.uid() or public.is_admin())';
 
   EXECUTE 'drop policy if exists referral_rewards_select_own_or_admin on public.referral_rewards';
   EXECUTE 'create policy referral_rewards_select_own_or_admin on public.referral_rewards for select using (referrer_user_id = auth.uid() or referred_user_id = auth.uid() or public.is_admin())';
@@ -271,3 +310,13 @@ values
   ('ETH', 'ERC20', 250000.00000000, 0.45, true),
   ('SOL', 'SOLANA', 14000.00000000, 0.60, true)
 on conflict (coin_symbol, network) do nothing;
+
+insert into public.quote_slabs (quote_type, coin_symbol, network, min_amount, max_amount, rate_inr, is_enabled)
+values
+  ('standard', 'USDT', 'TRC20', 0, 999, 82.90, true),
+  ('standard', 'USDT', 'TRC20', 1000, 9999, 83.10, true),
+  ('standard', 'USDT', 'TRC20', 10000, null, 83.25, true),
+  ('fast_payout', 'USDT', 'TRC20', 0, 999, 82.50, true),
+  ('fast_payout', 'USDT', 'TRC20', 1000, 9999, 82.80, true),
+  ('fast_payout', 'USDT', 'TRC20', 10000, null, 83.00, true)
+on conflict do nothing;

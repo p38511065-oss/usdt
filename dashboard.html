@@ -11,12 +11,13 @@
     <aside class="sidebar seller-sidebar">
       <div class="sidebar-brand">₹ Crypto Sell to INR Desk</div>
       <nav class="sidebar-menu">
-        <button class="side-link active" data-target="seller-overview">Dashboard</button>
-        <button class="side-link" data-target="seller-sell">Create Sell Request</button>
-        <button class="side-link" data-target="seller-payouts">Payout Accounts</button>
+        <button class="side-link active" data-target="seller-overview">Overview</button>
+        <button class="side-link" data-target="seller-sell">Sell Crypto</button>
+        <button class="side-link" data-target="seller-payouts">Payout Methods</button>
         <button class="side-link" data-target="seller-orders">My Orders</button>
-        <button class="side-link" data-target="seller-referrals">Referrals &amp; Earnings</button>
-        <button class="side-link" data-target="seller-profile">Profile &amp; KYC</button>
+        <button class="side-link" data-target="seller-referrals">Referrals</button>
+        <button class="side-link" data-target="seller-kyc">KYC Submit</button>
+        <button class="side-link" data-target="seller-profile">Profile</button>
       </nav>
       <div class="sidebar-foot">
         <button id="logout-btn" class="btn btn-secondary btn-block">Logout</button>
@@ -27,7 +28,7 @@
       <header class="panel-topbar">
         <div>
           <div class="panel-title">Seller Dashboard</div>
-          <div class="panel-subtitle">Quotes, payout methods, orders and referrals in one place.</div>
+          <div class="panel-subtitle">Quotes, payout methods, KYC, orders and referrals in one place.</div>
         </div>
         <div class="topbar-actions">
           <span class="nav-user-pill" id="seller-top-name">Loading...</span>
@@ -57,9 +58,9 @@
                 <div><label>Coin</label><select id="sell-coin"></select></div>
                 <div><label>Network</label><select id="sell-network"></select></div>
                 <div><label>Crypto Amount</label><input id="sell-amount" type="number" step="0.0001" placeholder="Enter amount" /></div>
-                <div><label>Payout Account</label><select id="bank-account-select"></select></div>
+                <div><label>Payout Method</label><select id="bank-account-select"></select></div>
               </div>
-              <div class="tiny-note">First add a bank account or UPI ID in the Payout Accounts section, then select it here.</div>
+              <div class="tiny-note">Quotes will use your amount slab. Small USDT can have lower rate and higher USDT can have higher rate.</div>
               <div class="top-gap-sm">
                 <button id="show-quotes-btn" class="btn btn-primary">Show Available Quotes</button>
               </div>
@@ -67,20 +68,20 @@
             </div>
             <div class="card">
               <div class="section-head"><h3>Selected Payout Destination</h3></div>
-              <div id="selected-payout-summary" class="empty-state">Select a payout account to see details here.</div>
+              <div id="selected-payout-summary" class="empty-state">Select a payout method to see details here.</div>
             </div>
           </div>
           <div class="card top-gap">
             <div class="section-head"><h3>Available Quotes</h3></div>
             <div id="quotes-container" class="quote-cards quote-cards-3"></div>
-            <div id="quotes-empty" class="empty-state">Quotes will appear after you enter coin, network, amount and payout account.</div>
+            <div id="quotes-empty" class="empty-state">Quotes will appear after you enter coin, network, amount and payout method.</div>
           </div>
         </section>
 
         <section id="seller-payouts" class="panel-section">
           <div class="grid-2">
             <div class="card">
-              <div class="section-head"><h3>Add / Edit Payout Account</h3></div>
+              <div class="section-head"><h3>Add / Edit Payout Method</h3></div>
               <input type="hidden" id="payout-edit-id" />
               <div class="field-grid">
                 <div>
@@ -90,31 +91,31 @@
                     <option value="upi">UPI ID</option>
                   </select>
                 </div>
-                <div><label>Label</label><input id="payout-label" placeholder="Example: Main Bank / Personal UPI" /></div>
+                <div><label>Label</label><input id="payout-label" placeholder="Main Bank / Personal UPI" /></div>
                 <div><label>Account Holder Name</label><input id="payout-holder" placeholder="Enter name" /></div>
                 <div><label>Bank Name</label><input id="payout-bank-name" placeholder="Enter bank name" /></div>
                 <div><label>Account Number</label><input id="payout-account-number" placeholder="Enter account number" /></div>
                 <div><label>IFSC Code</label><input id="payout-ifsc" placeholder="Enter IFSC" /></div>
                 <div><label>UPI ID</label><input id="payout-upi" placeholder="example@upi" /></div>
-                <div class="toggle-field"><label><input id="payout-primary" type="checkbox" /> Make primary payout account</label></div>
+                <div class="toggle-field"><label><input id="payout-primary" type="checkbox" /> Make primary payout method</label></div>
               </div>
               <div class="action-row top-gap-sm">
-                <button id="save-payout-account" class="btn btn-primary">Save Payout Account</button>
+                <button id="save-payout-account" class="btn btn-primary">Save Payout Method</button>
                 <button id="reset-payout-form" class="btn btn-secondary">Clear</button>
               </div>
               <p id="payout-message" class="status-text"></p>
             </div>
             <div class="card">
-              <div class="section-head"><h3>Payout Help</h3></div>
+              <div class="section-head"><h3>Payout Setup Notes</h3></div>
               <ul class="clean-list">
-                <li>User can add bank account or UPI ID here.</li>
-                <li>Primary payout method will be selected by default during sell request.</li>
-                <li>Admin panel will see exact payout destination inside orders.</li>
+                <li>Add bank account or UPI before submitting sell request.</li>
+                <li>Primary method will be auto-selected during sell flow.</li>
+                <li>Admin panel will see exact payout destination in each order.</li>
               </ul>
             </div>
           </div>
           <div class="card top-gap">
-            <div class="section-head"><h3>Saved Payout Accounts</h3></div>
+            <div class="section-head"><h3>Saved Payout Methods</h3></div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -178,6 +179,41 @@
           </div>
         </section>
 
+        <section id="seller-kyc" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>KYC Submit</h3></div>
+              <input type="hidden" id="kyc-edit-id" />
+              <div class="field-grid">
+                <div><label>Full Name</label><input id="kyc-full-name" placeholder="Enter full name" /></div>
+                <div><label>Date of Birth</label><input id="kyc-dob" type="date" /></div>
+                <div><label>ID Type</label>
+                  <select id="kyc-id-type">
+                    <option value="aadhaar">Aadhaar</option>
+                    <option value="pan">PAN</option>
+                    <option value="passport">Passport</option>
+                    <option value="driving_license">Driving License</option>
+                  </select>
+                </div>
+                <div><label>ID Number</label><input id="kyc-id-number" placeholder="Enter ID number" /></div>
+                <div class="span-2"><label>Address</label><textarea id="kyc-address" rows="3" placeholder="Enter full address"></textarea></div>
+                <div><label>ID Front Image</label><input id="kyc-front-file" type="file" accept="image/*" /></div>
+                <div><label>ID Back Image</label><input id="kyc-back-file" type="file" accept="image/*" /></div>
+                <div><label>Selfie Image</label><input id="kyc-selfie-file" type="file" accept="image/*" /></div>
+              </div>
+              <div class="action-row top-gap-sm">
+                <button id="submit-kyc-btn" class="btn btn-primary">Submit KYC</button>
+              </div>
+              <p id="kyc-message" class="status-text"></p>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>KYC Current Status</h3></div>
+              <div id="kyc-status-box" class="empty-state"></div>
+              <div id="kyc-preview-box" class="kyc-preview-grid top-gap-sm"></div>
+            </div>
+          </div>
+        </section>
+
         <section id="seller-profile" class="panel-section">
           <div class="grid-2">
             <div class="card">
@@ -185,8 +221,12 @@
               <div class="kv-list" id="profile-box"></div>
             </div>
             <div class="card">
-              <div class="section-head"><h3>KYC Status</h3></div>
-              <div class="empty-state" id="kyc-status-box"></div>
+              <div class="section-head"><h3>Support Notes</h3></div>
+              <ul class="clean-list">
+                <li>Use Quotes tab to compare rates based on your amount.</li>
+                <li>Complete KYC before expecting fast payout approval.</li>
+                <li>Add payout method first so admin knows where INR should go.</li>
+              </ul>
             </div>
           </div>
         </section>

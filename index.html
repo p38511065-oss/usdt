@@ -7,79 +7,137 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="home">
-  <header class="topbar">
-    <div class="container nav">
-      <div class="brand">₹ Crypto Sell to INR Desk</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="login.html">Seller Login</a>
-        <a href="admin-login.html">Admin</a>
+  <div class="landing-shell">
+    <header class="landing-topbar container">
+      <div class="landing-brand-wrap">
+        <div class="landing-brand-icon">₮</div>
+        <div>
+          <div class="landing-brand-title">Crypto Sell to INR Desk</div>
+          <div class="landing-brand-sub">USDT to INR best rates for India</div>
+        </div>
+      </div>
+      <nav class="landing-nav">
+        <a href="#live-rates">Live Rates</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="login.html" class="landing-nav-btn">Seller Login</a>
       </nav>
-    </div>
-  </header>
+    </header>
 
-  <main>
-    <section class="hero container home-hero">
-      <div>
-        <span class="eyebrow">Seller-first OTC platform</span>
-        <h1>Sell USDT, BTC, ETH &amp; SOL for INR</h1>
-        <p class="lead">Create sell requests, choose quotes, set payout methods, and track your orders from a proper seller dashboard.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="login.html">Seller Login</a>
-          <a class="btn btn-secondary" href="admin-login.html">Admin Login</a>
+    <main class="landing-main container">
+      <section class="landing-hero">
+        <div class="landing-hero-copy">
+          <span class="landing-eyebrow">USDT FIRST • INR ONLY</span>
+          <h1>Sell <span>USDT</span> for INR at Best Rates</h1>
+          <p class="landing-lead">See live admin-created quote slabs, choose the best range for your amount, send crypto, and receive INR directly to your bank account or UPI.</p>
+          <div class="landing-cta-row">
+            <a class="landing-btn landing-btn-primary" href="login.html">Get Live Quote</a>
+            <a class="landing-btn landing-btn-secondary" href="#live-rates">See Best Rates</a>
+          </div>
+          <div class="landing-mini-badges">
+            <span>KYC Verified</span>
+            <span>Fast Settlement</span>
+            <span>USDT to INR</span>
+            <span>Secure Payouts</span>
+          </div>
         </div>
-        <div class="badges">
-          <span>Quote Selection</span>
-          <span>Payout Accounts</span>
-          <span>Order Tracking</span>
-          <span>Referral Dashboard</span>
+        <div class="landing-hero-card">
+          <div class="landing-coin-flow">
+            <div class="landing-coin usdt">₮</div>
+            <div class="landing-flow-arrow">→</div>
+            <div class="landing-coin inr">₹</div>
+          </div>
+          <div class="landing-market-stats">
+            <div>
+              <span>Pair</span>
+              <strong>USDT / INR</strong>
+            </div>
+            <div>
+              <span>Best Live Rate</span>
+              <strong id="landingBestRate">₹0.00</strong>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="card quote-preview">
-        <h3>Platform Preview</h3>
-        <div class="feature-grid four">
-          <div class="mini-card"><strong>Seller Dashboard</strong><span>Sidebar based panel</span></div>
-          <div class="mini-card"><strong>Payout Methods</strong><span>Bank + UPI</span></div>
-          <div class="mini-card"><strong>Quotes</strong><span>Standard / Fast / Bulk</span></div>
-          <div class="mini-card"><strong>Admin Control</strong><span>Edit rates, wallets, users</span></div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="container section-grid homepage-grid">
-      <div class="card">
-        <h3>Seller side</h3>
-        <ul class="clean-list">
-          <li>Sidebar dashboard</li>
-          <li>Create sell request with payout account selection</li>
-          <li>Bank account and UPI setup</li>
-          <li>Order history and latest order summary</li>
-          <li>Referral and earnings section</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>Admin side</h3>
-        <ul class="clean-list">
-          <li>Proper sidebar control panel</li>
-          <li>Edit quote templates and live rates</li>
-          <li>Manage users and KYC status</li>
-          <li>Manage wallets with QR upload</li>
-          <li>See payout destination inside orders</li>
-        </ul>
-      </div>
-    </section>
-  </main>
+      <section class="landing-card" id="live-rates">
+        <div class="landing-section-head">
+          <div>
+            <span class="landing-section-kicker">Live Market View</span>
+            <h2>USDT to INR Best Rates</h2>
+          </div>
+          <div class="landing-live-pill">● Live Admin Quotes</div>
+        </div>
+        <div class="landing-market-card">
+          <div class="landing-market-left">
+            <div class="landing-pair">USDT/INR</div>
+            <div class="landing-big-price" id="landingMarketPrice">₹0.00</div>
+            <div class="landing-price-note">Rates shown below are loaded from your admin-created quote slabs.</div>
+          </div>
+          <div class="landing-chart-wrap">
+            <div class="landing-chart-line"></div>
+          </div>
+        </div>
+        <div class="landing-table-wrap">
+          <table class="landing-rates-table">
+            <thead>
+              <tr>
+                <th>Amount Range</th>
+                <th>Best Rate</th>
+                <th>Quote Type</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="landingRatesBody">
+              <tr><td colspan="4" class="landing-loading">Loading live quote slabs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <footer class="footer">
-    <div class="container footer-grid">
-      <div>
-        <strong>Crypto Sell to INR Desk</strong>
-        <p>Seller and admin dashboards with Supabase backend.</p>
-      </div>
-      <div>
-        <p>Mobile-friendly starter ready for GitHub + Cloudflare deployment.</p>
-      </div>
-    </div>
-  </footer>
+      <section class="landing-card" id="how-it-works">
+        <div class="landing-section-head">
+          <div>
+            <span class="landing-section-kicker">Simple Flow</span>
+            <h2>How It Works</h2>
+          </div>
+        </div>
+        <div class="landing-how-grid">
+          <div class="landing-step-card">
+            <div class="landing-step-no">1</div>
+            <h3>Choose Quote</h3>
+            <p>See all available USDT slabs and pick the one that gives you the best INR rate.</p>
+          </div>
+          <div class="landing-step-card">
+            <div class="landing-step-no">2</div>
+            <h3>Send Crypto</h3>
+            <p>Get wallet address and QR, then send the exact USDT amount on the selected network.</p>
+          </div>
+          <div class="landing-step-card">
+            <div class="landing-step-no">3</div>
+            <h3>Admin Verifies</h3>
+            <p>Your transfer is checked and marked received by admin inside the secure control panel.</p>
+          </div>
+          <div class="landing-step-card">
+            <div class="landing-step-no">4</div>
+            <h3>Receive INR</h3>
+            <p>INR is transferred to your selected payout method and reflected in your dashboard tracking card.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-support-card">
+        <div>
+          <h3>Need help with quotes or payouts?</h3>
+          <p>Seller dashboard, payout methods, KYC, and order tracking are already connected in your working project.</p>
+        </div>
+        <a href="login.html" class="landing-btn landing-btn-primary">Open Seller Dashboard</a>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="main.js"></script>
+  <script src="landing-home.js"></script>
 </body>
 </html>

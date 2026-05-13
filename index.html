@@ -7,53 +7,39 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="home">
-  <div class="lp-shell lp-shell-premium">
-    <header class="lp-topbar lp-topbar-premium">
+  <div class="lp-shell">
+    <header class="lp-topbar">
       <div class="lp-brand">
         <div class="lp-brand-icon">₹</div>
         <div>
           <div class="lp-brand-title">Crypto Sell to INR Desk</div>
-          <div class="lp-brand-sub">USDT first. INR only. Fast crypto liquidation desk.</div>
+          <div class="lp-brand-sub">Trusted by thousands of sellers</div>
         </div>
       </div>
-      <nav class="lp-nav lp-nav-clean">
-        <a href="#rates" class="lp-link-lite">Best Rates</a>
-        <a href="#how-it-works" class="lp-link-lite">How It Works</a>
+      <nav class="lp-nav">
         <a href="login.html" class="lp-btn lp-btn-ghost">Seller Login</a>
+        <button class="lp-menu" aria-label="menu">☰</button>
       </nav>
     </header>
 
     <main class="lp-main">
-      <section class="lp-hero lp-hero-premium">
+      <section class="lp-hero">
         <div class="lp-hero-copy">
           <div class="lp-chip">USDT OTC PLATFORM FOR INDIA</div>
-          <h1>Sell <span>USDT</span> for INR with <em>Best Live Rates</em></h1>
-          <p>Premium crypto sell platform for Indian users. Compare all available quote slabs first, select the best rate, send USDT, and receive INR in your bank or UPI account.</p>
+          <h1>Sell USDT for <span>INR</span> Instantly</h1>
+          <p>Best rates. Zero hassle. Secure payout to your bank account via UPI. Live slab rates below are loaded from your admin-created quotes.</p>
           <div class="lp-hero-actions">
-            <a href="login.html" class="lp-btn lp-btn-primary">Open Seller Dashboard</a>
-            <a href="#rates" class="lp-btn lp-btn-secondary">View Best Rates</a>
+            <a href="login.html" class="lp-btn lp-btn-primary">Get Live Quote</a>
+            <a href="login.html" class="lp-btn lp-btn-secondary">Seller Login</a>
           </div>
-          <div class="lp-badges lp-badges-premium">
-            <span>Live Quote Slabs</span>
+          <div class="lp-badges">
+            <span>100% Secure</span>
             <span>Fast Settlement</span>
             <span>KYC Verified</span>
-            <span>Wallet + QR Flow</span>
           </div>
         </div>
-        <div class="lp-hero-visual lp-hero-visual-rich">
-          <div class="lp-kpi-stack">
-            <div class="lp-kpi-card glow-card">
-              <small>Top Live Rate</small>
-              <strong id="lpMarketPrice">₹83.00</strong>
-              <span id="lpMarketChange">+ Live</span>
-            </div>
-            <div class="lp-kpi-card">
-              <small>Primary Pair</small>
-              <strong>USDT / INR</strong>
-              <span>Admin-created quote slabs</span>
-            </div>
-          </div>
-          <div class="lp-coin-card lp-coin-card-premium">
+        <div class="lp-hero-visual">
+          <div class="lp-coin-card">
             <div class="lp-coin lp-usdt">₮</div>
             <div class="lp-arrow">→</div>
             <div class="lp-coin lp-inr">₹</div>
@@ -61,30 +47,24 @@
         </div>
       </section>
 
-      <section class="lp-card lp-card-market">
+      <section class="lp-card">
         <div class="lp-card-head">
           <h2>Live USDT to INR Market</h2>
           <span class="lp-live">● Live</span>
         </div>
-        <div class="lp-market-toolbar">
-          <button class="lp-mini-tab active">USDT / INR</button>
-          <button class="lp-mini-tab">Fast Payout</button>
-          <button class="lp-mini-tab">Priority</button>
-          <button class="lp-mini-tab">Bulk OTC</button>
-        </div>
         <div class="lp-market-top">
           <div>
             <div class="lp-pair">USDT/INR</div>
-            <div class="lp-big-price" id="lpMarketPriceMirror">₹83.00</div>
+            <div class="lp-big-price" id="lpMarketPrice">₹83.00</div>
           </div>
-          <div class="lp-market-change" id="lpMarketChangeMirror">+ Live Admin Quotes</div>
+          <div class="lp-market-change" id="lpMarketChange">+ Live</div>
         </div>
-        <div class="lp-chart-box premium-chart">
+        <div class="lp-chart-box">
           <div class="lp-chart-line"></div>
         </div>
       </section>
 
-      <section class="lp-card" id="rates">
+      <section class="lp-card">
         <div class="lp-card-head">
           <h2>USDT to INR Best Rates</h2>
           <span class="lp-hint">Higher amount, better rate</span>
@@ -104,25 +84,10 @@
             </tbody>
           </table>
         </div>
-        <p class="lp-note">Rates shown here are loaded from your admin-created quote slabs. User can pick these slabs directly inside the dashboard.</p>
+        <p class="lp-note">Rates shown below are loaded from your admin-created quote slabs.</p>
       </section>
 
-      <section class="lp-card lp-sell-flow-preview">
-        <div class="lp-card-head">
-          <h2>Seller Journey</h2>
-          <span class="lp-hint">Designed for conversion</span>
-        </div>
-        <div class="lp-journey-grid">
-          <div class="lp-journey-card"><b>1.</b><span>Open available quotes</span></div>
-          <div class="lp-journey-card"><b>2.</b><span>Select best slab</span></div>
-          <div class="lp-journey-card"><b>3.</b><span>Choose payout method</span></div>
-          <div class="lp-journey-card"><b>4.</b><span>Send USDT to wallet + QR</span></div>
-          <div class="lp-journey-card"><b>5.</b><span>Admin verifies crypto</span></div>
-          <div class="lp-journey-card"><b>6.</b><span>Receive INR successfully</span></div>
-        </div>
-      </section>
-
-      <section class="lp-card" id="how-it-works">
+      <section class="lp-card">
         <div class="lp-card-head">
           <h2>How It Works</h2>
         </div>
@@ -150,28 +115,7 @@
         </div>
       </section>
 
-      <section class="lp-card lp-dual-grid">
-        <div class="lp-feature-panel">
-          <h3>Why sellers like this flow</h3>
-          <ul class="lp-list-clean">
-            <li>See all slabs before selling</li>
-            <li>Higher USDT amount can unlock higher INR rate</li>
-            <li>Wallet address and QR are shown after quote selection</li>
-            <li>Order tracking is visible in a premium status timeline</li>
-          </ul>
-        </div>
-        <div class="lp-feature-panel">
-          <h3>What admin controls</h3>
-          <ul class="lp-list-clean">
-            <li>Quotes, slabs and live rates</li>
-            <li>User management and KYC review</li>
-            <li>Wallet address and QR updates</li>
-            <li>Orders, payouts and status actions</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="lp-help lp-help-premium">
+      <section class="lp-help">
         <div>
           <h3>Need help with quotes or payouts?</h3>
           <p>Seller dashboard, payout methods, KYC, and order tracking are already connected in your working project.</p>

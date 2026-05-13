@@ -6,8 +6,6 @@
   const tbody = document.getElementById('lpRatesBody');
   const marketPrice = document.getElementById('lpMarketPrice');
   const marketChange = document.getElementById('lpMarketChange');
-  const marketPriceMirror = document.getElementById('lpMarketPriceMirror');
-  const marketChangeMirror = document.getElementById('lpMarketChangeMirror');
   if (!tbody) return;
 
   function fmtRange(min, max){
@@ -40,18 +38,14 @@
       if (!data || !data.length){
         tbody.innerHTML = '<tr><td colspan="4" class="lp-loading">No active USDT quote slabs found.</td></tr>';
         marketPrice.textContent = '₹0.00';
-        if (marketPriceMirror) marketPriceMirror.textContent = '₹0.00';
         marketChange.textContent = 'No active quotes';
-        if (marketChangeMirror) marketChangeMirror.textContent = 'No active quotes';
         return;
       }
 
       const rates = data.map(r => Number(r.rate_inr || 0));
       const highest = Math.max(...rates);
       marketPrice.textContent = `₹${highest.toFixed(2)}`;
-      if (marketPriceMirror) marketPriceMirror.textContent = `₹${highest.toFixed(2)}`;
       marketChange.textContent = '+ Live Admin Quotes';
-      if (marketChangeMirror) marketChangeMirror.textContent = '+ Live Admin Quotes';
 
       tbody.innerHTML = data.map((row) => {
         const min = row.min_amount ?? row.min_crypto_amount ?? 0;
@@ -70,9 +64,7 @@
       console.error(err);
       tbody.innerHTML = '<tr><td colspan="4" class="lp-loading">Could not load live quote slabs.</td></tr>';
       marketPrice.textContent = '₹0.00';
-      if (marketPriceMirror) marketPriceMirror.textContent = '₹0.00';
       marketChange.textContent = 'Load failed';
-      if (marketChangeMirror) marketChangeMirror.textContent = 'Load failed';
     }
   }
 

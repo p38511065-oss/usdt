@@ -132,7 +132,48 @@
       return '';
     }
   }
-  window.showPayoutDetailsFromData = function(el) {
+  
+  function payoutDetailsMarkup(details) {
+    return `
+      <div class="inline-payout-grid">
+        <div class="inline-payout-row"><span>Payment Type</span><strong>${escapeHtml(String(details.method || '-').toUpperCase())}</strong></div>
+        <div class="inline-payout-row"><span>Label</span><strong>${escapeHtml(details.label || '-')}</strong></div>
+        <div class="inline-payout-row"><span>Holder Name</span><strong>${escapeHtml(details.holder || '-')}</strong></div>
+        ${details.method === 'upi' ? `
+          <div class="inline-payout-row"><span>UPI ID</span><strong>${escapeHtml(details.upi || '-')}</strong></div>
+        ` : `
+          <div class="inline-payout-row"><span>Bank Name</span><strong>${escapeHtml(details.bank || '-')}</strong></div>
+          <div class="inline-payout-row"><span>Account Number</span><strong>${escapeHtml(details.account || '-')}</strong></div>
+          <div class="inline-payout-row"><span>IFSC Code</span><strong>${escapeHtml(details.ifsc || '-')}</strong></div>
+        `}
+      </div>`;
+  }
+  function toggleInlinePayoutDetails(raw, targetId, triggerEl) {
+    try {
+      if (!raw || !targetId) return false;
+      const target = qs('#' + targetId);
+      if (!target) return false;
+      const isOpen = target.classList.contains('open');
+      const sameRaw = target.getAttribute('data-current') === raw;
+      if (isOpen && sameRaw) {
+        target.classList.remove('open');
+        target.innerHTML = '';
+        target.removeAttribute('data-current');
+        if (triggerEl) triggerEl.textContent = 'View';
+        return false;
+      }
+      const parsed = JSON.parse(raw);
+      target.innerHTML = payoutDetailsMarkup(parsed);
+      target.classList.add('open');
+      target.setAttribute('data-current', raw);
+      if (triggerEl) triggerEl.textContent = 'Hide';
+      return false;
+    } catch (e) {
+      alert('Payout details could not be opened');
+      return false;
+    }
+  }
+window.showPayoutDetailsFromData = function(el) {
     try {
       const raw = el?.getAttribute('data-payout');
       if (!raw) {
@@ -513,11 +554,12 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
               <div class="summary-row"><span>Exact Amount</span><strong class="summary-copy-wrap">${escapeHtml(String(order.crypto_amount || '-'))}<button id="copy-deposit-amount" class="mini-copy inline-copy" title="Copy amount">⧉</button></strong></div>
               <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
               <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
-              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
+              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'seller-payout-inline',this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
               <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
               <div class="summary-row"><span>TX Hash</span><strong class="code-small">${escapeHtml(order.tx_hash || '-')}</strong></div>
               <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
             </div>
+            <div id="seller-payout-inline" class="inline-payout-box"></div>
             ${order.tx_hash ? `
               <div class="tx-success-box">
                 <div class="tx-success-title">✓ Crypto sent successfully</div>
@@ -1459,7 +1501,8 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
       <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
       <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>
-      <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
+      <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'admin-payout-inline',this);" class="btn btn-secondary btn-xs">View Payout Details</button></div>
+      <div id="admin-payout-inline" class="inline-payout-box"></div>`);
     setHtml('admin-order-timeline', buildOrderTimeline(row));
 
   }
@@ -1569,14 +1612,24 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         </td>
         <td>${fmtInr(row.estimated_inr_payout)}</td>
         <td>
-          <div class="payout-cell-line"><strong>${escapeHtml(payout.label)}</strong><button class="mini-view-btn js-payout-view" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return window.showPayoutDetailsFromData(this);">View</button></div>
+          <div class="payout-cell-line"><strong>${escapeHtml(payout.label)}</strong><button class="mini-view-btn js-payout-view" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}'>View</button></div>
           <div class="tiny-note">${escapeHtml(payout.value || '-')}</div>
         </td>
         <td><div>${chip(statusMeta.label, statusMeta.cls)}</div><div class="tiny-note top-gap-xs">${escapeHtml(statusMeta.sub)}</div></td>
         <td>${fmtDate(row.created_at)}</td>
         <td>${adminOrderActionButtons(row)}</td>`;
       tr.querySelector('.js-copy-order')?.addEventListener('click', async (e) => { e.stopPropagation(); const ok = await copyText(row.id); flashInlineCopyState(e.currentTarget, ok, '✓'); });
-      tr.querySelectorAll('.js-payout-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); openPayoutDetailsModal(buildPayoutDetails(row)); }));
+      tr.querySelectorAll('.js-payout-view').forEach((btn) => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderAdminOrderDetail(row);
+        selectAdminOrderRow(tr);
+        setTimeout(() => {
+          const detailBtn = qs('#admin-view-payout-details');
+          if (detailBtn) {
+            toggleInlinePayoutDetails(detailBtn.getAttribute('data-payout'), 'admin-payout-inline', detailBtn);
+          }
+        }, 0);
+      }));
       tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); renderAdminOrderDetail(row); selectAdminOrderRow(tr); }));
       tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget); }));
       tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget); }));

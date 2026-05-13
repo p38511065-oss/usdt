@@ -1287,14 +1287,47 @@
     return `<div class="actions-stack">${buttons.join('')}</div>`;
   }
 
-  async function updateAdminOrderStatus(id, status) {
-    await adminClient.from('sell_orders').update({ status, completed_at: status === 'completed' ? new Date().toISOString() : null }).eq('id', id);
-    await audit('order_status_updated', 'sell_orders', id, { status });
-    await loadAdminOrders();
-    await loadAdminStats();
+  async function updateAdminOrderStatus(id, status, triggerButton = null) {
+    const originalText = triggerButton ? triggerButton.textContent : '';
+    try {
+      if (triggerButton) {
+        triggerButton.disabled = true;
+        triggerButton.textContent = 'Updating...';
+      }
+
+      const payload = {
+        status,
+        completed_at: status === 'completed' ? new Date().toISOString() : null
+      };
+
+      const { error } = await adminClient
+        .from('sell_orders')
+        .update(payload)
+        .eq('id', id);
+
+      if (error) {
+        alert(error.message || 'Order status update failed');
+        return;
+      }
+
+      try {
+        await audit('order_status_updated', 'sell_orders', id, { status });
+      } catch (_) {}
+
+      await loadAdminOrders(id);
+      await loadAdminStats();
+      alert('Order status updated successfully');
+    } catch (err) {
+      alert(err?.message || 'Order status update failed');
+    } finally {
+      if (triggerButton) {
+        triggerButton.disabled = false;
+        triggerButton.textContent = originalText;
+      }
+    }
   }
 
-  async function loadAdminOrders() {
+  async function loadAdminOrders(selectedOrderId = null) {
     const { data } = await adminClient.from('sell_orders').select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)').order('created_at', { ascending: false });
     const body = qs('admin-orders-body');
     const search = val('admin-order-search').toLowerCase();
@@ -1315,12 +1348,15 @@
       <div class="card kpi-card danger"><div><span>Cancelled</span><strong>${cancelled}</strong><small>${rows.length ? ((cancelled/rows.length)*100).toFixed(1) : 0}% Cancelled</small></div></div>`);
 
     body.innerHTML = !rows.length ? '<tr><td colspan="8">No sell orders found.</td></tr>' : '';
+    let selectedMatched = false;
     rows.forEach((row, index) => {
       const userName = row.profiles?.full_name || row.profiles?.email || '-';
       const payout = payoutDisplay(row);
       const statusMeta = adminStatusMeta(row.status);
       const tr = document.createElement('tr');
-      tr.className = index === 0 ? 'is-selected' : '';
+      const isSelected = selectedOrderId ? row.id === selectedOrderId : index === 0;
+      if (isSelected) selectedMatched = true;
+      tr.className = isSelected ? 'is-selected' : '';
       tr.innerHTML = `
         <td>
           <div class="order-id-stack"><strong>#${escapeHtml(shortOrderId(row.id))}</strong><button class="mini-copy js-copy-order" data-copy="${escapeHtml(row.id)}">⧉</button></div>
@@ -1343,15 +1379,19 @@
         <td>${adminOrderActionButtons(row)}</td>`;
       tr.querySelector('.js-copy-order')?.addEventListener('click', (e) => { e.stopPropagation(); copyText(row.id); });
       tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); renderAdminOrderDetail(row); selectAdminOrderRow(tr); }));
-      tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations'); }));
-      tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress'); }));
-      tr.querySelectorAll('.js-order-paid').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'completed'); }));
-      tr.querySelectorAll('.js-order-cancel').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'cancelled'); }));
+      tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget); }));
+      tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget); }));
+      tr.querySelectorAll('.js-order-paid').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'completed', e.currentTarget); }));
+      tr.querySelectorAll('.js-order-cancel').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'cancelled', e.currentTarget); }));
       tr.addEventListener('click', () => { renderAdminOrderDetail(row); selectAdminOrderRow(tr); });
       body.appendChild(tr);
-      if (index === 0) renderAdminOrderDetail(row);
+      if (isSelected) renderAdminOrderDetail(row);
     });
-    if (!rows.length) renderAdminOrderDetail(null);
+    if (!rows.length) {
+      renderAdminOrderDetail(null);
+    } else if (selectedOrderId && !selectedMatched) {
+      renderAdminOrderDetail(rows[0]);
+    }
   }
 
   function selectAdminOrderRow(activeRow) {

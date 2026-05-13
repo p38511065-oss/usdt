@@ -159,3 +159,7 @@ textarea {
   .span-2 { grid-column: span 1; }
   .kyc-preview-grid { grid-template-columns: 1fr; }
 }
+
+
+.inline-end{display:flex;align-items:end;}
+#selected-quote-banner .kv-row{display:flex;justify-content:space-between;gap:12px;margin:6px 0;}

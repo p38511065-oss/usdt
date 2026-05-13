@@ -12,6 +12,7 @@
       <div class="sidebar-brand">₹ Crypto Sell to INR Desk</div>
       <nav class="sidebar-menu">
         <button class="side-link active" data-target="seller-overview">Overview</button>
+        <button class="side-link" data-target="seller-quotes">Available Quotes</button>
         <button class="side-link" data-target="seller-sell">Sell Crypto</button>
         <button class="side-link" data-target="seller-payouts">Payout Methods</button>
         <button class="side-link" data-target="seller-orders">My Orders</button>
@@ -50,10 +51,43 @@
           </div>
         </section>
 
+
+        <section id="seller-quotes" class="panel-section">
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Available Quotes</h3></div>
+              <div class="field-grid">
+                <div><label>Coin</label><select id="quotes-coin"></select></div>
+                <div><label>Network</label><select id="quotes-network"></select></div>
+                <div><label>Your Amount (optional)</label><input id="quotes-amount" type="number" step="0.0001" placeholder="Enter amount to highlight best slab" /></div>
+                <div class="inline-end"><button id="refresh-quotes-btn" class="btn btn-primary">Show Quotes</button></div>
+              </div>
+              <div class="tiny-note">पहले सभी quote slabs देखो. Higher amount पर higher rate मिलने वाली slabs यहाँ पहले से दिखेंगी.</div>
+              <p id="quotes-page-message" class="status-text"></p>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>How this works</h3></div>
+              <ul class="clean-list">
+                <li>पहले available quote slabs देखो.</li>
+                <li>जिस quote पर बेचना है उस पर <strong>Sell With This Quote</strong> दबाओ.</li>
+                <li>Sell page पर coin, network और chosen slab पहले से fill हो जाएगी.</li>
+                <li>फिर amount और payout method confirm करके order बनाओ.</li>
+              </ul>
+              <div id="quotes-selected-hint" class="empty-state">Choose a slab to continue with sell request.</div>
+            </div>
+          </div>
+          <div class="card top-gap">
+            <div class="section-head"><h3>All Quote Slabs</h3></div>
+            <div id="quotes-slabs-container" class="quote-cards quote-cards-3"></div>
+            <div id="quotes-slabs-empty" class="empty-state">No quote slabs available yet.</div>
+          </div>
+        </section>
+
         <section id="seller-sell" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Create Sell Request</h3></div>
+              <div id="selected-quote-banner" class="empty-state top-gap-sm">Select a quote from Available Quotes to prefill this sell request, or search manually below.</div>
               <div class="field-grid">
                 <div><label>Coin</label><select id="sell-coin"></select></div>
                 <div><label>Network</label><select id="sell-network"></select></div>
@@ -62,7 +96,7 @@
               </div>
               <div class="tiny-note">Quotes will use your amount slab. Small USDT can have lower rate and higher USDT can have higher rate.</div>
               <div class="top-gap-sm">
-                <button id="show-quotes-btn" class="btn btn-primary">Show Available Quotes</button>
+                <button id="show-quotes-btn" class="btn btn-primary">Search Matching Quotes</button>
               </div>
               <p id="quote-calc-message" class="status-text"></p>
             </div>

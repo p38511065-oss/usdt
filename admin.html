@@ -244,13 +244,63 @@
         </section>
 
         <section id="admin-orders" class="panel-section">
-          <div class="card">
-            <div class="section-head"><h3>Orders &amp; Payout Details</h3></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Order</th><th>User</th><th>Coin</th><th>Amount</th><th>INR</th><th>Payout To</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody id="admin-orders-body"></tbody>
-              </table>
+          <div class="orders-premium-shell">
+            <div class="orders-premium-head">
+              <div>
+                <div class="section-kicker">Operations Desk</div>
+                <h3>Orders &amp; Payouts</h3>
+                <p class="panel-subtitle">Manage seller orders, crypto receipt confirmation and INR payout flow.</p>
+              </div>
+              <div class="orders-toolbar">
+                <div class="toolbar-search-wrap"><input id="admin-order-search" placeholder="Search by Order ID / User / UPI ID" /></div>
+                <button class="btn btn-secondary" id="admin-order-filter-btn">Filter</button>
+                <button class="btn btn-secondary" id="admin-order-export-btn">Export</button>
+              </div>
+            </div>
+
+            <div class="orders-kpi-grid" id="admin-order-stats"></div>
+
+            <div class="card order-table-card top-gap-sm">
+              <div class="table-wrap order-table-wrap">
+                <table class="orders-premium-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Seller Details</th>
+                      <th>Coin / Amount</th>
+                      <th>INR Amount</th>
+                      <th>Payout Method</th>
+                      <th>Status</th>
+                      <th>Date &amp; Time</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-orders-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="orders-detail-grid top-gap-sm">
+              <div class="card order-timeline-card">
+                <div class="section-head"><h3>Order Progress Timeline</h3></div>
+                <div id="admin-order-timeline" class="timeline-list compact-timeline"></div>
+              </div>
+
+              <div class="card order-summary-card-admin">
+                <div class="section-head"><h3>Order Summary</h3><span class="badge">Secure Order</span></div>
+                <div id="admin-order-summary" class="summary-list compact-summary"></div>
+              </div>
+
+              <div class="card order-wallet-card-admin">
+                <div class="section-head"><h3>Deposit Wallet</h3><span class="badge">Auto Assigned</span></div>
+                <div id="admin-order-wallet" class="wallet-detail-box"></div>
+              </div>
+
+              <div class="card order-payout-card-admin">
+                <div class="section-head"><h3>Payout Information</h3></div>
+                <div id="admin-order-payout" class="summary-list compact-summary"></div>
+                <div class="admin-detail-actions top-gap-sm" id="admin-order-detail-actions"></div>
+              </div>
             </div>
           </div>
         </section>

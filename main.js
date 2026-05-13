@@ -1182,45 +1182,181 @@
     });
   }
 
+  function adminStatusMeta(status) {
+    const map = {
+      draft: { label: 'Draft', sub: 'Order not started', cls: 'neutral' },
+      quote_selected: { label: 'Quote Locked', sub: 'Awaiting seller action', cls: 'pending' },
+      awaiting_kyc: { label: 'Awaiting KYC', sub: 'Seller KYC required', cls: 'pending' },
+      awaiting_transfer: { label: 'Crypto Sent', sub: 'Awaiting review', cls: 'pending' },
+      awaiting_confirmations: { label: 'Crypto Received', sub: 'Waiting confirmations', cls: 'active' },
+      payout_in_progress: { label: 'Payout Sent', sub: 'Waiting confirmation', cls: 'active' },
+      completed: { label: 'Completed', sub: 'Amount received', cls: 'active' },
+      cancelled: { label: 'Cancelled', sub: 'Cancelled by admin', cls: 'cancelled' },
+      rejected: { label: 'Rejected', sub: 'Rejected by admin', cls: 'rejected' }
+    };
+    return map[status] || { label: status || 'Unknown', sub: '', cls: 'neutral' };
+  }
+
+  function shortOrderId(id) {
+    if (!id) return '-';
+    return id.length > 14 ? `${id.slice(0, 14)}…` : id;
+  }
+
+  function payoutDisplay(row) {
+    const method = row.payout_method || row.payout_type || row.payout_details?.payment_method || 'bank';
+    const label = row.payout_label || row.payout_details?.label || (method === 'upi' ? 'Personal UPI' : row.payout_bank_name || 'Bank Transfer');
+    const value = method === 'upi'
+      ? (row.payout_upi_id || row.payout_details?.upi_id || '-')
+      : (row.payout_bank_name || row.payout_details?.bank_name || 'Bank Transfer');
+    const extra = method === 'upi'
+      ? (row.payout_account_holder_name || row.payout_details?.account_holder_name || '')
+      : (row.payout_account_number || row.payout_details?.account_number || '');
+    return { method, label, value, extra };
+  }
+
+  function buildOrderTimeline(row) {
+    const steps = [
+      { key: 'awaiting_transfer', title: 'Order Created', done: true, time: row.created_at },
+      { key: 'awaiting_transfer', title: 'Crypto Sent by Seller', done: ['awaiting_transfer','awaiting_confirmations','payout_in_progress','completed'].includes(row.status), time: row.created_at },
+      { key: 'awaiting_confirmations', title: 'Crypto Received by Admin', done: ['awaiting_confirmations','payout_in_progress','completed'].includes(row.status), time: row.updated_at },
+      { key: 'payout_in_progress', title: 'Payout Initiated', done: ['payout_in_progress','completed'].includes(row.status), time: row.updated_at },
+      { key: 'completed', title: 'Amount Received by Seller', done: row.status === 'completed', time: row.completed_at || row.updated_at }
+    ];
+    return steps.map((step) => `
+      <div class="timeline-row ${step.done ? 'done' : ''}">
+        <span class="timeline-dot"></span>
+        <div class="timeline-copy">
+          <strong>${escapeHtml(step.title)}</strong>
+          <span>${step.done ? 'Completed' : 'Pending'}</span>
+        </div>
+        <div class="timeline-time">${step.done && step.time ? fmtDate(step.time) : '--'}</div>
+      </div>`).join('');
+  }
+
+  function renderAdminOrderDetail(row) {
+    if (!row) {
+      setHtml('admin-order-summary', '<div class="empty-state">Select an order to view details.</div>');
+      setHtml('admin-order-wallet', '<div class="empty-state">Deposit wallet details will appear here.</div>');
+      setHtml('admin-order-payout', '<div class="empty-state">Payout details will appear here.</div>');
+      setHtml('admin-order-timeline', '<div class="empty-state">Order progress will appear here.</div>');
+      setHtml('admin-order-detail-actions', '');
+      return;
+    }
+    const payout = payoutDisplay(row);
+    setHtml('admin-order-summary', `
+      <div class="summary-row"><span>Order ID</span><strong>${escapeHtml(row.id)}</strong></div>
+      <div class="summary-row"><span>Transaction ID</span><strong>${escapeHtml(row.tx_hash || 'Pending')}</strong></div>
+      <div class="summary-row"><span>Seller</span><strong>${escapeHtml(row.profiles?.full_name || row.profiles?.email || '-')} ${row.profiles?.mobile ? '(' + escapeHtml(row.profiles.mobile) + ')' : ''}</strong></div>
+      <div class="summary-row"><span>Coin / Network</span><strong>${escapeHtml(row.coin_symbol)} (${escapeHtml(row.network)})</strong></div>
+      <div class="summary-row"><span>Amount</span><strong>${escapeHtml(row.crypto_amount)} ${escapeHtml(row.coin_symbol)}</strong></div>
+      <div class="summary-row"><span>INR Amount</span><strong>${fmtInr(row.estimated_inr_payout)}</strong></div>
+      <div class="summary-row"><span>Rate</span><strong>${escapeHtml(Number(row.locked_rate_inr || 0).toFixed(4))}</strong></div>
+      <div class="summary-row"><span>Created On</span><strong>${fmtDate(row.created_at)}</strong></div>`);
+    setHtml('admin-order-wallet', `
+      <div class="wallet-grid-mini">
+        <div class="qr-preview-box fancy-qr">${row.deposit_wallet_qr_url || row.deposit_wallet_address ? `<img src="${escapeHtml(row.deposit_wallet_qr_url || 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(row.deposit_wallet_address || ''))}" alt="QR" />` : '<div class="empty-state">No QR</div>'}</div>
+        <div class="summary-list compact-summary">
+          <div class="summary-row"><span>Wallet Address</span><strong class="break-anywhere">${escapeHtml(row.deposit_wallet_address || 'Not assigned')}</strong></div>
+          <div class="summary-row"><span>Network</span><strong>${escapeHtml(row.network || '-')}</strong></div>
+          <div class="summary-row"><span>Wallet Label</span><strong>${escapeHtml(row.wallet_label || 'Auto Assigned')}</strong></div>
+        </div>
+      </div>`);
+    setHtml('admin-order-payout', `
+      <div class="summary-row"><span>Method</span><strong>${escapeHtml((payout.method || 'bank').toUpperCase())}</strong></div>
+      <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
+      <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
+      <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>`);
+    setHtml('admin-order-timeline', buildOrderTimeline(row));
+  }
+
+  function adminOrderActionButtons(row) {
+    const buttons = [];
+    if (['awaiting_transfer','awaiting_confirmations'].includes(row.status)) {
+      buttons.push(`<button class="btn btn-primary btn-xs js-order-received" data-id="${row.id}">Mark Crypto Received</button>`);
+    }
+    if (row.status === 'awaiting_confirmations') {
+      buttons.push(`<button class="btn btn-secondary btn-xs js-order-payout" data-id="${row.id}">Start Payout</button>`);
+    }
+    if (row.status === 'payout_in_progress') {
+      buttons.push(`<button class="btn btn-primary btn-xs js-order-paid" data-id="${row.id}">Mark Paid</button>`);
+    }
+    buttons.push(`<button class="btn btn-secondary btn-xs js-order-view" data-id="${row.id}">View Details</button>`);
+    if (!['completed','cancelled'].includes(row.status)) {
+      buttons.push(`<button class="btn btn-danger btn-xs js-order-cancel" data-id="${row.id}">Cancel</button>`);
+    }
+    return `<div class="actions-stack">${buttons.join('')}</div>`;
+  }
+
+  async function updateAdminOrderStatus(id, status) {
+    await adminClient.from('sell_orders').update({ status, completed_at: status === 'completed' ? new Date().toISOString() : null }).eq('id', id);
+    await audit('order_status_updated', 'sell_orders', id, { status });
+    await loadAdminOrders();
+    await loadAdminStats();
+  }
+
   async function loadAdminOrders() {
     const { data } = await adminClient.from('sell_orders').select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)').order('created_at', { ascending: false });
     const body = qs('admin-orders-body');
+    const search = val('admin-order-search').toLowerCase();
     if (!body) return;
-    body.innerHTML = !(data || []).length ? '<tr><td colspan="8">No sell orders found.</td></tr>' : '';
-    (data || []).forEach((row) => {
-      const userName = row.profiles?.full_name || row.profiles?.email || '-';
-      const payoutTo = row.payout_label || row.payout_details?.upi_id || row.payout_details?.account_number || '-';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="code-small">${escapeHtml(row.id)}</td>
-        <td>${escapeHtml(userName)}<br><span class="tiny-note">${escapeHtml(row.profiles?.mobile || row.profiles?.email || '')}</span></td>
-        <td>${escapeHtml(row.coin_symbol)} / ${escapeHtml(row.network)}<br><span class="tiny-note">Wallet: ${escapeHtml(row.deposit_wallet_address || '-')}</span></td>
-        <td>${escapeHtml(row.crypto_amount)}</td>
-        <td>${fmtInr(row.estimated_inr_payout)}</td>
-        <td><div>${escapeHtml(payoutTo)}</div><div class="tiny-note">${escapeHtml(row.payout_method || '-')}</div></td>
-        <td>${chip(row.status)}</td>
-        <td><div class="actions-row"><button class="btn btn-secondary btn-xs order-next">Next Status</button><button class="btn btn-secondary btn-xs order-complete">Complete</button><button class="btn btn-danger btn-xs order-cancel">Cancel</button></div></td>`;
-      tr.querySelector('.order-next').addEventListener('click', async () => {
-        const nextMap = { quote_selected: 'awaiting_kyc', awaiting_kyc: 'awaiting_transfer', awaiting_transfer: 'awaiting_confirmations', awaiting_confirmations: 'payout_in_progress', payout_in_progress: 'completed', completed: 'completed', cancelled: 'cancelled' };
-        const next = nextMap[row.status] || 'awaiting_transfer';
-        await adminClient.from('sell_orders').update({ status: next, completed_at: next === 'completed' ? new Date().toISOString() : null }).eq('id', row.id);
-        await audit('order_status_updated', 'sell_orders', row.id, { status: next });
-        await loadAdminOrders();
-        await loadAdminStats();
-      });
-      tr.querySelector('.order-complete').addEventListener('click', async () => {
-        await adminClient.from('sell_orders').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', row.id);
-        await audit('order_completed', 'sell_orders', row.id, { status: 'completed' });
-        await loadAdminOrders();
-        await loadAdminStats();
-      });
-      tr.querySelector('.order-cancel').addEventListener('click', async () => {
-        await adminClient.from('sell_orders').update({ status: 'cancelled' }).eq('id', row.id);
-        await audit('order_cancelled', 'sell_orders', row.id, { status: 'cancelled' });
-        await loadAdminOrders();
-      });
-      body.appendChild(tr);
+    const rows = (data || []).filter((row) => {
+      if (!search) return true;
+      return [row.id, row.profiles?.full_name, row.profiles?.email, row.profiles?.mobile, row.payout_upi_id, row.payout_account_number]
+        .filter(Boolean).join(' ').toLowerCase().includes(search);
     });
+
+    const completed = rows.filter((r) => r.status === 'completed').length;
+    const inProgress = rows.filter((r) => ['awaiting_transfer','awaiting_confirmations','payout_in_progress'].includes(r.status)).length;
+    const cancelled = rows.filter((r) => r.status === 'cancelled').length;
+    setHtml('admin-order-stats', `
+      <div class="card kpi-card"><div><span>Total Orders</span><strong>${rows.length}</strong><small>All Time</small></div></div>
+      <div class="card kpi-card success"><div><span>Completed</span><strong>${completed}</strong><small>${rows.length ? Math.round((completed/rows.length)*100) : 0}% Success</small></div></div>
+      <div class="card kpi-card warning"><div><span>In Progress</span><strong>${inProgress}</strong><small>${rows.length ? ((inProgress/rows.length)*100).toFixed(1) : 0}% Active</small></div></div>
+      <div class="card kpi-card danger"><div><span>Cancelled</span><strong>${cancelled}</strong><small>${rows.length ? ((cancelled/rows.length)*100).toFixed(1) : 0}% Cancelled</small></div></div>`);
+
+    body.innerHTML = !rows.length ? '<tr><td colspan="8">No sell orders found.</td></tr>' : '';
+    rows.forEach((row, index) => {
+      const userName = row.profiles?.full_name || row.profiles?.email || '-';
+      const payout = payoutDisplay(row);
+      const statusMeta = adminStatusMeta(row.status);
+      const tr = document.createElement('tr');
+      tr.className = index === 0 ? 'is-selected' : '';
+      tr.innerHTML = `
+        <td>
+          <div class="order-id-stack"><strong>#${escapeHtml(shortOrderId(row.id))}</strong><button class="mini-copy js-copy-order" data-copy="${escapeHtml(row.id)}">⧉</button></div>
+          <div class="tiny-note">TXN: ${escapeHtml(row.tx_hash || 'Pending')}</div>
+        </td>
+        <td>
+          <div class="seller-mini"><span class="seller-avatar">${escapeHtml((userName || 'S').slice(0,2).toUpperCase())}</span><div><strong>${escapeHtml(userName)}</strong><div class="tiny-note">${escapeHtml(row.profiles?.mobile || row.profiles?.email || '')}</div></div></div>
+        </td>
+        <td>
+          <div><strong>${escapeHtml(row.coin_symbol)} (${escapeHtml(row.network)})</strong></div>
+          <div class="tiny-note">${escapeHtml(row.crypto_amount)} ${escapeHtml(row.coin_symbol)}</div>
+        </td>
+        <td>${fmtInr(row.estimated_inr_payout)}</td>
+        <td>
+          <div><strong>${escapeHtml(payout.label)}</strong></div>
+          <div class="tiny-note">${escapeHtml(payout.value || '-')}</div>
+        </td>
+        <td><div>${chip(statusMeta.label, statusMeta.cls)}</div><div class="tiny-note top-gap-xs">${escapeHtml(statusMeta.sub)}</div></td>
+        <td>${fmtDate(row.created_at)}</td>
+        <td>${adminOrderActionButtons(row)}</td>`;
+      tr.querySelector('.js-copy-order')?.addEventListener('click', (e) => { e.stopPropagation(); copyText(row.id); });
+      tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); renderAdminOrderDetail(row); selectAdminOrderRow(tr); }));
+      tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations'); }));
+      tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress'); }));
+      tr.querySelectorAll('.js-order-paid').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'completed'); }));
+      tr.querySelectorAll('.js-order-cancel').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'cancelled'); }));
+      tr.addEventListener('click', () => { renderAdminOrderDetail(row); selectAdminOrderRow(tr); });
+      body.appendChild(tr);
+      if (index === 0) renderAdminOrderDetail(row);
+    });
+    if (!rows.length) renderAdminOrderDetail(null);
+  }
+
+  function selectAdminOrderRow(activeRow) {
+    qs('admin-orders-body')?.querySelectorAll('tr').forEach((tr) => tr.classList.remove('is-selected'));
+    activeRow?.classList.add('is-selected');
   }
 
   async function loadAdminKyc() {

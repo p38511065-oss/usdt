@@ -256,6 +256,7 @@
     setText('payout-message', '');
     updatePayoutFieldVisibility();
   }
+
   function onPayoutSelectorChange() {
     const opt = qs('bank-account-select')?.selectedOptions?.[0];
     if (!opt || !opt.value) return setHtml('selected-payout-summary', 'No payout method selected.');
@@ -268,12 +269,65 @@
         <div class="kv-row"><span>Destination</span><strong>${escapeHtml(payoutDestinationLabel(details))}</strong></div>
       </div>`);
   }
+  async function renderDepositOrderBox(order) {
+    const box = qs('deposit-order-box');
+    if (!box) return;
+    if (!order) {
+      box.innerHTML = 'जब आप quote confirm करोगे, यहाँ wallet address, QR और TX hash submit करने का option दिखेगा.';
+      return;
+    }
+    const qr = order.deposit_wallet_qr_url || order.qr_image_url || order.qr_code_url || '';
+    box.innerHTML = `
+      <div class="grid-2">
+        <div>
+          <div class="kv-list">
+            <div class="kv-row"><span>Order ID</span><strong class="code-small">${escapeHtml(order.id || '-')}</strong></div>
+            <div class="kv-row"><span>Send Coin</span><strong>${escapeHtml(order.coin_symbol || '-')} / ${escapeHtml(order.network || '-')}</strong></div>
+            <div class="kv-row"><span>Exact Amount</span><strong>${escapeHtml(String(order.crypto_amount || '-'))}</strong></div>
+            <div class="kv-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)}</strong></div>
+            <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
+            <div class="kv-row"><span>Wallet Address</span><strong class="code-small">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}</strong></div>
+            <div class="kv-row"><span>Status</span><strong>${escapeHtml(order.status || '-')}</strong></div>
+          </div>
+          <div class="action-row top-gap-sm">
+            <button id="copy-deposit-address" class="btn btn-secondary">Copy Wallet</button>
+            <button id="copy-deposit-amount" class="btn btn-secondary">Copy Amount</button>
+          </div>
+          <div class="top-gap-sm field-grid">
+            <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="${escapeHtml(order.tx_hash || '')}" /></div>
+            <div class="inline-end"><button id="mark-crypto-sent" class="btn btn-primary">I Have Sent Crypto</button></div>
+          </div>
+          <p id="deposit-order-message" class="status-text"></p>
+          <div class="tiny-note top-gap-sm">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
+        </div>
+        <div>
+          <div class="section-head"><h3>Scan QR</h3></div>
+          ${qr ? `<div class="image-preview-box"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
+        </div>
+      </div>`;
+    qs('copy-deposit-address')?.addEventListener('click', () => copyText(order.deposit_wallet_address || ''));
+    qs('copy-deposit-amount')?.addEventListener('click', () => copyText(String(order.crypto_amount || '')));
+    qs('mark-crypto-sent')?.addEventListener('click', async () => {
+      const txHash = val('deposit-tx-hash');
+      if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
+      const nextStatus = order.status === 'awaiting_kyc' ? 'awaiting_kyc' : 'awaiting_confirmations';
+      const { error } = await sellerClient.from('sell_orders').update({ tx_hash: txHash, status: nextStatus }).eq('id', order.id);
+      if (error) return setText('deposit-order-message', error.message);
+      await audit('crypto_sent_marked', 'sell_orders', order.id, { tx_hash: txHash });
+      setText('deposit-order-message', 'TX hash saved. Admin can now review this transfer.');
+      const profile = await getProfile(sellerClient);
+      await loadSellerStats(profile);
+      const refreshed = await sellerClient.from('sell_orders').select('*').eq('id', order.id).single();
+      if (refreshed.data) renderDepositOrderBox(refreshed.data);
+    });
+  }
   function renderSellerOrders(orders) {
     const body = qs('orders-body');
     if (!body) return;
     body.innerHTML = '';
     if (!(orders || []).length) {
       body.innerHTML = '<tr><td colspan="8">No sell orders found.</td></tr>';
+      renderDepositOrderBox(null);
       return;
     }
     orders.forEach((row) => {
@@ -281,13 +335,17 @@
       const payoutTo = row.payout_label || row.payout_details?.upi_id || row.payout_details?.account_number || '-';
       tr.innerHTML = `
         <td class="code-small">${escapeHtml(row.id)}</td>
-        <td>${escapeHtml(row.coin_symbol)} / ${escapeHtml(row.network)}</td>
+        <td>${escapeHtml(row.coin_symbol)} / ${escapeHtml(row.network)}<br><span class="tiny-note">Wallet: ${escapeHtml(row.deposit_wallet_address || '-')}</span></td>
         <td>${escapeHtml(row.crypto_amount)}</td>
         <td>${Number(row.locked_rate_inr || 0).toFixed(4)}</td>
         <td>${fmtInr(row.estimated_inr_payout)}</td>
         <td>${escapeHtml(payoutTo)}</td>
-        <td>${chip(row.status)}</td>
+        <td>${chip(row.status)}<br><button class="btn btn-secondary btn-xs open-order">Open</button></td>
         <td>${fmtDate(row.created_at)}</td>`;
+      tr.querySelector('.open-order')?.addEventListener('click', () => {
+        document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+        renderDepositOrderBox(row);
+      });
       body.appendChild(tr);
     });
   }
@@ -310,6 +368,7 @@
     const latest = orders?.[0];
     if (!latest) {
       setHtml('latest-order-box', 'No recent order yet.');
+      renderDepositOrderBox(null);
     } else {
       setHtml('latest-order-box', `
         <div class="kv-list">
@@ -319,7 +378,13 @@
           <div class="kv-row"><span>Payout To</span><strong>${escapeHtml(latest.payout_label || '-')}</strong></div>
           <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(latest.estimated_inr_payout)}</strong></div>
           <div class="kv-row"><span>Deposit Wallet</span><strong class="code-small">${escapeHtml(latest.deposit_wallet_address || '-')}</strong></div>
-        </div>`);
+        </div>
+        <div class="action-row top-gap-sm"><button id="open-latest-order" class="btn btn-primary btn-xs">Open Deposit Step</button></div>`);
+      qs('open-latest-order')?.addEventListener('click', () => {
+        document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+        renderDepositOrderBox(latest);
+      });
+      renderDepositOrderBox(latest);
     }
     renderSellerOrders(orders || []);
   }
@@ -486,6 +551,7 @@
             payout_label: payoutDestinationLabel(payout),
             payout_details: payout,
             deposit_wallet_address: activeWallet?.wallet_address || null,
+            deposit_wallet_qr_url: activeWallet?.qr_data_url || activeWallet?.qr_image_url || activeWallet?.qr_code_url || null,
             status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
           };
           const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
@@ -495,7 +561,8 @@
           selectedSellerQuote = null;
           setSelectedQuoteBanner();
           await loadSellerStats(profile);
-          document.querySelector('.side-link[data-target="seller-orders"]')?.click();
+          document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+          renderDepositOrderBox(order);
         });
         container.appendChild(card);
       });

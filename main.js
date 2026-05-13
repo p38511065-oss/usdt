@@ -1437,7 +1437,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
       <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
       <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>
-      <div class="top-gap-sm"><button id="admin-view-payout-details" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
+      <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" class="btn btn-secondary btn-xs">View Payout Details</button></div>`);
     setHtml('admin-order-timeline', buildOrderTimeline(row));
     qs('admin-view-payout-details')?.addEventListener('click', () => openPayoutDetailsModal(buildPayoutDetails(row)));
   }
@@ -1506,10 +1506,13 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const search = val('admin-order-search').toLowerCase();
     if (!body) return;
     const rows = (data || []).filter((row) => {
+
       if (!search) return true;
       return [row.id, row.profiles?.full_name, row.profiles?.email, row.profiles?.mobile, row.payout_upi_id, row.payout_account_number]
         .filter(Boolean).join(' ').toLowerCase().includes(search);
     });
+
+    window.__adminOrderRows = rows;
 
     const completed = rows.filter((r) => r.status === 'completed').length;
     const inProgress = rows.filter((r) => ['awaiting_transfer','awaiting_confirmations','payout_in_progress'].includes(r.status)).length;
@@ -1680,6 +1683,37 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
   if (page === 'referrals') {
     window.location.href = 'dashboard.html#seller-referrals';
     return;
+  }
+
+
+  if (!window.__payoutViewDelegationBound) {
+    window.__payoutViewDelegationBound = true;
+    document.addEventListener('click', (e) => {
+      const payoutBtn = e.target.closest('.js-payout-view');
+      if (payoutBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = payoutBtn.getAttribute('data-id');
+        const row = (window.__adminOrderRows || []).find((r) => r.id === id);
+        if (row) {
+          openPayoutDetailsModal(buildPayoutDetails(row));
+        } else {
+          alert('Payout details not found');
+        }
+        return;
+      }
+      const detailBtn = e.target.closest('#admin-view-payout-details');
+      if (detailBtn) {
+        e.preventDefault();
+        const id = detailBtn.getAttribute('data-id');
+        const row = (window.__adminOrderRows || []).find((r) => r.id === id);
+        if (row) {
+          openPayoutDetailsModal(buildPayoutDetails(row));
+        } else {
+          alert('Payout details not found');
+        }
+      }
+    });
   }
 
   switch (page) {

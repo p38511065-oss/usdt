@@ -1881,12 +1881,17 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
   }
 
   async function loadAdminOrders(selectedOrderId = null) {
-    const { data } = await adminClient.from('sell_orders').select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)').order('created_at', { ascending: false });
+    const { data } = await adminClient
+      .from('sell_orders')
+      .select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)')
+      .order('created_at', { ascending: false });
+
     const body = qs('admin-orders-body');
+    const pagination = qs('admin-orders-pagination');
     const search = val('admin-order-search').toLowerCase();
     if (!body) return;
-    const rows = (data || []).filter((row) => {
 
+    const rows = (data || []).filter((row) => {
       if (!search) return true;
       return [row.id, row.profiles?.full_name, row.profiles?.email, row.profiles?.mobile, row.payout_upi_id, row.payout_account_number]
         .filter(Boolean).join(' ').toLowerCase().includes(search);
@@ -1894,24 +1899,43 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
 
     window.__adminOrderRows = rows;
 
+    const pageSize = 5;
+    let currentPage = Number(window.__adminOrdersPage || 1);
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+
+    if (selectedOrderId) {
+      const selectedIndex = rows.findIndex((r) => r.id === selectedOrderId);
+      if (selectedIndex >= 0) currentPage = Math.floor(selectedIndex / pageSize) + 1;
+    }
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    window.__adminOrdersPage = currentPage;
+
+    const pageRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     const completed = rows.filter((r) => r.status === 'completed').length;
     const inProgress = rows.filter((r) => ['awaiting_transfer','awaiting_confirmations','payout_in_progress'].includes(r.status)).length;
     const cancelled = rows.filter((r) => r.status === 'cancelled').length;
+
     setHtml('admin-order-stats', `
       <div class="card kpi-card"><div><span>Total Orders</span><strong>${rows.length}</strong><small>All Time</small></div></div>
       <div class="card kpi-card success"><div><span>Completed</span><strong>${completed}</strong><small>${rows.length ? Math.round((completed/rows.length)*100) : 0}% Success</small></div></div>
       <div class="card kpi-card warning"><div><span>In Progress</span><strong>${inProgress}</strong><small>${rows.length ? ((inProgress/rows.length)*100).toFixed(1) : 0}% Active</small></div></div>
       <div class="card kpi-card danger"><div><span>Cancelled</span><strong>${cancelled}</strong><small>${rows.length ? ((cancelled/rows.length)*100).toFixed(1) : 0}% Cancelled</small></div></div>`);
 
-    body.innerHTML = !rows.length ? '<tr><td colspan="8">No sell orders found.</td></tr>' : '';
+    body.innerHTML = !pageRows.length ? '<tr><td colspan="8">No sell orders found.</td></tr>' : '';
     let selectedMatched = false;
-    rows.forEach((row, index) => {
+
+    pageRows.forEach((row, index) => {
       const userName = row.profiles?.full_name || row.profiles?.email || '-';
       const payout = payoutDisplay(row);
       const statusMeta = adminStatusMeta(row.status);
-      const tr = document.createElement('tr');
-      const isSelected = selectedOrderId ? row.id === selectedOrderId : index === 0;
+      const globalIndex = ((currentPage - 1) * pageSize) + index;
+      const isSelected = selectedOrderId ? row.id === selectedOrderId : globalIndex === 0;
       if (isSelected) selectedMatched = true;
+
+      const tr = document.createElement('tr');
       tr.className = isSelected ? 'is-selected' : '';
       tr.innerHTML = `
         <td>
@@ -1933,7 +1957,13 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         <td><div>${chip(statusMeta.label, statusMeta.cls)}</div><div class="tiny-note top-gap-xs">${escapeHtml(statusMeta.sub)}</div></td>
         <td>${fmtDate(row.created_at)}</td>
         <td>${adminOrderActionButtons(row)}</td>`;
-      tr.querySelector('.js-copy-order')?.addEventListener('click', async (e) => { e.stopPropagation(); const ok = await copyText(row.id); flashInlineCopyState(e.currentTarget, ok, '✓'); });
+
+      tr.querySelector('.js-copy-order')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await copyText(row.id);
+        flashInlineCopyState(e.currentTarget, ok, '✓');
+      });
+
       tr.querySelectorAll('.js-payout-view').forEach((btn) => btn.addEventListener('click', (e) => {
         e.stopPropagation();
         renderAdminOrderDetail(row);
@@ -1945,19 +1975,69 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
           }
         }, 0);
       }));
-      tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => { e.stopPropagation(); renderAdminOrderDetail(row); selectAdminOrderRow(tr); }));
-      tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget); }));
-      tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget); }));
-      tr.querySelectorAll('.js-order-paid').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'completed', e.currentTarget); }));
-      tr.querySelectorAll('.js-order-cancel').forEach((btn) => btn.addEventListener('click', async (e) => { e.stopPropagation(); await updateAdminOrderStatus(row.id, 'cancelled', e.currentTarget); }));
-      tr.addEventListener('click', () => { renderAdminOrderDetail(row); selectAdminOrderRow(tr); });
+
+      tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        renderAdminOrderDetail(row);
+        selectAdminOrderRow(tr);
+      }));
+      tr.querySelectorAll('.js-order-received').forEach((btn) => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget);
+      }));
+      tr.querySelectorAll('.js-order-payout').forEach((btn) => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget);
+      }));
+      tr.querySelectorAll('.js-order-paid').forEach((btn) => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await updateAdminOrderStatus(row.id, 'completed', e.currentTarget);
+      }));
+      tr.querySelectorAll('.js-order-cancel').forEach((btn) => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await updateAdminOrderStatus(row.id, 'cancelled', e.currentTarget);
+      }));
+
+      tr.addEventListener('click', () => {
+        renderAdminOrderDetail(row);
+        selectAdminOrderRow(tr);
+      });
+
       body.appendChild(tr);
       if (isSelected) renderAdminOrderDetail(row);
     });
+
+    if (pagination) {
+      const from = rows.length ? ((currentPage - 1) * pageSize) + 1 : 0;
+      const to = Math.min(currentPage * pageSize, rows.length);
+      const pageButtons = Array.from({ length: totalPages }, (_, i) => {
+        const page = i + 1;
+        return `<button class="orders-page-btn ${page === currentPage ? 'active' : ''}" data-page="${page}">${page}</button>`;
+      }).join('');
+
+      pagination.innerHTML = `
+        <div class="orders-page-info">Showing ${from}-${to} of ${rows.length} orders</div>
+        <div class="orders-page-controls">
+          <button class="orders-page-btn" data-page="${Math.max(1, currentPage - 1)}" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>
+          ${pageButtons}
+          <button class="orders-page-btn" data-page="${Math.min(totalPages, currentPage + 1)}" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>
+        </div>`;
+
+      pagination.querySelectorAll('.orders-page-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          if (btn.disabled) return;
+          window.__adminOrdersPage = Number(btn.dataset.page || 1);
+          await loadAdminOrders();
+        });
+      });
+    }
+
     if (!rows.length) {
       renderAdminOrderDetail(null);
     } else if (selectedOrderId && !selectedMatched) {
       renderAdminOrderDetail(rows[0]);
+    } else if (!selectedOrderId && pageRows.length) {
+      renderAdminOrderDetail(pageRows[0]);
     }
   }
 
@@ -1965,6 +2045,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('admin-orders-body')?.querySelectorAll('tr').forEach((tr) => tr.classList.remove('is-selected'));
     activeRow?.classList.add('is-selected');
   }
+
 
   async function loadAdminKyc() {
     const { data } = await adminClient.from('kyc_submissions').select('*, profiles!kyc_submissions_user_id_fkey(full_name,email,mobile)').order('created_at', { ascending: false });
@@ -2138,6 +2219,15 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('reset-slab-form')?.addEventListener('click', resetSlabForm);
     qs('save-wallet')?.addEventListener('click', saveWallet);
     qs('reset-wallet-form')?.addEventListener('click', clearWalletForm);
+
+    qs('admin-order-search')?.addEventListener('input', async () => {
+      window.__adminOrdersPage = 1;
+      await loadAdminOrders();
+    });
+    qs('admin-order-filter-btn')?.addEventListener('click', async () => {
+      window.__adminOrdersPage = 1;
+      await loadAdminOrders();
+    });
 
     await Promise.all([
       loadAdminStats(),

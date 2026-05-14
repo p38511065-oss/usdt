@@ -143,3 +143,9 @@ Payout details display fix:
 - New sell orders now save flat payout fields too.
 - Admin order payout section now shows holder name, UPI/bank, account and IFSC directly.
 - Added payout-details-final-fix.sql for database columns/backfill.
+
+Admin Orders pagination:
+- Orders & Payouts now shows latest 5 orders per page.
+- Page numbers 1,2,3... added below orders table.
+- Search/filter resets pagination to page 1.
+- Order detail/timeline/payout details remain unchanged.

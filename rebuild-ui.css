@@ -521,3 +521,46 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
 .tab-panel.active{display:block}
 
 #save-payout-account[disabled],#submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}
+
+
+/* Admin orders pagination */
+.orders-pagination{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:14px 4px 0;
+  flex-wrap:wrap;
+}
+.orders-page-info{
+  color:var(--n-muted, #91a8c7);
+  font-size:13px;
+  font-weight:800;
+}
+.orders-page-controls{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.orders-page-btn{
+  min-width:36px;
+  height:36px;
+  border-radius:12px;
+  border:1px solid rgba(119,190,255,.18);
+  background:rgba(8,26,52,.75);
+  color:#dbefff;
+  font-weight:900;
+}
+.orders-page-btn.active{
+  background:linear-gradient(90deg,#25e7ff,#37ffc1);
+  color:#02101d;
+  border-color:transparent;
+}
+.orders-page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+@media(max-width:640px){
+  .orders-pagination{align-items:flex-start}
+  .orders-page-controls{width:100%}
+}

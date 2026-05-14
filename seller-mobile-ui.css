@@ -809,3 +809,11 @@ body[data-page="seller-dashboard"] .panel-section.active{
 .cancel-note-row strong{
   color:#ffd166!important;
 }
+
+
+/* Duplicate TX hash error visibility */
+#deposit-order-message.error{
+  color:#ff9aae!important;
+  border-color:rgba(255,77,109,.30)!important;
+  background:rgba(255,77,109,.10)!important;
+}

@@ -195,3 +195,9 @@ Seller cancel pending order:
 - After cancellation, Sell USDT form unlocks and user can start again.
 - If TX hash exists, seller cannot self-cancel and must contact admin.
 - Added seller-cancel-order-policy.sql.
+
+Duplicate TX hash fix:
+- TX hash is trimmed before submit.
+- Seller side checks if TX hash already exists in another order.
+- Duplicate TX hash shows clear error message.
+- Added database unique index in tx-hash-duplicate-fix.sql.

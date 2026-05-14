@@ -693,6 +693,34 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('seller-sell-start-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+
+  function normalizeTxHashValue(value) {
+    return String(value || '').trim();
+  }
+
+  async function isDuplicateTxHash(txHash, currentOrderId = null) {
+    const normalized = normalizeTxHashValue(txHash);
+    if (!normalized) return false;
+
+    let query = sellerClient
+      .from('sell_orders')
+      .select('id, tx_hash')
+      .eq('tx_hash', normalized)
+      .limit(1);
+
+    if (currentOrderId) {
+      query = query.neq('id', currentOrderId);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('Duplicate TX check failed:', error.message);
+      return false;
+    }
+
+    return !!(data && data.length);
+  }
+
 async function renderDepositOrderBox(order) {
     const box = qs('deposit-order-box');
     const paymentCard = qs('seller-order-payment-card');
@@ -792,8 +820,12 @@ async function renderDepositOrderBox(order) {
     qs('cancel-active-order')?.addEventListener('click', () => cancelSellerPendingOrder(order));
 
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
-      const txHash = val('deposit-tx-hash');
+      const txHash = normalizeTxHashValue(val('deposit-tx-hash'));
       if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
+      const duplicateTx = await isDuplicateTxHash(txHash, order.id);
+      if (duplicateTx) {
+        return setText('deposit-order-message', 'Duplicate TX hash. This transaction hash is already used in another order.');
+      }
       const btn = qs('mark-crypto-sent');
       const input = qs('deposit-tx-hash');
       const message = qs('deposit-order-message');
@@ -817,7 +849,10 @@ async function renderDepositOrderBox(order) {
         }
         if (input) input.disabled = false;
         if (message) {
-          message.textContent = error.message;
+          const duplicateMsg = /duplicate|unique|tx_hash/i.test(error.message || '')
+            ? 'Duplicate TX hash. This transaction hash is already used in another order.'
+            : error.message;
+          message.textContent = duplicateMsg;
           message.classList.remove('pending');
           message.classList.add('error');
         }

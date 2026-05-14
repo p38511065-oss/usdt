@@ -102,3 +102,16 @@ KYC RPC final fix:
 - RPC repairs missing profile row and inserts/updates KYC with security definer
 - Direct table insert remains fallback
 - Added kyc-rpc-final-fix.sql
+
+Seller button binding fix:
+- Added dashboard fallback script that captures Save Payout Method and Submit KYC clicks
+- If old main.js binding fails, these buttons still show loading/errors and submit
+- KYC uses submit_kyc RPC
+- Payout saves directly to bank_accounts
+
+Seller all actions fallback:
+- Added capture fallback handlers for seller buttons beyond KYC/Payout
+- Refresh Quotes and Show Quotes now have fallback logic
+- Confirm Sell Request fallback creates sell_orders
+- Referral withdrawal, copy code/link, reset payout, logout fallback added
+- If main.js event binding fails, seller buttons should still show messages/actions

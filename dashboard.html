@@ -430,5 +430,442 @@
       btn.addEventListener('click', function(){ document.getElementById('seller-drawer-nav')?.classList.remove('open'); });
     });
   </script>
+
+<script>
+(function(){
+  function q(id){ return document.getElementById(id); }
+  function v(id){ return (q(id)?.value || '').trim(); }
+  function setMsg(id, msg){ const el=q(id); if(el) el.textContent = msg || ''; }
+
+  async function fileToCompressedDataUrl(file){
+    if(!file) return null;
+    if(!file.type || !file.type.startsWith('image/')){
+      return await new Promise((resolve,reject)=>{
+        const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file);
+      });
+    }
+    return await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>{
+        const img=new Image();
+        img.onload=()=>{
+          const maxSide=1000;
+          let w=img.width, h=img.height;
+          if(w>maxSide || h>maxSide){
+            const ratio=Math.min(maxSide/w, maxSide/h);
+            w=Math.round(w*ratio); h=Math.round(h*ratio);
+          }
+          const c=document.createElement('canvas');
+          c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',0.70));
+        };
+        img.onerror=reject;
+        img.src=r.result;
+      };
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function getClientAndUser(){
+    const client = window.appSupabase || (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY
+      ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+          auth: { storageKey: 'crypto_seller_auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        })
+      : null);
+    if(!client) throw new Error('Supabase client not ready. Refresh page once.');
+    const { data, error } = await client.auth.getUser();
+    if(error || !data?.user) throw new Error('Seller session not found. Please login again.');
+    return { client, user: data.user };
+  }
+
+  async function fallbackSavePayout(){
+    const btn=q('save-payout-account');
+    try{
+      if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+      setMsg('payout-message','Saving payout method...');
+      const { client, user } = await getClientAndUser();
+
+      const method = v('payout-method') || 'bank';
+      const payload = {
+        user_id: user.id,
+        payment_method: method,
+        label: v('payout-label'),
+        account_holder_name: v('payout-holder'),
+        bank_name: method === 'bank' ? v('payout-bank-name') : null,
+        account_number: method === 'bank' ? v('payout-account-number') : null,
+        ifsc_code: method === 'bank' ? v('payout-ifsc') : null,
+        upi_id: method === 'upi' ? v('payout-upi') : null,
+        is_primary: !!q('payout-primary')?.checked,
+        is_active: true
+      };
+
+      if(!payload.label || !payload.account_holder_name){
+        setMsg('payout-message','Please fill label and account holder name.');
+        return;
+      }
+      if(method === 'bank' && (!payload.bank_name || !payload.account_number || !payload.ifsc_code)){
+        setMsg('payout-message','Please fill bank name, account number and IFSC.');
+        return;
+      }
+      if(method === 'upi' && !payload.upi_id){
+        setMsg('payout-message','Please fill UPI ID.');
+        return;
+      }
+
+      if(payload.is_primary){
+        await client.from('bank_accounts').update({ is_primary:false }).eq('user_id', user.id);
+      }
+
+      const editId = v('payout-edit-id');
+      const result = editId
+        ? await client.from('bank_accounts').update(payload).eq('id', editId).select().single()
+        : await client.from('bank_accounts').insert(payload).select().single();
+
+      if(result.error){
+        setMsg('payout-message', result.error.message || 'Payout method save failed.');
+        return;
+      }
+
+      setMsg('payout-message','Payout method saved successfully. Refreshing...');
+      setTimeout(()=>window.location.reload(), 700);
+    }catch(err){
+      setMsg('payout-message', err?.message || 'Payout method save failed.');
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent='Save Payout Method'; }
+    }
+  }
+
+  async function fallbackSubmitKyc(){
+    const btn=q('submit-kyc-btn');
+    try{
+      if(btn){ btn.disabled=true; btn.textContent='Submitting...'; }
+      setMsg('kyc-message','Submitting KYC...');
+      const { client } = await getClientAndUser();
+
+      const fullName = v('kyc-full-name');
+      const idType = v('kyc-id-type') || 'aadhaar';
+      const idNumber = v('kyc-id-number');
+      const dob = v('kyc-dob') || null;
+      const address = v('kyc-address') || null;
+
+      if(!fullName || !idNumber){
+        setMsg('kyc-message','Please fill full name and ID number.');
+        return;
+      }
+
+      const frontData = await fileToCompressedDataUrl(q('kyc-front-file')?.files?.[0]);
+      const backData = await fileToCompressedDataUrl(q('kyc-back-file')?.files?.[0]);
+      const selfieData = await fileToCompressedDataUrl(q('kyc-selfie-file')?.files?.[0]);
+
+      const rpc = await client.rpc('submit_kyc', {
+        p_full_name: fullName,
+        p_dob: dob,
+        p_id_type: idType,
+        p_id_number: idNumber,
+        p_address: address,
+        p_front_image_data: frontData,
+        p_back_image_data: backData,
+        p_selfie_image_data: selfieData
+      });
+
+      if(rpc.error){
+        setMsg('kyc-message', rpc.error.message || 'KYC submit failed. Run kyc-rpc-final-fix.sql once.');
+        return;
+      }
+
+      setMsg('kyc-message','KYC submitted successfully. Status: pending review. Refreshing...');
+      setTimeout(()=>window.location.reload(), 800);
+    }catch(err){
+      setMsg('kyc-message', err?.message || 'KYC submit failed.');
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent='Submit KYC'; }
+    }
+  }
+
+  // Capture phase: this confirms buttons work even if old JS binding failed.
+  document.addEventListener('click', function(e){
+    const target = e.target;
+    if(target && target.id === 'save-payout-account'){
+      e.preventDefault(); e.stopImmediatePropagation();
+      fallbackSavePayout();
+    }
+    if(target && target.id === 'submit-kyc-btn'){
+      e.preventDefault(); e.stopImmediatePropagation();
+      fallbackSubmitKyc();
+    }
+  }, true);
+})();
+</script>
+
+
+<script>
+(function(){
+  if (window.__sellerAllActionsFallbackInstalled) return;
+  window.__sellerAllActionsFallbackInstalled = true;
+
+  function q(id){ return document.getElementById(id); }
+  function v(id){ return (q(id)?.value || '').trim(); }
+  function html(id, val){ const el=q(id); if(el) el.innerHTML = val || ''; }
+  function msg(id, val){ const el=q(id); if(el) el.textContent = val || ''; }
+  function esc(s){ return String(s ?? '').replace(/[&<>\"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+  function inr(n){ return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n||0)); }
+
+  async function clientUserProfile(){
+    const client = window.appSupabase || (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY
+      ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+          auth: { storageKey: 'crypto_seller_auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        })
+      : null);
+    if(!client) throw new Error('Supabase client not ready.');
+    const { data: userData, error: userErr } = await client.auth.getUser();
+    if(userErr || !userData?.user) throw new Error('Seller session not found. Please login again.');
+    const user = userData.user;
+    let { data: profile } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if(!profile){
+      const refCode = 'SELL' + String(user.id).replaceAll('-','').slice(0,8).toUpperCase();
+      const payload = { id:user.id, email:user.email, full_name:user.email?.split('@')[0] || 'Seller', role:'seller', user_status:'active', kyc_status:'not_submitted', referral_code:refCode };
+      await client.from('profiles').upsert(payload, { onConflict:'id' });
+      profile = payload;
+    }
+    return { client, user, profile };
+  }
+
+  function slabMin(s){ return Number(s.min_amount ?? s.min_crypto_amount ?? 0); }
+  function slabMax(s){ const x = s.max_amount ?? s.max_crypto_amount; return x === null || x === undefined || x === '' ? null : Number(x); }
+  function slabRate(s){ return Number(s.rate_inr ?? s.buy_rate_inr ?? s.rate ?? 0); }
+  function slabNetwork(s){ return String(s.network || '').toUpperCase(); }
+  function slabCoin(s){ return String(s.coin_symbol || s.coin || 'USDT').toUpperCase(); }
+  function slabEnabled(s){
+    const e = s.is_enabled ?? s.is_active ?? s.status;
+    return e === true || e === 'true' || e === 'active' || e === 'enabled' || e === null || e === undefined;
+  }
+  function slabRange(s){ const min=slabMin(s), max=slabMax(s); return max ? `${min.toLocaleString('en-IN')} – ${max.toLocaleString('en-IN')}` : `${min.toLocaleString('en-IN')}+`; }
+  function matchAmount(s, amt){ const min=slabMin(s), max=slabMax(s); return amt >= min && (max === null || amt <= max); }
+
+  async function fetchAdminSlabs(client){
+    const { data, error } = await client.from('quote_slabs').select('*').eq('coin_symbol','USDT');
+    if(error) throw error;
+    return (data || [])
+      .filter(s => slabCoin(s)==='USDT' && (slabNetwork(s)==='TRC20' || slabNetwork(s)==='TRON' || slabNetwork(s)==='') && slabEnabled(s) && slabRate(s)>0)
+      .sort((a,b)=>slabMin(a)-slabMin(b));
+  }
+
+  async function fetchPayouts(client, userId){
+    const { data, error } = await client.from('bank_accounts').select('*').eq('user_id', userId).eq('is_active', true).order('is_primary', { ascending:false });
+    if(error) throw error;
+    return data || [];
+  }
+
+  async function fetchWallet(client, coin, network){
+    let { data, error } = await client.from('wallet_pools').select('*').eq('coin_symbol', coin).eq('network', network).eq('is_active', true).limit(1).maybeSingle();
+    if(error || !data){
+      const broad = await client.from('wallet_pools').select('*').eq('coin_symbol', coin).eq('is_active', true).limit(1).maybeSingle();
+      data = broad.data;
+    }
+    return data || null;
+  }
+
+  async function fallbackRefreshQuotes(){
+    try{
+      msg('quotes-page-message','Loading admin quotes...');
+      const { client } = await clientUserProfile();
+      const slabs = await fetchAdminSlabs(client);
+      const box = q('quotes-slabs-container');
+      const empty = q('quotes-slabs-empty');
+      if(!box) return;
+      box.innerHTML = '';
+      if(!slabs.length){
+        if(empty){ empty.style.display='block'; empty.textContent='No active admin quote slabs found.'; }
+        msg('quotes-page-message','No active admin quote slabs found.');
+        return;
+      }
+      if(empty) empty.style.display='none';
+      box.classList.add('quote-cards-3');
+      slabs.forEach((s, i)=>{
+        const card = document.createElement('div');
+        card.className = 'quote-card' + (i===slabs.length-1 ? ' recommended' : '');
+        card.innerHTML = `
+          <div class="badge">${i===slabs.length-1 ? 'Best / Higher Slab' : 'Available'}</div>
+          <h4>USDT / ${esc(s.network || 'TRC20')}</h4>
+          <p>Admin-created quote slab</p>
+          <div class="kv-list">
+            <div class="kv-row"><span>Amount Slab</span><strong>${slabRange(s)} USDT</strong></div>
+            <div class="kv-row"><span>Rate</span><strong>${slabRate(s).toFixed(4)} INR</strong></div>
+          </div>
+          <button class="btn btn-primary btn-xs fallback-use-quote" data-min="${slabMin(s)}" data-network="${esc(s.network || 'TRC20')}">Sell With This Quote</button>`;
+        card.querySelector('.fallback-use-quote').addEventListener('click', ()=>{
+          if(q('sell-coin')) q('sell-coin').value='USDT';
+          if(q('sell-network')) q('sell-network').value=s.network || 'TRC20';
+          if(q('sell-amount')) q('sell-amount').value=slabMin(s);
+          document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+          msg('quote-calc-message','Quote selected. Select payout method and click Show Quotes.');
+        });
+        box.appendChild(card);
+      });
+      msg('quotes-page-message',`Loaded ${slabs.length} admin quote slabs.`);
+    }catch(err){
+      msg('quotes-page-message', err?.message || 'Could not load quotes.');
+    }
+  }
+
+  async function fallbackShowQuotes(){
+    try{
+      msg('quote-calc-message','Checking quote...');
+      const { client, profile } = await clientUserProfile();
+      const coin = (v('sell-coin') || 'USDT').toUpperCase();
+      const network = (v('sell-network') || 'TRC20').toUpperCase();
+      const amount = Number(v('sell-amount') || 0);
+      const payoutId = v('bank-account-select');
+      if(!amount || !payoutId){
+        msg('quote-calc-message','Please enter amount and select payout method.');
+        return;
+      }
+
+      const payouts = await fetchPayouts(client, profile.id);
+      const payout = payouts.find(p => p.id === payoutId);
+      if(!payout){
+        msg('quote-calc-message','Please select a valid payout method.');
+        return;
+      }
+
+      const wallet = await fetchWallet(client, coin, network);
+      if(!wallet?.wallet_address){
+        msg('quote-calc-message','No active admin wallet found for this coin/network.');
+        return;
+      }
+
+      const slabs = await fetchAdminSlabs(client);
+      const matching = slabs.filter(s => slabCoin(s)===coin && (slabNetwork(s)===network || slabNetwork(s)==='TRON' || slabNetwork(s)==='') && matchAmount(s, amount));
+      const container = q('quotes-container');
+      const empty = q('quotes-empty');
+      if(!container) return;
+      container.innerHTML = '';
+      if(!matching.length){
+        if(empty){ empty.style.display='block'; empty.textContent='No active quote slab matches this amount.'; }
+        msg('quote-calc-message','No matching admin slab found for this amount.');
+        return;
+      }
+      if(empty) empty.style.display='none';
+
+      matching.sort((a,b)=>slabRate(b)-slabRate(a)).forEach((s, i)=>{
+        const rate = slabRate(s);
+        const estimated = rate * amount;
+        const card = document.createElement('div');
+        card.className = 'quote-card' + (i===0 ? ' recommended' : '');
+        card.innerHTML = `
+          <div class="badge">${i===0 ? 'Recommended' : 'Available'}</div>
+          <h4>USDT / ${esc(network)}</h4>
+          <p>Confirm sell request with locked admin rate.</p>
+          <div class="kv-list">
+            <div class="kv-row"><span>Rate</span><strong>${rate.toFixed(4)} INR</strong></div>
+            <div class="kv-row"><span>Estimated INR</span><strong>${inr(estimated)}</strong></div>
+            <div class="kv-row"><span>Amount Slab</span><strong>${slabRange(s)} USDT</strong></div>
+          </div>
+          <button class="btn btn-primary fallback-confirm-sell">Confirm Sell Request</button>`;
+        card.querySelector('.fallback-confirm-sell').addEventListener('click', async ()=>{
+          try{
+            msg('quote-calc-message','Creating order...');
+            const payoutLabel = payout.payment_method === 'upi'
+              ? `${payout.label || 'UPI'} • ${payout.upi_id || '-'}`
+              : `${payout.label || payout.bank_name || 'Bank'} • ${payout.account_number || '-'}`;
+            let payload = {
+              user_id: profile.id,
+              bank_account_id: payout.id,
+              quote_slab_id: s.id || null,
+              quote_template_id: s.quote_template_id || null,
+              coin_symbol: coin,
+              network,
+              crypto_amount: amount,
+              locked_rate_inr: rate,
+              spread_percent: Number(s.spread_percent || 0),
+              estimated_inr_payout: estimated,
+              payout_method: payout.payment_method,
+              payout_label: payoutLabel,
+              payout_details: payout,
+              deposit_wallet_address: wallet.wallet_address,
+              deposit_wallet_qr_url: wallet.qr_data_url || wallet.qr_image_url || wallet.qr_code_url || null,
+              status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
+            };
+            let result = await client.from('sell_orders').insert(payload).select().single();
+            if(result.error && /payout_details|quote_template_id|quote_slab_id|spread_percent|deposit_wallet_qr_url/i.test(result.error.message || '')){
+              delete payload.payout_details;
+              delete payload.quote_template_id;
+              delete payload.quote_slab_id;
+              delete payload.spread_percent;
+              delete payload.deposit_wallet_qr_url;
+              result = await client.from('sell_orders').insert(payload).select().single();
+            }
+            if(result.error){
+              msg('quote-calc-message', result.error.message || 'Order create failed.');
+              return;
+            }
+            msg('quote-calc-message','Order created. Open Deposit Step / My Orders.');
+            setTimeout(()=>window.location.reload(), 900);
+          }catch(e){
+            msg('quote-calc-message', e?.message || 'Order create failed.');
+          }
+        });
+        container.appendChild(card);
+      });
+      msg('quote-calc-message',`Found ${matching.length} matching quote.`);
+    }catch(err){
+      msg('quote-calc-message', err?.message || 'Could not show quote.');
+    }
+  }
+
+  async function fallbackReferralWithdrawal(){
+    try{
+      msg('ref-withdraw-message','Submitting withdrawal request...');
+      const { client, profile } = await clientUserProfile();
+      const amount = Number(v('ref-withdraw-amount') || 0);
+      if(amount < 2000){ msg('ref-withdraw-message','Minimum referral withdrawal is ₹2,000.'); return; }
+      const { data: activePayout } = await client.from('bank_accounts').select('*').eq('user_id', profile.id).eq('is_active', true).order('is_primary', { ascending:false }).limit(1).maybeSingle();
+      const { error } = await client.from('referral_withdrawals').insert({
+        user_id: profile.id,
+        amount_inr: amount,
+        status: 'requested',
+        payout_method_id: activePayout?.id || null,
+        payout_label: activePayout?.label || activePayout?.bank_name || activePayout?.upi_id || null,
+        payout_details: activePayout || null
+      });
+      if(error){ msg('ref-withdraw-message', error.message); return; }
+      msg('ref-withdraw-message','Withdrawal request submitted.');
+    }catch(err){
+      msg('ref-withdraw-message', err?.message || 'Withdrawal request failed.');
+    }
+  }
+
+  async function fallbackLogout(){
+    try{
+      const { client } = await clientUserProfile();
+      await client.auth.signOut();
+    }catch(_){}
+    window.location.href='login.html';
+  }
+
+  document.addEventListener('click', function(e){
+    const t = e.target?.closest('button,a');
+    if(!t) return;
+    const id = t.id;
+    if(id === 'refresh-quotes-btn'){ e.preventDefault(); e.stopImmediatePropagation(); fallbackRefreshQuotes(); }
+    if(id === 'show-quotes-btn'){ e.preventDefault(); e.stopImmediatePropagation(); fallbackShowQuotes(); }
+    if(id === 'request-ref-withdrawal'){ e.preventDefault(); e.stopImmediatePropagation(); fallbackReferralWithdrawal(); }
+    if(id === 'copy-ref-code'){ e.preventDefault(); e.stopImmediatePropagation(); navigator.clipboard?.writeText(q('ref-code-box')?.textContent || ''); t.textContent='Copied'; setTimeout(()=>t.textContent='Copy',1200); }
+    if(id === 'copy-ref-link'){ e.preventDefault(); e.stopImmediatePropagation(); navigator.clipboard?.writeText(q('ref-link-box')?.textContent || ''); t.textContent='Copied'; setTimeout(()=>t.textContent='Copy',1200); }
+    if(id === 'reset-payout-form'){ e.preventDefault(); e.stopImmediatePropagation(); ['payout-edit-id','payout-label','payout-holder','payout-bank-name','payout-account-number','payout-ifsc','payout-upi'].forEach(x=>{ if(q(x)) q(x).value=''; }); msg('payout-message','Form cleared.'); }
+    if(id === 'logout-btn' || t.classList.contains('seller-drawer-logout')){ e.preventDefault(); e.stopImmediatePropagation(); fallbackLogout(); }
+  }, true);
+
+  // Load available quotes preview if user lands on dashboard and old loader failed.
+  setTimeout(()=>{
+    if(q('quotes-slabs-container') && !q('quotes-slabs-container').children.length){
+      fallbackRefreshQuotes();
+    }
+  }, 1500);
+})();
+</script>
+
 </body>
 </html>

@@ -519,3 +519,5 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
 /* Auth tab visibility fix */
 .tab-panel{display:none}
 .tab-panel.active{display:block}
+
+#save-payout-account[disabled],#submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}

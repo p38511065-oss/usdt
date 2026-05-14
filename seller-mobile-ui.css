@@ -637,3 +637,5 @@ body[data-page="seller-dashboard"] .panel-section.active{
 /* KYC submit UX fix */
 #submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}
 #kyc-message{font-weight:700}
+
+#save-payout-account[disabled],#submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}

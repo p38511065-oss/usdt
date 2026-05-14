@@ -830,75 +830,35 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const refLink = `${origin}/login.html?ref=${refCode}`;
     setText('ref-code-box', refCode);
     setText('ref-link-box', refLink);
-    qs('copy-ref-code')?.addEventListener('click', async () => {
-      const ok = await copyText(refCode);
-      flashInlineCopyState(qs('copy-ref-code'), ok, '✓');
-    });
-    qs('copy-ref-link')?.addEventListener('click', async () => {
-      const ok = await copyText(refLink);
-      flashInlineCopyState(qs('copy-ref-link'), ok, '✓');
-    });
+    qs('copy-ref-code')?.addEventListener('click', async () => { const ok = await copyText(refCode); flashInlineCopyState(qs('copy-ref-code'), ok, '✓'); });
+    qs('copy-ref-link')?.addEventListener('click', async () => { const ok = await copyText(refLink); flashInlineCopyState(qs('copy-ref-link'), ok, '✓'); });
 
     const [{ data: referredUsers }, { data: rewards }, { data: withdrawals }] = await Promise.all([
       sellerClient.from('profiles').select('id,user_status').eq('referred_by', profile.id),
       sellerClient.from('referral_rewards').select('*, referred_user:referred_user_id(full_name,email)').eq('referrer_user_id', profile.id).order('created_at', { ascending: false }),
       sellerClient.from('referral_withdrawals').select('*').eq('user_id', profile.id).order('created_at', { ascending: false })
     ]);
-
     setText('stat-total-referrals', String((referredUsers || []).length));
     setText('stat-active-referrals', String((referredUsers || []).filter((u) => u.user_status === 'active').length));
-
     const totalEarned = (rewards || []).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const pendingRewards = (rewards || []).filter((r) => ['pending','approved','earned'].includes(r.reward_status)).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const paidRewards = (rewards || []).filter((r) => r.reward_status === 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const available = availableReferralBalance(rewards || [], withdrawals || []);
-
     setText('stat-ref-earnings', fmtInr(totalEarned));
     setText('stat-ref-available', fmtInr(available));
     setText('stat-pending-rewards', fmtInr(pendingRewards));
     setText('stat-ref-paid', fmtInr(paidRewards));
-
     const body = qs('referrals-body');
-    if (body) {
-      body.innerHTML = !(rewards || []).length ? '<tr><td colspan="6">No referral rewards yet.</td></tr>' : (rewards || []).map((r) => `
-        <tr>
-          <td>${escapeHtml(r.referred_user?.full_name || r.referred_user?.email || '-')}</td>
-          <td class="code-small">${escapeHtml(r.order_id || '-')}</td>
-          <td>${Number(r.reward_percent || 0.10).toFixed(2)}%</td>
-          <td>${fmtInr(r.reward_amount_inr)}</td>
-          <td>${chip(r.reward_status)}</td>
-          <td>${fmtDate(r.created_at)}</td>
-        </tr>`).join('');
-    }
-
+    if (body) body.innerHTML = !(rewards || []).length ? '<tr><td colspan="6">No referral rewards yet.</td></tr>' : (rewards || []).map((r) => `<tr><td>${escapeHtml(r.referred_user?.full_name || r.referred_user?.email || '-')}</td><td class="code-small">${escapeHtml(r.order_id || '-')}</td><td>${Number(r.reward_percent || 0.10).toFixed(2)}%</td><td>${fmtInr(r.reward_amount_inr)}</td><td>${chip(r.reward_status)}</td><td>${fmtDate(r.created_at)}</td></tr>`).join('');
     const withdrawBody = qs('ref-withdrawals-body');
-    if (withdrawBody) {
-      withdrawBody.innerHTML = !(withdrawals || []).length ? '<tr><td colspan="4">No withdrawal request yet.</td></tr>' : (withdrawals || []).map((w) => `
-        <tr>
-          <td>${fmtInr(w.amount_inr)}</td>
-          <td>${chip(w.status)}</td>
-          <td>${fmtDate(w.created_at)}</td>
-          <td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td>
-        </tr>`).join('');
-    }
-
+    if (withdrawBody) withdrawBody.innerHTML = !(withdrawals || []).length ? '<tr><td colspan="4">No withdrawal request yet.</td></tr>' : (withdrawals || []).map((w) => `<tr><td>${fmtInr(w.amount_inr)}</td><td>${chip(w.status)}</td><td>${fmtDate(w.created_at)}</td><td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td></tr>`).join('');
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
       const amount = Number(val('ref-withdraw-amount') || 0);
       if (!amount) return setText('ref-withdraw-message', 'Enter withdrawal amount.');
       if (amount < 2000) return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
       if (amount > available) return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(available)}.`);
-
       const { data: activePayout } = await sellerClient.from('bank_accounts').select('*').eq('user_id', profile.id).eq('is_active', true).order('is_primary', { ascending: false }).limit(1).maybeSingle();
-
-      const { error } = await sellerClient.from('referral_withdrawals').insert({
-        user_id: profile.id,
-        amount_inr: amount,
-        status: 'requested',
-        payout_method_id: activePayout?.id || null,
-        payout_label: activePayout?.label || activePayout?.bank_name || activePayout?.upi_id || null,
-        payout_details: activePayout || null
-      });
-
+      const { error } = await sellerClient.from('referral_withdrawals').insert({ user_id: profile.id, amount_inr: amount, status: 'requested', payout_method_id: activePayout?.id || null, payout_label: activePayout?.label || activePayout?.bank_name || activePayout?.upi_id || null, payout_details: activePayout || null });
       if (error) return setText('ref-withdraw-message', error.message);
       setText('ref-withdraw-message', 'Withdrawal request submitted. Admin will review and pay manually.');
       qs('ref-withdraw-amount').value = '';

@@ -115,3 +115,5 @@ Seller all actions fallback:
 - Confirm Sell Request fallback creates sell_orders
 - Referral withdrawal, copy code/link, reset payout, logout fallback added
 - If main.js event binding fails, seller buttons should still show messages/actions
+
+Referral final fixed/merged with latest seller all-buttons build.

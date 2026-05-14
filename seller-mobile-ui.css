@@ -545,3 +545,20 @@ body[data-page="seller-dashboard"] .panel-section.active{
     font-size:9px;
   }
 }
+
+
+/* Seller logout fix */
+.seller-drawer-logout{
+  width:100%;
+  border:1px solid rgba(255,111,125,.28);
+  background:rgba(255,111,125,.12);
+  color:#ffb7bf;
+  border-radius:16px;
+  padding:13px 14px;
+  font-weight:950;
+  text-align:center;
+  margin-top:6px;
+}
+.seller-drawer-logout:hover{
+  background:rgba(255,111,125,.18);
+}

@@ -797,3 +797,15 @@ body[data-page="seller-dashboard"] .panel-section.active{
 #seller-sell-start-card.hidden-flow-card{
   display:none!important;
 }
+
+
+/* Seller cancel pending order */
+.cancel-order-btn{
+  margin:10px 0 12px!important;
+  background:rgba(255,77,109,.14)!important;
+  border:1px solid rgba(255,77,109,.35)!important;
+  color:#ff9fb0!important;
+}
+.cancel-note-row strong{
+  color:#ffd166!important;
+}

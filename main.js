@@ -657,7 +657,43 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     return { steps, banner, status };
   }
 
-  async function renderDepositOrderBox(order) {
+  
+  async function cancelSellerPendingOrder(order) {
+    if (!order?.id) return;
+    if (order.tx_hash) {
+      alert('TX hash already submitted. Please contact admin/support to cancel this order.');
+      return;
+    }
+
+    const ok = confirm('Cancel this order and start again? Use this only if amount or payout method is wrong.');
+    if (!ok) return;
+
+    const { error } = await sellerClient
+      .from('sell_orders')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+      .eq('id', order.id)
+      .is('tx_hash', null);
+
+    if (error) {
+      alert(error.message || 'Order cancel failed. Please contact support.');
+      return;
+    }
+
+    try {
+      await audit('seller_order_cancelled', 'sell_orders', order.id, { reason: 'seller_cancel_before_tx' });
+    } catch (_) {}
+
+    toggleSellerNewOrderLocked(false);
+    resetSellerNewOrderState(true);
+    qs('sell-amount') && (qs('sell-amount').value = '');
+    qs('quotes-container') && (qs('quotes-container').innerHTML = '');
+    qs('quotes-empty') && (qs('quotes-empty').textContent = 'Enter amount and payout method, then tap Get Best Admin Rate.');
+    qs('quotes-empty') && (qs('quotes-empty').style.display = 'block');
+    setText('quote-calc-message', 'Order cancelled. You can start a new Sell USDT order.');
+    qs('seller-sell-start-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+async function renderDepositOrderBox(order) {
     const box = qs('deposit-order-box');
     const paymentCard = qs('seller-order-payment-card');
     const trackingCard = qs('seller-order-tracking-card');
@@ -710,6 +746,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
             <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
             <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
             ${isSellerOrderComplete(order) ? '<div class="summary-row success-note-row"><span>Next Order</span><strong>यह order complete है. अब आप नया Sell USDT order start कर सकते हैं.</strong></div>' : ''}
+            ${!order.tx_hash && !isSellerOrderComplete(order) ? '<div class="summary-row cancel-note-row"><span>Wrong Details?</span><strong>TX submit से पहले आप order cancel करके फिर से start कर सकते हैं.</strong></div>' : ''}
           </div>
           <div id="seller-payout-inline" class="inline-payout-box"></div>
           <div class="deposit-warning">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
@@ -717,6 +754,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
 
         <div class="seller-payment-right">
           <div class="summary-title">Scan QR / Send USDT</div>
+          ${!order.tx_hash && !isSellerOrderComplete(order) ? '<button id="cancel-active-order" class="btn btn-danger btn-block cancel-order-btn">Cancel Order & Start Again</button>' : ''}
           ${qr ? `<div class="image-preview-box fancy-qr seller-payment-qr"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
           ${order.tx_hash ? `
             <div class="tx-success-box">
@@ -751,6 +789,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
 
     bindInlineCopy('copy-deposit-address', order.deposit_wallet_address || '', '✓');
     bindInlineCopy('copy-deposit-amount', String(order.crypto_amount || ''), '✓');
+    qs('cancel-active-order')?.addEventListener('click', () => cancelSellerPendingOrder(order));
 
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
       const txHash = val('deposit-tx-hash');

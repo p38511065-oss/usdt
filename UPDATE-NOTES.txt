@@ -189,3 +189,9 @@ Seller active order lock:
 - If seller has any incomplete latest order, Sell USDT page shows that active order instead of new order form.
 - New order creation is blocked until last active order is completed/cancelled/rejected.
 - Once order is completed, Sell USDT flow unlocks and can start fresh.
+
+Seller cancel pending order:
+- Seller can cancel active order before TX hash is submitted.
+- After cancellation, Sell USDT form unlocks and user can start again.
+- If TX hash exists, seller cannot self-cancel and must contact admin.
+- Added seller-cancel-order-policy.sql.

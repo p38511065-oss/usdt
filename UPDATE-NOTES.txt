@@ -155,3 +155,8 @@ Admin premium mobile UI update:
 - Added premium header, stat cards, quick section tabs, recent order card, order steps, quick actions and bottom mobile navigation.
 - KYC button removed from recent order; order actions are Crypto Received, Start Payout and Mark Paid.
 - Existing admin sections and working logic preserved.
+
+Admin Premium UI v2:
+- Strong CSS override added so old admin design does not show.
+- Sidebar hidden and app-style mobile/desktop dashboard shown.
+- Dashboard header/cards/tabs/recent order/bottom nav styled closer to reference image.

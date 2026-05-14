@@ -2324,6 +2324,45 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('save-wallet')?.addEventListener('click', saveWallet);
     qs('reset-wallet-form')?.addEventListener('click', clearWalletForm);
 
+    function closeAdminFloatingPanels() {
+      qs('admin-quick-menu')?.classList.add('hidden');
+      qs('admin-notification-panel')?.classList.add('hidden');
+    }
+
+    qs('admin-more-menu-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      qs('admin-notification-panel')?.classList.add('hidden');
+      qs('admin-quick-menu')?.classList.toggle('hidden');
+    });
+
+    qs('admin-menu-close')?.addEventListener('click', closeAdminFloatingPanels);
+
+    qs('admin-notification-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      qs('admin-quick-menu')?.classList.add('hidden');
+      qs('admin-notification-panel')?.classList.toggle('hidden');
+    });
+
+    qs('admin-notification-close')?.addEventListener('click', closeAdminFloatingPanels);
+
+    qs('admin-floating-logout')?.addEventListener('click', async () => {
+      await adminClient.auth.signOut();
+      window.location.href = 'admin-login.html';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.admin-floating-menu') && !e.target.closest('#admin-more-menu-btn') && !e.target.closest('.admin-notification-panel') && !e.target.closest('#admin-notification-btn')) {
+        closeAdminFloatingPanels();
+      }
+    });
+
+    qs('admin-quick-menu')?.querySelectorAll('.floating-link').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        closeAdminFloatingPanels();
+      });
+    });
+
+
     qs('admin-order-search')?.addEventListener('input', async () => {
       window.__adminOrdersPage = 1;
       await loadAdminOrders();

@@ -166,3 +166,9 @@ Admin Orders mobile fit patch:
 - Order detail, payout, wallet and timeline sections become single-column on mobile.
 - Buttons and pagination are mobile-friendly.
 - No backend/logic changes.
+
+Admin menu/notification fix:
+- Top menu button opens admin menu dropdown.
+- Logout option added inside floating menu.
+- Notification icon opens notification panel.
+- Dropdowns close on outside click.

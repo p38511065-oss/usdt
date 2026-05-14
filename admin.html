@@ -31,7 +31,7 @@
     <div class="panel-main">
       <header class="panel-topbar admin-app-topbar">
         <div class="admin-brand-row">
-          <button class="admin-menu-btn" type="button" aria-label="Menu">☰</button>
+          <button class="admin-menu-btn" id="admin-more-menu-btn" type="button" aria-label="Menu">☰</button>
           <div class="admin-logo-mark">₹</div>
           <div>
             <div class="panel-title">Crypto Sell to <span>INR</span> Desk Admin</div>
@@ -39,11 +39,47 @@
           </div>
         </div>
         <div class="topbar-actions admin-top-actions">
-          <span class="admin-bell">🔔<b>3</b></span>
+          <button class="admin-bell" id="admin-notification-btn" type="button">🔔<b>3</b></button>
           <span class="admin-avatar">AD</span>
           <span class="nav-user-pill" id="admin-name">Loading...</span>
         </div>
       </header>
+
+      <div id="admin-quick-menu" class="admin-floating-menu hidden">
+        <div class="floating-menu-head">
+          <strong>Admin Menu</strong>
+          <button type="button" id="admin-menu-close">✕</button>
+        </div>
+        <button class="side-link floating-link" data-target="admin-overview">Dashboard</button>
+        <button class="side-link floating-link" data-target="admin-orders">Orders &amp; Payouts</button>
+        <button class="side-link floating-link" data-target="admin-slabs">Rate Slabs</button>
+        <button class="side-link floating-link" data-target="admin-wallets">Wallet Management</button>
+        <button class="side-link floating-link" data-target="admin-kyc">KYC Verification</button>
+        <button class="side-link floating-link" data-target="admin-users">User Management</button>
+        <button class="side-link floating-link" data-target="admin-referrals">Referral Rewards</button>
+        <button class="side-link floating-link" data-target="admin-logs">Transaction Logs</button>
+        <button type="button" id="admin-floating-logout" class="btn btn-danger btn-block">Logout</button>
+      </div>
+
+      <div id="admin-notification-panel" class="admin-notification-panel hidden">
+        <div class="floating-menu-head">
+          <strong>Notifications</strong>
+          <button type="button" id="admin-notification-close">✕</button>
+        </div>
+        <div class="admin-notification-item">
+          <span>●</span>
+          <div><strong>Pending Orders</strong><small>Check Orders &amp; Payouts for crypto received / payout updates.</small></div>
+        </div>
+        <div class="admin-notification-item">
+          <span>●</span>
+          <div><strong>KYC Review</strong><small>Review pending seller verification requests.</small></div>
+        </div>
+        <div class="admin-notification-item">
+          <span>●</span>
+          <div><strong>Referral Withdrawals</strong><small>Approve or mark referral withdrawals as paid.</small></div>
+        </div>
+      </div>
+
 
       <main class="panel-content">
         <section class="workspace-banner admin-welcome-hero">

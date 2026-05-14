@@ -2127,3 +2127,134 @@ body.admin-app-ui-v2 #admin-orders .break-anywhere{
     justify-content:flex-start!important;
   }
 }
+
+
+
+/* Admin menu / notification dropdown fix */
+body.admin-app-ui-v2 .admin-bell{
+  border:1px solid rgba(119,190,255,.14)!important;
+  cursor:pointer!important;
+}
+
+body.admin-app-ui-v2 .admin-floating-menu,
+body.admin-app-ui-v2 .admin-notification-panel{
+  position:fixed!important;
+  top:86px!important;
+  right:24px!important;
+  z-index:200!important;
+  width:min(360px, calc(100% - 24px))!important;
+  max-height:calc(100vh - 118px)!important;
+  overflow:auto!important;
+  border-radius:24px!important;
+  border:1px solid rgba(119,190,255,.18)!important;
+  background:linear-gradient(180deg,rgba(6,24,48,.98),rgba(3,13,29,.98))!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.42)!important;
+  backdrop-filter:blur(20px)!important;
+  padding:14px!important;
+}
+
+body.admin-app-ui-v2 .admin-floating-menu.hidden,
+body.admin-app-ui-v2 .admin-notification-panel.hidden{
+  display:none!important;
+}
+
+body.admin-app-ui-v2 .floating-menu-head{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:12px!important;
+  padding:6px 4px 12px!important;
+  border-bottom:1px solid rgba(119,190,255,.12)!important;
+  margin-bottom:10px!important;
+}
+
+body.admin-app-ui-v2 .floating-menu-head strong{
+  font-size:18px!important;
+  color:#f4fbff!important;
+}
+
+body.admin-app-ui-v2 .floating-menu-head button{
+  width:36px!important;
+  height:36px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(119,190,255,.16)!important;
+  background:rgba(8,25,49,.8)!important;
+  color:#fff!important;
+  cursor:pointer!important;
+}
+
+body.admin-app-ui-v2 .admin-floating-menu .floating-link{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  min-height:46px!important;
+  padding:12px 14px!important;
+  border-radius:15px!important;
+  color:#d5e8ff!important;
+  background:transparent!important;
+  border:1px solid transparent!important;
+  text-align:left!important;
+}
+
+body.admin-app-ui-v2 .admin-floating-menu .floating-link:before{
+  display:none!important;
+}
+
+body.admin-app-ui-v2 .admin-floating-menu .floating-link:hover{
+  background:rgba(37,231,255,.08)!important;
+  border-color:rgba(37,231,255,.18)!important;
+  color:#22f4e3!important;
+}
+
+body.admin-app-ui-v2 #admin-floating-logout{
+  margin-top:12px!important;
+  background:rgba(255,77,109,.14)!important;
+  border:1px solid rgba(255,77,109,.30)!important;
+  color:#ff9aae!important;
+  min-height:46px!important;
+  border-radius:15px!important;
+  font-weight:950!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item{
+  display:flex!important;
+  gap:12px!important;
+  padding:13px 6px!important;
+  border-bottom:1px solid rgba(119,190,255,.10)!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item:last-child{
+  border-bottom:0!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item span{
+  color:#37ffc1!important;
+  font-size:18px!important;
+  line-height:1.1!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item div{
+  display:grid!important;
+  gap:4px!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item strong{
+  color:#fff!important;
+}
+
+body.admin-app-ui-v2 .admin-notification-item small{
+  color:#a9b9cf!important;
+  line-height:1.35!important;
+}
+
+@media(max-width:760px){
+  body.admin-app-ui-v2 .admin-floating-menu,
+  body.admin-app-ui-v2 .admin-notification-panel{
+    top:78px!important;
+    left:9px!important;
+    right:9px!important;
+    width:auto!important;
+    max-height:calc(100vh - 102px)!important;
+  }
+}

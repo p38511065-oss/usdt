@@ -122,3 +122,17 @@ Seller TRC20 default update:
 - Seller side network is now fixed/default TRC20.
 - sell-network and quotes-network fields are readonly TRC20.
 - Seller quote/sell logic uses TRC20 only.
+
+Seller UX cleanup:
+- Bottom nav New Quote replaced with Sell USDT.
+- Available Quotes renamed to Rate Board.
+- Sell Crypto renamed to Sell USDT.
+- Seller coin/network are fixed readonly USDT/TRC20.
+- Added helper text to Rate Board and Sell USDT sections.
+- Seller flow wording changed: Get Best Admin Rate → Create Sell Order.
+
+Editable amount update:
+- Rate Board Use This Rate may auto-fill minimum slab amount as a starting value.
+- Sell amount remains editable, so seller can enter any amount within admin slab range.
+- Added clear help message explaining amount can be edited.
+- Coin remains USDT and network remains TRC20.

@@ -1030,7 +1030,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     fillNetworks();
 
     qs('show-quotes-btn')?.addEventListener('click', async () => {
-      const coin = val('sell-coin').toUpperCase();
+      const coin = 'USDT';
       const network = 'TRC20';
       const amount = Number(val('sell-amount'));
       const payoutId = val('bank-account-select');
@@ -1051,7 +1051,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         slabMatchesAmount(s, amount)
       );
 
-      // If user came from Available Quotes, never lose that slab.
+      // If user came from Rate Board, never lose that slab.
       // This fixes higher amount / open-ended slabs showing as Not Available.
       if (selectedSellerQuote) {
         const selected = normalizeSlabRow(selectedSellerQuote, templates);
@@ -1071,7 +1071,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
           .sort((a, b) => Number(a.min_amount || 0) - Number(b.min_amount || 0))[0];
         empty.textContent = nextHigher
           ? `No slab matched this amount. Add ${Number(nextHigher.min_amount || 0) - amount} ${coin} more to unlock ${Number(nextHigher.rate_inr || 0).toFixed(4)} rate.`
-          : 'No active quote slab matches this amount.';
+          : 'No admin rate slab matches this amount. Please enter an amount within an active admin slab range.';
         return;
       }
       empty.style.display = 'none';
@@ -1094,7 +1094,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
               <div class="kv-row"><span>Payout Time</span><strong>${escapeHtml(slab.payout_time_label || '-')}</strong></div>
               <div class="kv-row"><span>Amount Slab</span><strong>${escapeHtml(slabRangeLabel(slab))}</strong></div>
             </div>
-            <div class="action-row top-gap-sm"><button class="btn btn-primary select-quote">Confirm Sell Request</button></div>`;
+            <div class="action-row top-gap-sm"><button class="btn btn-primary select-quote">Create Sell Order</button></div>`;
 
           card.querySelector('.select-quote').addEventListener('click', async () => {
             const payload = {
@@ -1141,7 +1141,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const banner = qs('selected-quote-banner');
     const hint = qs('quotes-selected-hint');
     if (!selectedSellerQuote) {
-      if (banner) banner.innerHTML = 'Select a quote from Available Quotes to prefill this sell request, or search manually below.';
+      if (banner) banner.innerHTML = 'Select a quote from Rate Board to prefill this sell request, or search manually below.';
       if (hint) hint.innerHTML = 'Choose a slab to continue with sell request.';
       return;
     }
@@ -1163,7 +1163,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     if (qs('sell-amount')) qs('sell-amount').value = Number(quote.min_amount ?? quote.min_crypto_amount ?? 0);
     setSelectedQuoteBanner();
     document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-    setText('quote-calc-message', 'Chosen quote prefilled. Select payout method and click Search Matching Quotes to confirm this slab.');
+    setText('quote-calc-message', 'Chosen quote prefilled. Select payout method and click Get Best Admin Rate to confirm this slab.');
   }
 
   function buildQuoteCard(quote, amount) {
@@ -1180,7 +1180,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         <div class="kv-row"><span>Payout Time</span><strong>${escapeHtml(quote.payout_time_label || '-')}</strong></div>
       </div>
       ${higherUnlock ? `<div class="tiny-note top-gap-sm">${escapeHtml(higherUnlock)}</div>` : ''}
-      <div class="action-row top-gap-sm"><button class="btn btn-primary quote-sell-now">Sell With This Quote</button></div>
+      <div class="action-row top-gap-sm"><button class="btn btn-primary quote-sell-now">Use This Rate</button></div>
     </div>`;
   }
 
@@ -1269,6 +1269,12 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     }
     setText('seller-top-name', profile.full_name || profile.email || 'Seller');
     renderProfileBoxes(profile);
+
+    if (qs('sell-coin')) qs('sell-coin').value = 'USDT';
+    if (qs('quotes-coin')) qs('quotes-coin').value = 'USDT';
+    if (qs('sell-network')) qs('sell-network').value = 'TRC20';
+    if (qs('quotes-network')) qs('quotes-network').value = 'TRC20';
+
 
     if (qs('sell-network')) qs('sell-network').value = 'TRC20';
     if (qs('quotes-network')) qs('quotes-network').value = 'TRC20';

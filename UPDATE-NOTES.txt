@@ -178,3 +178,14 @@ Seller order summary flow update:
 - Order tracking is hidden until TX hash is submitted.
 - QR and wallet address now appear inside Order Summary & Payment section, not timeline.
 - Payment submit success then shows tracking section.
+
+Seller new order reset fix:
+- Old order summary/payment card now hides when seller changes amount or payout method.
+- Old tracking card hides when starting a new sell order.
+- Get Best Admin Rate resets previous order state before showing fresh quote.
+- Rate Board selection resets previous payment/tracking state before new order flow.
+
+Seller active order lock:
+- If seller has any incomplete latest order, Sell USDT page shows that active order instead of new order form.
+- New order creation is blocked until last active order is completed/cancelled/rejected.
+- Once order is completed, Sell USDT flow unlocks and can start fresh.

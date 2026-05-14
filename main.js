@@ -675,6 +675,10 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
 
     if (paymentCard) paymentCard.classList.remove('hidden-flow-card');
 
+    if (isSellerOrderComplete(order)) {
+      toggleSellerNewOrderLocked(false);
+    }
+
     order = await ensureOrderWalletAssignment(order);
     const qr = order.deposit_wallet_qr_url || order.qr_image_url || order.qr_code_url || '';
     const walletMissing = !order.deposit_wallet_address;
@@ -705,6 +709,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
             <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'seller-payout-inline',this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
             <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
             <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
+            ${isSellerOrderComplete(order) ? '<div class="summary-row success-note-row"><span>Next Order</span><strong>यह order complete है. अब आप नया Sell USDT order start कर सकते हैं.</strong></div>' : ''}
           </div>
           <div id="seller-payout-inline" class="inline-payout-box"></div>
           <div class="deposit-warning">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
@@ -1074,7 +1079,19 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     coinSelect.addEventListener?.('change', fillNetworks);
     fillNetworks();
 
+    ['sell-amount','bank-account-select','sell-coin','sell-network'].forEach((id) => {
+      qs(id)?.addEventListener('input', resetSellerNewOrderState);
+      qs(id)?.addEventListener('change', resetSellerNewOrderState);
+    });
+
+    await showLatestActiveOrderIfAny(profile);
+
     qs('show-quotes-btn')?.addEventListener('click', async () => {
+      const activeOrder = await showLatestActiveOrderIfAny(profile, { scroll: true });
+      if (activeOrder) {
+        return setText('quote-calc-message', 'पहले आपका active order complete होगा, उसके बाद नया order start कर पाएंगे.');
+      }
+      resetSellerNewOrderState(true);
       const coin = 'USDT';
       const network = 'TRC20';
       const amount = Number(val('sell-amount'));
@@ -1182,10 +1199,87 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('quotes-amount')?.addEventListener('input', () => renderAvailableQuotesPage());
     qs('bank-account-select')?.addEventListener('change', onPayoutSelectorChange);
     setSelectedQuoteBanner();
+    resetSellerNewOrderState();
     await renderAvailableQuotesPage();
     qs('bank-account-select')?.addEventListener('change', onPayoutSelectorChange);
   }
 
+
+
+
+  function isSellerOrderComplete(order) {
+    return ['completed', 'paid', 'cancelled', 'rejected'].includes(String(order?.status || '').toLowerCase());
+  }
+
+  async function getLatestActiveSellerOrder(userId) {
+    if (!userId) return null;
+    const { data, error } = await sellerClient
+      .from('sell_orders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (error) {
+      console.warn('Latest active order lookup failed:', error.message);
+      return null;
+    }
+
+    return (data || []).find((order) => !isSellerOrderComplete(order)) || null;
+  }
+
+  function toggleSellerNewOrderLocked(isLocked) {
+    qs('active-order-lock-banner')?.classList.toggle('hidden-flow-card', !isLocked);
+    qs('seller-sell-start-card')?.classList.toggle('hidden-flow-card', isLocked);
+    qs('show-quotes-btn')?.toggleAttribute('disabled', !!isLocked);
+  }
+
+  async function showLatestActiveOrderIfAny(profile, options = {}) {
+    const activeOrder = await getLatestActiveSellerOrder(profile?.id);
+    if (!activeOrder) {
+      toggleSellerNewOrderLocked(false);
+      if (options.resetWhenNone) resetSellerNewOrderState();
+      return null;
+    }
+
+    toggleSellerNewOrderLocked(true);
+    qs('quotes-container') && (qs('quotes-container').innerHTML = '');
+    qs('quotes-empty') && (qs('quotes-empty').textContent = 'आपका एक active order चल रहा है. नया rate/order complete होने के बाद ही start होगा.');
+    qs('quotes-empty') && (qs('quotes-empty').style.display = 'block');
+
+    await renderDepositOrderBox(activeOrder);
+    qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
+    if (activeOrder.tx_hash) qs('seller-order-tracking-card')?.classList.remove('hidden-flow-card');
+
+    if (options.scroll) {
+      qs('seller-order-payment-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    return activeOrder;
+  }
+
+  function resetSellerNewOrderState(force = false) {
+    const paymentCard = qs('seller-order-payment-card');
+    const trackingCard = qs('seller-order-tracking-card');
+    const depositBox = qs('deposit-order-box');
+    const trackingBox = qs('seller-post-payment-tracking');
+    const quoteMsg = qs('quote-calc-message');
+
+    if (!force && !qs('active-order-lock-banner')?.classList.contains('hidden-flow-card')) return;
+    paymentCard?.classList.add('hidden-flow-card');
+    trackingCard?.classList.add('hidden-flow-card');
+
+    if (depositBox) {
+      depositBox.innerHTML = '<div class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>';
+    }
+    if (trackingBox) {
+      trackingBox.innerHTML = '<div class="empty-state">TX hash submit करने के बाद tracking status यहाँ दिखेगा.</div>';
+    }
+    if (quoteMsg) {
+      quoteMsg.textContent = '';
+      quoteMsg.classList.remove('error', 'pending');
+    }
+  }
 
   function setSelectedQuoteBanner() {
     const banner = qs('selected-quote-banner');

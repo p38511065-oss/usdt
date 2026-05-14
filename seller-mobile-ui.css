@@ -781,3 +781,19 @@ body[data-page="seller-dashboard"] .panel-section.active{
     grid-column:2;
   }
 }
+
+
+/* Seller active order lock */
+.active-order-lock-banner{
+  border-color:rgba(255,199,45,.26)!important;
+  background:rgba(255,199,45,.09)!important;
+  color:#ffe6a3!important;
+  font-weight:850;
+  margin-bottom:12px;
+}
+.success-note-row strong{
+  color:#37ffc1!important;
+}
+#seller-sell-start-card.hidden-flow-card{
+  display:none!important;
+}

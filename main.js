@@ -40,6 +40,49 @@
     const klass = raw.includes('block') || raw.includes('reject') || raw.includes('cancel') || raw.includes('suspend') ? 'blocked' : raw.includes('pending') || raw.includes('inactive') ? 'pending' : 'active';
     return `<span class="status-chip ${klass}">${escapeHtml(value)}</span>`;
   }
+
+  function referralCodeFromUser(user, mobile) {
+    const seed = (mobile || user?.email || user?.id || '').replace(/\D/g, '').slice(-5) || String(user?.id || '').slice(0, 5).replace(/-/g, '').toUpperCase();
+    return 'SELL' + seed;
+  }
+  async function ensureSellerProfileRecord(user, extra = {}) {
+    if (!user?.id) return null;
+    const email = user.email || extra.email || '';
+    const meta = user.user_metadata || {};
+    const fullName = extra.full_name || meta.full_name || email.split('@')[0] || 'Seller';
+    const mobile = extra.mobile || meta.mobile || '';
+    const referralCode = referralCodeFromUser(user, mobile);
+
+    const { data: existing } = await sellerClient
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const payload = {
+      id: user.id,
+      email,
+      full_name: fullName,
+      mobile,
+      role: 'seller',
+      user_status: existing?.user_status || 'active',
+      kyc_status: existing?.kyc_status || 'not_submitted',
+      referral_code: existing?.referral_code || referralCode
+    };
+
+    if (extra.referred_by && extra.referred_by !== user.id && !existing?.referred_by) {
+      payload.referred_by = extra.referred_by;
+    }
+
+    const { error } = await sellerClient.from('profiles').upsert(payload, { onConflict: 'id' });
+    if (error) {
+      console.warn('Profile upsert failed:', error.message);
+      return existing || null;
+    }
+
+    const { data } = await sellerClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    return data || payload;
+  }
   function bindSidebar() {
     document.querySelectorAll('.side-link').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -265,10 +308,24 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
   }));
 
   async function loadLoginPage() {
+    const params = new URLSearchParams(window.location.search);
+    const refFromUrl = params.get('ref') || params.get('referral') || '';
+    if (refFromUrl && qs('register-referral')) qs('register-referral').value = refFromUrl;
+
     qs('login-btn')?.addEventListener('click', async () => {
       setText('auth-message', 'Logging in...');
-      const { error } = await sellerClient.auth.signInWithPassword({ email: val('login-email'), password: qs('login-password').value });
+      const email = val('login-email');
+      const password = qs('login-password')?.value || '';
+      if (!email || !password) return setText('auth-message', 'Please enter email and password.');
+
+      const { data, error } = await sellerClient.auth.signInWithPassword({ email, password });
       if (error) return setText('auth-message', error.message);
+
+      if (data?.user) {
+        await ensureSellerProfileRecord(data.user, { email });
+      }
+
+      setText('auth-message', 'Login successful. Opening dashboard...');
       window.location.href = 'dashboard.html';
     });
 
@@ -277,28 +334,44 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       const full_name = val('register-name');
       const mobile = val('register-mobile');
       const email = val('register-email');
-      const password = qs('register-password').value;
+      const password = qs('register-password')?.value || '';
       const referralCode = val('register-referral');
-      if (!full_name || !mobile || !email || !password) return setText('auth-message', 'Please fill all required fields.');
+
+      if (!full_name || !mobile || !email || !password) {
+        return setText('auth-message', 'Please fill all required fields.');
+      }
+
       let referredBy = null;
       if (referralCode) {
-        const { data: refProfile } = await sellerClient.from('profiles').select('id').eq('referral_code', referralCode).maybeSingle();
+        const { data: refProfile } = await sellerClient
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', referralCode)
+          .maybeSingle();
         referredBy = refProfile?.id || null;
       }
-      const { error } = await sellerClient.auth.signUp({
-        email, password,
+
+      const { data, error } = await sellerClient.auth.signUp({
+        email,
+        password,
         options: { data: { full_name, mobile, role: 'seller' } }
       });
+
       if (error) return setText('auth-message', error.message);
-      if (referredBy) {
-        setTimeout(async () => {
-          try {
-            const user = await getSessionUser(sellerClient);
-            if (user) await sellerClient.from('profiles').update({ referred_by: referredBy }).eq('id', user.id);
-          } catch (_e) {}
-        }, 1200);
+
+      const user = data?.user;
+      if (user) {
+        // If email confirmation is disabled, user/session is available immediately.
+        // If confirmation is enabled, this upsert may be blocked until login; login handler will create it later.
+        await ensureSellerProfileRecord(user, { full_name, mobile, email, referred_by: referredBy });
       }
-      setText('auth-message', 'Account created successfully. Now login.');
+
+      if (data?.session) {
+        setText('auth-message', 'Account created. Opening dashboard...');
+        window.location.href = 'dashboard.html';
+      } else {
+        setText('auth-message', 'Account created. If email confirmation is enabled, confirm email first, then login.');
+      }
     });
   }
 
@@ -802,7 +875,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     });
   }
 
-  async function loadKycSection  async function loadKycSection(profile) {
+  async function loadKycSection(profile) {
     const { data: latest } = await sellerClient.from('kyc_submissions').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
     const statusText = latest ? `Current KYC status: <strong>${escapeHtml(latest.status)}</strong>${latest.review_note ? `<br><span class="tiny-note">${escapeHtml(latest.review_note)}</span>` : ''}` : `Current KYC status: <strong>${escapeHtml(profile.kyc_status)}</strong>`;
     setHtml('kyc-status-box', statusText);
@@ -1139,7 +1212,15 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const user = await ensureAuth('login.html', sellerClient);
     if (!user) return;
     bindSidebar();
-    const profile = await getProfile(sellerClient);
+    let profile = await getProfile(sellerClient);
+    if (!profile) {
+      profile = await ensureSellerProfileRecord(user, { email: user.email });
+    }
+    if (!profile) {
+      await sellerClient.auth.signOut();
+      window.location.href = 'login.html';
+      return;
+    }
     setText('seller-top-name', profile.full_name || profile.email || 'Seller');
     renderProfileBoxes(profile);
     updatePayoutFieldVisibility();

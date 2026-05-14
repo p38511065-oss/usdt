@@ -76,3 +76,16 @@ Referral system update:
 - Seller can request withdrawal
 - Admin Referral Rewards section with rewards and withdrawal management
 - Added referral-system-migration.sql
+
+Admin panel emergency fix:
+- Fixed JavaScript syntax error caused by duplicate loadKycSection function text
+- Admin panel working restored
+
+Seller auth full fix:
+- Rebuilt seller login/register JS flow
+- Referral code from URL auto-fills register form
+- Register creates/repairs seller profile when possible
+- Login also repairs missing seller profile
+- Dashboard no longer breaks if profile row was missing
+- Added seller-auth-fix-policies.sql for profile RLS/register permissions
+- Fixed auth tab panel visibility

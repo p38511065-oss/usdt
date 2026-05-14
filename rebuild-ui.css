@@ -514,3 +514,8 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
     font-size:39px !important;
   }
 }
+
+
+/* Auth tab visibility fix */
+.tab-panel{display:none}
+.tab-panel.active{display:block}

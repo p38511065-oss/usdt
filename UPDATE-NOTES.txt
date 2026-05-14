@@ -67,3 +67,12 @@ Seller logout fix:
 - Added Logout button inside seller mobile menu drawer
 - Removed hidden floating logout duplicate
 - Existing logout button ID preserved for main.js logout logic
+
+Referral system update:
+- 0.10% referral reward on every completed referred sell order
+- Reward generated when admin marks order completed
+- Seller referral wallet with total, available, pending, paid
+- Minimum referral withdrawal ₹2,000
+- Seller can request withdrawal
+- Admin Referral Rewards section with rewards and withdrawal management
+- Added referral-system-migration.sql

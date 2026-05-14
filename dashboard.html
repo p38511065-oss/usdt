@@ -263,44 +263,98 @@
         </section>
 
 
+      
       <section id="seller-referrals" class="panel-section">
-          <div class="grid-2">
-            <div class="card">
-              <div class="section-head"><h3>Your Referral Information</h3></div>
-              <label>Your Referral Code</label>
-              <div class="copy-box" id="ref-code-box">-</div>
-              <div class="action-row top-gap-sm">
-                <button id="copy-ref-code" class="btn btn-secondary">Copy Code</button>
-              </div>
-              <label class="top-gap-sm">Your Referral Link</label>
-              <div class="copy-box" id="ref-link-box">-</div>
-              <div class="action-row top-gap-sm">
-                <button id="copy-ref-link" class="btn btn-primary">Copy Link</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="section-head"><h3>Referral Summary</h3></div>
-              <div class="stats-grid stats-grid-2 compact-stats">
-                <div class="mini-stat"><strong id="stat-total-referrals">0</strong><span>Total Referrals</span></div>
-                <div class="mini-stat"><strong id="stat-active-referrals">0</strong><span>Active Referrals</span></div>
-                <div class="mini-stat"><strong id="stat-ref-earnings">₹0.00</strong><span>Referral Earnings</span></div>
-                <div class="mini-stat"><strong id="stat-pending-rewards">₹0.00</strong><span>Pending Rewards</span></div>
-              </div>
-            </div>
+        <div class="section-head">
+          <div>
+            <h3>Referral Wallet</h3>
+            <p class="tiny-note">Earn 0.10% on every completed sell order made by your referred sellers. Minimum withdrawal is ₹2,000.</p>
           </div>
-          <div class="card top-gap">
-            <div class="section-head"><h3>Referral Rewards</h3></div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Referred User</th><th>Order</th><th>Reward %</th><th>Reward INR</th><th>Status</th><th>Created</th></tr>
-                </thead>
-                <tbody id="referrals-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+        </div>
 
+        <div class="referral-wallet-grid">
+          <div class="card referral-wallet-card">
+            <span>Total Earned</span>
+            <strong id="stat-ref-earnings">₹0</strong>
+            <small>All referral rewards</small>
+          </div>
+          <div class="card referral-wallet-card">
+            <span>Available</span>
+            <strong id="stat-ref-available">₹0</strong>
+            <small>Can request after ₹2,000</small>
+          </div>
+          <div class="card referral-wallet-card">
+            <span>Pending</span>
+            <strong id="stat-pending-rewards">₹0</strong>
+            <small>Approval / unpaid</small>
+          </div>
+          <div class="card referral-wallet-card">
+            <span>Paid</span>
+            <strong id="stat-ref-paid">₹0</strong>
+            <small>Already paid</small>
+          </div>
+        </div>
+
+        <div class="grid-2 top-gap">
+          <div class="card">
+            <div class="section-head"><h3>Your Referral Link</h3></div>
+            <div class="copy-box">
+              <label>Referral Code</label>
+              <div class="copy-line"><span id="ref-code-box">-</span><button id="copy-ref-code" class="mini-copy">Copy</button></div>
+            </div>
+            <div class="copy-box top-gap-sm">
+              <label>Referral Link</label>
+              <div class="copy-line"><span id="ref-link-box">-</span><button id="copy-ref-link" class="mini-copy">Copy</button></div>
+            </div>
+            <p class="tiny-note top-gap-sm">Reward is generated after admin marks referred seller’s order as completed.</p>
+          </div>
+
+          <div class="card referral-withdraw-card">
+            <div class="section-head"><h3>Withdraw Referral Reward</h3></div>
+            <div class="minimum-box">
+              <span>Minimum Withdrawal</span>
+              <strong>₹2,000</strong>
+            </div>
+            <div class="form-group top-gap-sm">
+              <label>Withdrawal Amount</label>
+              <input id="ref-withdraw-amount" type="number" placeholder="Enter amount" />
+            </div>
+            <button id="request-ref-withdrawal" class="btn btn-primary btn-block">Request Withdrawal</button>
+            <p id="ref-withdraw-message" class="status-text"></p>
+          </div>
+        </div>
+
+        <div class="card top-gap">
+          <div class="section-head"><h3>Referral Rewards</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Referred Seller</th>
+                  <th>Order</th>
+                  <th>Reward %</th>
+                  <th>Reward</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="referrals-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card top-gap">
+          <div class="section-head"><h3>Withdrawal Requests</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Amount</th><th>Status</th><th>Requested</th><th>Paid At</th></tr>
+              </thead>
+              <tbody id="ref-withdrawals-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
       <section id="seller-kyc" class="panel-section">
           <div class="grid-2">

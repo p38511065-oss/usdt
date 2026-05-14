@@ -19,6 +19,7 @@
         <button class="side-link" data-target="admin-kyc">KYC Verification</button>
         <button class="side-link" data-target="admin-wallets">Wallet Management</button>
         <button class="side-link" data-target="admin-orders">Orders &amp; Payouts</button>
+        <button class="side-link" data-target="admin-referrals">Referral Rewards</button>
         <button class="side-link" data-target="admin-logs">Transaction Logs</button>
       </nav>
       <div class="sidebar-foot">
@@ -323,7 +324,57 @@
           </div>
         </section>
 
-        <section id="admin-logs" class="panel-section">
+  
+      <section id="admin-referrals" class="panel-section">
+        <div class="section-head">
+          <div>
+            <h3>Referral Rewards & Withdrawals</h3>
+            <p class="tiny-note">0.10% reward on every completed referred sell order. Seller withdrawal minimum ₹2,000.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="admin-referral-stats"></div>
+
+        <div class="card top-gap">
+          <div class="section-head"><h3>Reward Ledger</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Referrer</th>
+                  <th>Referred Seller</th>
+                  <th>Order</th>
+                  <th>Order Amount</th>
+                  <th>Reward</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-referral-rewards-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card top-gap">
+          <div class="section-head"><h3>Withdrawal Requests</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Seller</th>
+                  <th>Amount</th>
+                  <th>Payout</th>
+                  <th>Status</th>
+                  <th>Requested</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-ref-withdrawals-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section id="admin-logs" class="panel-section">
           <div class="card">
             <div class="section-head"><h3>Transaction Logs</h3></div>
             <div class="table-wrap">

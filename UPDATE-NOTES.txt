@@ -21,3 +21,10 @@ Merged fix:
 - Added payout details View modal for seller and admin panels
 
 - Fixed payout View buttons with inline modal trigger fallback
+
+
+Premium same-style UI rebuild layer added:
+- Added premium-ui.css after existing styles so working JS/IDs stay safe
+- Landing, seller login, admin login, seller dashboard and admin dashboard visually redesigned
+- Existing main.js logic preserved
+- Mobile responsive premium layout added

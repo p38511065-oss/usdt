@@ -6,6 +6,7 @@
   <title>Admin Panel</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="rebuild-ui.css" />
+  <link rel="stylesheet" href="admin-premium-mobile.css" />
 </head>
 <body data-page="admin-dashboard">
   <div class="panel-shell">
@@ -28,55 +29,63 @@
     </aside>
 
     <div class="panel-main">
-      <header class="panel-topbar">
-        <div>
-          <div class="panel-title">Admin Control Center</div>
-          <div class="panel-subtitle">Editable quotes, rate slabs, users, KYC, wallets with QR, orders and payout destinations.</div>
+      <header class="panel-topbar admin-app-topbar">
+        <div class="admin-brand-row">
+          <button class="admin-menu-btn" type="button" aria-label="Menu">☰</button>
+          <div class="admin-logo-mark">₹</div>
+          <div>
+            <div class="panel-title">Crypto Sell to <span>INR</span> Desk Admin</div>
+            <div class="panel-subtitle">Secure OTC control center</div>
+          </div>
         </div>
-        <div class="topbar-actions">
+        <div class="topbar-actions admin-top-actions">
+          <span class="admin-bell">🔔<b>3</b></span>
+          <span class="admin-avatar">AD</span>
           <span class="nav-user-pill" id="admin-name">Loading...</span>
         </div>
       </header>
 
       <main class="panel-content">
-        <section class="workspace-banner">
-          <div class="workspace-banner__content">
-            <span class="workspace-chip">LIVE OPERATIONS</span>
-            <h2>Admin Operations Desk</h2>
-            <p>Quotes, users, KYC, wallets, orders and payouts in one control center.</p>
+        <section class="workspace-banner admin-welcome-hero">
+          <div class="admin-hero-copy">
+            <h2>Welcome back, Admin 👋</h2>
+            <p>Here’s what’s happening today.</p>
           </div>
-          <div class="workspace-banner__cards">
-            <div class="workspace-metric">
-              <small>Premium UI</small>
-              <strong>Enabled</strong>
-            </div>
-            <div class="workspace-metric">
-              <small>Status Flow</small>
-              <strong>Connected</strong>
-            </div>
-          </div>
+          <div class="admin-role-badge">🛡️ Admin</div>
         </section>
-        <section id="admin-overview" class="panel-section active">
-          <div class="stats-grid admin-stat-grid" id="admin-stats"></div>
-          <div class="grid-2 top-gap">
-            <div class="card">
-              <div class="section-head"><h3>Recent Activity / Audit Log</h3></div>
-              <div class="table-wrap small-table">
-                <table>
-                  <thead><tr><th>Action</th><th>Entity</th><th>Meta</th><th>Time</th></tr></thead>
-                  <tbody id="admin-audit-body"></tbody>
-                </table>
-              </div>
-            </div>
-            <div class="card">
-              <div class="section-head"><h3>System Notes</h3></div>
-              <ul class="clean-list">
-                <li>Quotes, rates and slabs are fully editable from their own sections.</li>
-                <li>Users can be activated, deactivated, blocked and KYC-updated.</li>
-                <li>Wallets support QR image upload for faster seller transfers.</li>
-                <li>Orders show exact bank or UPI payout destination.</li>
-              </ul>
-            </div>
+        <section id="admin-overview" class="panel-section active admin-premium-overview">
+          <div class="stats-grid admin-stat-grid admin-stat-cards" id="admin-stats"></div>
+
+          <div class="admin-quick-tabs">
+            <button class="side-link active admin-tab-tile" data-target="admin-orders"><span>▣</span><strong>Orders &amp; Payouts</strong></button>
+            <button class="side-link admin-tab-tile" data-target="admin-slabs"><span>↗</span><strong>Quotes &amp; Rates</strong></button>
+            <button class="side-link admin-tab-tile" data-target="admin-wallets"><span>▤</span><strong>Wallet Management</strong></button>
+            <button class="side-link admin-tab-tile" data-target="admin-kyc"><span>🛡</span><strong>KYC Verification</strong></button>
+            <button class="side-link admin-tab-tile" data-target="admin-users"><span>◎</span><strong>User Management</strong></button>
+          </div>
+
+          <div class="admin-section-row">
+            <h3>Recent Orders</h3>
+            <button class="admin-link-action side-link" data-target="admin-orders">View All ›</button>
+          </div>
+          <div id="admin-overview-recent-order" class="admin-recent-order-card">
+            <div class="empty-state">Loading latest order...</div>
+          </div>
+
+          <div class="admin-section-row top-gap">
+            <h3>Quick Actions</h3>
+          </div>
+          <div class="admin-quick-actions">
+            <button class="admin-action-tile side-link" data-target="admin-slabs"><span>▥</span><strong>Add New Rate</strong><small>Set slab rates</small></button>
+            <button class="admin-action-tile side-link" data-target="admin-quotes"><span>▱</span><strong>Create Quote</strong><small>Manage quote templates</small></button>
+            <button class="admin-action-tile side-link" data-target="admin-orders"><span>➤</span><strong>Manual Payout</strong><small>Process payout</small></button>
+            <button class="admin-action-tile side-link" data-target="admin-logs"><span>⇩</span><strong>Export Reports</strong><small>Download logs</small></button>
+          </div>
+
+          <div class="admin-secure-card">
+            <span>🛡</span>
+            <div><strong>Secure Dashboard</strong><small>All actions are logged and monitored</small></div>
+            <b>›</b>
           </div>
         </section>
 
@@ -389,6 +398,15 @@
       </main>
     </div>
   </div>
+
+
+  <nav class="admin-mobile-bottom-nav">
+    <button class="side-link active" data-target="admin-overview"><span>▦</span><small>Dashboard</small></button>
+    <button class="side-link" data-target="admin-orders"><span>▤</span><small>Orders</small></button>
+    <button class="side-link" data-target="admin-wallets"><span>▱</span><small>Wallets</small></button>
+    <button class="side-link" data-target="admin-kyc"><span>🛡</span><small>KYC</small></button>
+    <button class="side-link" data-target="admin-users"><span>◎</span><small>Users</small></button>
+  </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>

@@ -149,3 +149,9 @@ Admin Orders pagination:
 - Page numbers 1,2,3... added below orders table.
 - Search/filter resets pagination to page 1.
 - Order detail/timeline/payout details remain unchanged.
+
+Admin premium mobile UI update:
+- Added mobile-friendly admin dashboard inspired by reference image.
+- Added premium header, stat cards, quick section tabs, recent order card, order steps, quick actions and bottom mobile navigation.
+- KYC button removed from recent order; order actions are Crypto Received, Start Payout and Mark Paid.
+- Existing admin sections and working logic preserved.

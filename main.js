@@ -91,6 +91,7 @@
         btn.classList.add('active');
         document.getElementById(btn.dataset.target)?.classList.add('active');
         if (btn.dataset.target === 'admin-referrals') loadAdminReferralPanel?.();
+        if (btn.dataset.target === 'admin-overview') renderAdminOverviewRecentOrder?.();
         if (history.replaceState) history.replaceState(null, '', '#' + btn.dataset.target);
       });
     });
@@ -2097,18 +2098,121 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
   }
 
   async function loadAdminStats() {
-    const [{ count: usersCount }, { count: ordersCount }, { count: kycPending }, { data: completedOrders }] = await Promise.all([
+    const [
+      { count: usersCount },
+      { count: ordersCount },
+      { count: kycPending },
+      { data: completedOrders },
+      { count: cryptoCheckCount },
+      { count: payoutProgressCount }
+    ] = await Promise.all([
       adminClient.from('profiles').select('*', { count: 'exact', head: true }),
       adminClient.from('sell_orders').select('*', { count: 'exact', head: true }),
       adminClient.from('profiles').select('*', { count: 'exact', head: true }).eq('kyc_status', 'pending'),
-      adminClient.from('sell_orders').select('estimated_inr_payout').eq('status', 'completed')
+      adminClient.from('sell_orders').select('estimated_inr_payout').eq('status', 'completed'),
+      adminClient.from('sell_orders').select('*', { count: 'exact', head: true }).eq('status', 'awaiting_confirmations'),
+      adminClient.from('sell_orders').select('*', { count: 'exact', head: true }).eq('status', 'payout_in_progress')
     ]);
+
     const volume = (completedOrders || []).reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
+
     setHtml('admin-stats', `
-      <div class="card stat-card"><strong>${usersCount || 0}</strong><span>Total Users</span></div>
-      <div class="card stat-card"><strong>${ordersCount || 0}</strong><span>Total Orders</span></div>
-      <div class="card stat-card"><strong>${kycPending || 0}</strong><span>Pending KYC</span></div>
-      <div class="card stat-card"><strong>${fmtInr(volume)}</strong><span>Completed Volume</span></div>`);
+      <div class="card stat-card admin-stat-card"><span class="stat-icon">▣</span><small>Total Orders</small><strong>${ordersCount || 0}</strong><em>↗ Live count</em></div>
+      <div class="card stat-card admin-stat-card warning"><span class="stat-icon">⌕</span><small>Pending Crypto Check</small><strong>${cryptoCheckCount || 0}</strong><em>↗ Needs review</em></div>
+      <div class="card stat-card admin-stat-card success"><span class="stat-icon">✓</span><small>Payouts In Progress</small><strong>${payoutProgressCount || 0}</strong><em>↗ Active payouts</em></div>
+      <div class="card stat-card admin-stat-card rupee"><span class="stat-icon">₹</span><small>Completed Volume</small><strong>${fmtInr(volume)}</strong><em>↗ Paid orders</em></div>`);
+
+    await renderAdminOverviewRecentOrder();
+  }
+
+  function adminMiniStep(row, key) {
+    const status = row?.status || '';
+    const doneMap = {
+      created: true,
+      sent: ['awaiting_transfer','awaiting_confirmations','payout_in_progress','completed'].includes(status),
+      received: ['awaiting_confirmations','payout_in_progress','completed'].includes(status),
+      payout: ['payout_in_progress','completed'].includes(status),
+      paid: status === 'completed'
+    };
+    return !!doneMap[key];
+  }
+
+  function adminOverviewStep(title, time, done, active) {
+    return `
+      <div class="admin-order-step ${done ? 'done' : ''} ${active ? 'active' : ''}">
+        <span>${done ? '✓' : active ? '●' : ''}</span>
+        <strong>${escapeHtml(title)}</strong>
+        <small>${time ? fmtDate(time) : '-'}</small>
+      </div>`;
+  }
+
+  async function renderAdminOverviewRecentOrder() {
+    const box = qs('admin-overview-recent-order');
+    if (!box) return;
+
+    const { data: row, error } = await adminClient
+      .from('sell_orders')
+      .select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !row) {
+      box.innerHTML = '<div class="empty-state">No recent orders found.</div>';
+      return;
+    }
+
+    const userName = row.profiles?.full_name || row.profiles?.email || 'Seller';
+    const initials = (userName || 'AD').slice(0, 2).toUpperCase();
+    const payout = payoutDisplay(row);
+    const statusMeta = adminStatusMeta(row.status);
+    const amount = Number(row.crypto_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 4 });
+
+    box.innerHTML = `
+      <div class="admin-order-head">
+        <div><span class="admin-order-label">Order ID</span> <strong>#${escapeHtml(shortOrderId(row.id))}</strong></div>
+        <span class="admin-order-status ${escapeHtml(statusMeta.cls || '')}">● ${escapeHtml(statusMeta.label)}</span>
+      </div>
+
+      <div class="admin-order-main">
+        <div class="admin-seller-block">
+          <span class="admin-seller-avatar">${escapeHtml(initials)}</span>
+          <div>
+            <h4>${escapeHtml(userName)}</h4>
+            <p>${escapeHtml(row.profiles?.email || '')}</p>
+            <p>☎ ${escapeHtml(row.profiles?.mobile || '-')}</p>
+          </div>
+        </div>
+        <div class="admin-order-facts">
+          <div><span>INR Amount</span><strong>${fmtInr(row.estimated_inr_payout)}</strong></div>
+          <div><span>Selling Amount</span><strong>${escapeHtml(amount)} ${escapeHtml(row.coin_symbol || 'USDT')}</strong></div>
+          <div><span>Payout Method</span><strong>${escapeHtml((payout.method || row.payout_method || 'bank').toUpperCase())}</strong></div>
+          <div><span>Bank / UPI Details</span><strong>${escapeHtml(payout.value || payout.label || '-')}</strong></div>
+        </div>
+      </div>
+
+      <div class="admin-order-steps">
+        ${adminOverviewStep('Order Created', row.created_at, adminMiniStep(row, 'created'), false)}
+        ${adminOverviewStep('Crypto Sent', row.tx_hash ? row.updated_at : null, adminMiniStep(row, 'sent'), row.status === 'awaiting_transfer')}
+        ${adminOverviewStep('Crypto Received', row.updated_at, adminMiniStep(row, 'received'), row.status === 'awaiting_confirmations')}
+        ${adminOverviewStep('Payout Started', row.updated_at, adminMiniStep(row, 'payout'), row.status === 'payout_in_progress')}
+        ${adminOverviewStep('Paid', row.completed_at || row.updated_at, adminMiniStep(row, 'paid'), false)}
+      </div>
+
+      <div class="admin-order-actions">
+        <button class="btn btn-secondary btn-xs js-overview-view">👁 View Details</button>
+        <button class="btn btn-secondary btn-xs js-overview-received" ${adminMiniStep(row, 'received') ? 'disabled' : ''}>✓ Crypto Received</button>
+        <button class="btn btn-secondary btn-xs js-overview-payout" ${adminMiniStep(row, 'payout') || !adminMiniStep(row, 'received') ? 'disabled' : ''}>➤ Start Payout</button>
+        <button class="btn btn-primary btn-xs js-overview-paid" ${row.status !== 'payout_in_progress' ? 'disabled' : ''}>✓ Mark Paid</button>
+      </div>`;
+
+    box.querySelector('.js-overview-view')?.addEventListener('click', async () => {
+      document.querySelector('.side-link[data-target="admin-orders"]')?.click();
+      await loadAdminOrders(row.id);
+    });
+    box.querySelector('.js-overview-received')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget));
+    box.querySelector('.js-overview-payout')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget));
+    box.querySelector('.js-overview-paid')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'completed', e.currentTarget));
   }
 
   async function loadAdminReferralPanel() {

@@ -160,3 +160,9 @@ Admin Premium UI v2:
 - Strong CSS override added so old admin design does not show.
 - Sidebar hidden and app-style mobile/desktop dashboard shown.
 - Dashboard header/cards/tabs/recent order/bottom nav styled closer to reference image.
+
+Admin Orders mobile fit patch:
+- Orders & Payouts table converts into mobile cards under 760px.
+- Order detail, payout, wallet and timeline sections become single-column on mobile.
+- Buttons and pagination are mobile-friendly.
+- No backend/logic changes.

@@ -1733,3 +1733,397 @@ body.admin-app-ui-v2 table{
     text-align:left!important;
   }
 }
+
+
+
+/* =====================================================
+   ADMIN ORDERS MOBILE FIT PATCH
+   Orders & Payouts table becomes mobile cards
+   ===================================================== */
+
+body.admin-app-ui-v2 #admin-orders .orders-premium-shell{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .orders-premium-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  flex-wrap:wrap!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .orders-toolbar{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .toolbar-search-wrap{
+  min-width:260px!important;
+  flex:1 1 260px!important;
+}
+
+body.admin-app-ui-v2 #admin-orders #admin-order-search{
+  width:100%!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .order-table-card{
+  overflow:hidden!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .order-table-wrap{
+  overflow-x:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .orders-premium-table{
+  min-width:980px!important;
+}
+
+/* Details grid should never overflow */
+body.admin-app-ui-v2 #admin-orders .orders-detail-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .orders-detail-grid .card{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .summary-row,
+body.admin-app-ui-v2 #admin-orders .timeline-row,
+body.admin-app-ui-v2 #admin-orders .inline-payout-row{
+  min-width:0!important;
+}
+
+body.admin-app-ui-v2 #admin-orders .summary-row strong,
+body.admin-app-ui-v2 #admin-orders .inline-payout-row strong,
+body.admin-app-ui-v2 #admin-orders .wallet-detail-box strong,
+body.admin-app-ui-v2 #admin-orders .break-anywhere{
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+
+/* Mobile: convert orders table rows to cards */
+@media(max-width:760px){
+  body.admin-app-ui-v2 #admin-orders{
+    padding-bottom:8px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-shell{
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-head{
+    display:grid!important;
+    gap:12px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-head h3{
+    font-size:25px!important;
+    margin-bottom:4px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-head .panel-subtitle{
+    display:block!important;
+    font-size:14px!important;
+    line-height:1.45!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-toolbar{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    width:100%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .toolbar-search-wrap{
+    grid-column:1 / -1!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-toolbar .btn{
+    width:100%!important;
+    min-height:44px!important;
+    border-radius:14px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-kpi-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-kpi-grid .kpi-card{
+    min-height:116px!important;
+    padding:14px!important;
+    border-radius:18px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-kpi-grid .kpi-card strong{
+    font-size:21px!important;
+    line-height:1.1!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .order-table-card{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    padding:0!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .order-table-wrap{
+    overflow:visible!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table{
+    min-width:0!important;
+    width:100%!important;
+    display:block!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table thead{
+    display:none!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table tbody{
+    display:grid!important;
+    gap:12px!important;
+    width:100%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table tr{
+    display:grid!important;
+    gap:10px!important;
+    width:100%!important;
+    padding:14px!important;
+    border-radius:22px!important;
+    border:1px solid rgba(119,190,255,.16)!important;
+    background:
+      radial-gradient(circle at 0% 0%,rgba(37,231,255,.10),transparent 32%),
+      linear-gradient(180deg,rgba(7,27,55,.95),rgba(3,14,31,.98))!important;
+    box-shadow:0 16px 45px rgba(0,0,0,.22)!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table tr.is-selected{
+    border-color:rgba(37,231,255,.38)!important;
+    box-shadow:0 0 0 1px rgba(37,231,255,.13),0 16px 45px rgba(0,0,0,.22)!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td{
+    display:flex!important;
+    justify-content:space-between!important;
+    align-items:flex-start!important;
+    gap:12px!important;
+    width:100%!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    color:#eaf4ff!important;
+    min-width:0!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td::before{
+    content:"";
+    flex:0 0 auto;
+    color:#92a8c5!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    text-transform:uppercase!important;
+    letter-spacing:.04em!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(1)::before{content:"Order";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(2)::before{content:"Seller";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(3)::before{content:"Coin";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(4)::before{content:"INR";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(5)::before{content:"Payout";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(6)::before{content:"Status";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(7)::before{content:"Date";}
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(8)::before{content:"Actions";}
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td > *{
+    max-width:64%!important;
+    text-align:right!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(2) > *,
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(5) > *,
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(8) > *{
+    max-width:70%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .seller-mini{
+    justify-content:flex-end!important;
+    text-align:right!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .seller-mini .seller-avatar{
+    order:2!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .payout-cell-line{
+    justify-content:flex-end!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .actions-stack,
+  body.admin-app-ui-v2 #admin-orders .actions-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    width:100%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(8){
+    display:grid!important;
+    gap:10px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(8)::before{
+    margin-bottom:2px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(8) > *{
+    max-width:100%!important;
+    text-align:left!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table .btn{
+    width:100%!important;
+    min-height:40px!important;
+    border-radius:12px!important;
+    padding:9px 10px!important;
+    font-size:12px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .mini-copy,
+  body.admin-app-ui-v2 #admin-orders .mini-view-btn{
+    padding:5px 9px!important;
+    font-size:11px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-pagination{
+    padding:14px 0 0!important;
+    display:grid!important;
+    gap:10px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-page-info{
+    text-align:center!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-page-controls{
+    justify-content:center!important;
+    display:flex!important;
+    gap:6px!important;
+    flex-wrap:wrap!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-page-btn{
+    min-width:34px!important;
+    height:34px!important;
+    border-radius:11px!important;
+  }
+
+  /* Detail cards one by one under table */
+  body.admin-app-ui-v2 #admin-orders .orders-detail-grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-detail-grid .card{
+    padding:14px!important;
+    border-radius:20px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .section-head{
+    align-items:flex-start!important;
+    gap:10px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .section-head h3{
+    font-size:18px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .summary-row,
+  body.admin-app-ui-v2 #admin-orders .inline-payout-row,
+  body.admin-app-ui-v2 #admin-orders .payout-view-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+    padding:9px 0!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .summary-row strong,
+  body.admin-app-ui-v2 #admin-orders .inline-payout-row strong,
+  body.admin-app-ui-v2 #admin-orders .payout-view-row strong{
+    text-align:left!important;
+    max-width:100%!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .wallet-grid-mini{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .qr-preview-box,
+  body.admin-app-ui-v2 #admin-orders .fancy-qr{
+    justify-self:center!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .admin-detail-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .admin-detail-actions .btn{
+    width:100%!important;
+  }
+}
+
+@media(max-width:420px){
+  body.admin-app-ui-v2 #admin-orders .orders-kpi-grid{
+    grid-template-columns:1fr!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-toolbar{
+    grid-template-columns:1fr!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td > *,
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(2) > *,
+  body.admin-app-ui-v2 #admin-orders .orders-premium-table td:nth-child(5) > *{
+    max-width:100%!important;
+    text-align:left!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .seller-mini{
+    justify-content:flex-start!important;
+    text-align:left!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .seller-mini .seller-avatar{
+    order:0!important;
+  }
+
+  body.admin-app-ui-v2 #admin-orders .payout-cell-line{
+    justify-content:flex-start!important;
+  }
+}

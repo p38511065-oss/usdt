@@ -326,3 +326,6 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
   .stats-grid,.seller-stat-grid,.admin-stat-grid,.orders-kpi-grid,.quote-cards-3{grid-template-columns:1fr!important}
   th,td{padding:12px!important}.payout-view-row{flex-direction:column}.payout-view-row strong{text-align:left}
 }
+
+.neo-rates .neo-btn{padding:8px 12px;font-size:12px;border-radius:12px;white-space:nowrap}
+.neo-rates td strong{font-weight:950}

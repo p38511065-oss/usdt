@@ -29,3 +29,9 @@ FULL FRONTEND REBUILD v1:
 - Added rebuild-ui.css as the new visual system
 - Seller/Admin dashboard existing IDs and logic preserved, with rebuilt visual layer
 - main.js was preserved to avoid breaking working flows
+
+Landing rates fix:
+- Fixed landing-home.js Supabase quote_slabs loader
+- Added fallback for min_amount / min_crypto_amount and max_amount / max_crypto_amount
+- Added fallback rows instead of broken ₹0.00 / loading failed
+- Uses USDT/TRC20 first, then broader USDT fallback

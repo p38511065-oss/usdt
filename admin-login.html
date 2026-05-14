@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="premium-ui.css" />
+  <link rel="stylesheet" href="rebuild-ui.css" />
 </head>
 <body data-page="admin-login">
   <header class="topbar">
@@ -14,27 +14,24 @@
       <nav>
         <a href="index.html">Home</a>
         <a href="login.html">Seller Login</a>
-        <a href="admin-login.html">Admin Login</a>
       </nav>
     </div>
   </header>
 
-  <main class="container auth-shell admin-auth-shell">
-    <section class="auth-copy">
-      <span class="eyebrow">Control center</span>
-      <h1>Admin Login</h1>
-      <p class="lead">Open the admin control panel for rates, users, payout destination details, quotes, wallets and order actions.</p>
+  <main class="auth-rebuild-shell">
+    <section class="auth-rebuild-copy">
+      <span class="neo-chip">ADMIN CONTROL CENTER</span>
+      <h1>Secure admin access for <span>OTC operations</span></h1>
+      <p>Manage rate slabs, wallets, QR codes, KYC, payout destinations, order statuses and admin actions in one premium control panel.</p>
+      <div class="neo-badges">
+        <span>Orders & Payouts</span><span>Wallet Management</span><span>KYC Review</span>
+      </div>
     </section>
 
-    <section class="card auth-card">
-      <div class="form-group">
-        <label>Email</label>
-        <input id="admin-email" type="email" placeholder="Enter admin email" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input id="admin-password" type="password" placeholder="Enter password" />
-      </div>
+    <section class="card auth-glow-card">
+      <div class="auth-icon">₹</div>
+      <div class="form-group"><label>Email</label><input id="admin-email" type="email" placeholder="Enter admin email" /></div>
+      <div class="form-group"><label>Password</label><input id="admin-password" type="password" placeholder="Enter password" /></div>
       <button id="admin-login-btn" class="btn btn-primary btn-block">Login to Admin Panel</button>
       <p id="admin-auth-message" class="status-text"></p>
     </section>

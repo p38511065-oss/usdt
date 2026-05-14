@@ -22,9 +22,10 @@ Merged fix:
 
 - Fixed payout View buttons with inline modal trigger fallback
 
-
-Premium same-style UI rebuild layer added:
-- Added premium-ui.css after existing styles so working JS/IDs stay safe
-- Landing, seller login, admin login, seller dashboard and admin dashboard visually redesigned
-- Existing main.js logic preserved
-- Mobile responsive premium layout added
+FULL FRONTEND REBUILD v1:
+- Rebuilt landing page HTML structure, not just CSS
+- Rebuilt seller login page HTML structure
+- Rebuilt admin login page HTML structure
+- Added rebuild-ui.css as the new visual system
+- Seller/Admin dashboard existing IDs and logic preserved, with rebuilt visual layer
+- main.js was preserved to avoid breaking working flows

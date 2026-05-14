@@ -49,3 +49,16 @@ Seller mobile polish:
 - Quote cards made controlled horizontal scroll
 - Bottom nav refined
 - Tracking preview made mobile-safe
+
+Landing mobile polish:
+- Compact mobile topbar
+- Reduced hero overflow and improved headline spacing
+- Hid heavy coin visual on mobile to keep page cleaner
+- Fixed rates table mobile columns
+- Tightened Live Market section spacing
+
+Admin slabs only fix:
+- Removed fallback/sample/random quote rates from landing page
+- Landing page now shows only admin-created USDT/TRC20 quote slabs
+- If slabs cannot load, it shows a clear permission/admin slabs message instead of fake prices
+- Seller preview top rate now uses admin-created quote_slabs only

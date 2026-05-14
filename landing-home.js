@@ -44,79 +44,74 @@
     return ['Standard', 'standard'];
   }
 
-  function fallbackRows() {
-    return [
-      { quote_type: 'standard', coin_symbol: 'USDT', network: 'TRC20', min_amount: 100, max_amount: 999, rate_inr: 82.70, is_enabled: true },
-      { quote_type: 'standard', coin_symbol: 'USDT', network: 'TRC20', min_amount: 1000, max_amount: 4999, rate_inr: 82.95, is_enabled: true },
-      { quote_type: 'standard', coin_symbol: 'USDT', network: 'TRC20', min_amount: 5000, max_amount: 19999, rate_inr: 83.10, is_enabled: true },
-      { quote_type: 'standard', coin_symbol: 'USDT', network: 'TRC20', min_amount: 20000, max_amount: null, rate_inr: 83.30, is_enabled: true }
-    ];
+  function normalizeRows(rows) {
+    return (rows || [])
+      .filter((row) => {
+        const coin = String(row.coin_symbol || row.coin || '').toUpperCase();
+        const network = String(row.network || '').toUpperCase();
+        const enabled = row.is_enabled ?? row.is_active ?? row.status;
+        const enabledOk = enabled === true || enabled === 'true' || enabled === 'active' || enabled === 'enabled' || enabled === null || enabled === undefined;
+        return coin === 'USDT' &&
+          (network === 'TRC20' || network === 'TRON' || network === '') &&
+          enabledOk &&
+          Number(row.rate_inr || row.buy_rate_inr || row.rate || 0) > 0;
+      })
+      .map((row) => ({
+        ...row,
+        rate_inr: Number(row.rate_inr || row.buy_rate_inr || row.rate || 0)
+      }))
+      .sort((a, b) => slabMin(a) - slabMin(b));
   }
 
-  async function fetchSlabs() {
-    if (!client) return fallbackRows();
+  async function fetchAdminSlabs() {
+    if (!client) {
+      throw new Error('Supabase client not ready');
+    }
 
-    // First try normal active slabs query.
+    // Try specific selected columns first.
     let result = await client
       .from('quote_slabs')
-      .select('id, quote_type, coin_symbol, network, min_amount, max_amount, min_crypto_amount, max_crypto_amount, rate_inr, spread_percent, is_enabled')
-      .eq('coin_symbol', 'USDT')
-      .eq('network', 'TRC20')
-      .order('min_amount', { ascending: true });
+      .select('id, quote_type, coin_symbol, network, min_amount, max_amount, min_crypto_amount, max_crypto_amount, rate_inr, buy_rate_inr, is_enabled, is_active, status')
+      .eq('coin_symbol', 'USDT');
 
-    // Some old schemas / cache can fail on min_amount ordering.
+    // If schema cache does not know one of the optional columns, use select('*').
     if (result.error) {
       result = await client
         .from('quote_slabs')
         .select('*')
-        .eq('coin_symbol', 'USDT')
-        .eq('network', 'TRC20');
+        .eq('coin_symbol', 'USDT');
     }
 
     if (result.error) {
-      console.warn('Landing quote slabs query failed:', result.error.message);
-      return fallbackRows();
+      throw result.error;
     }
 
-    let rows = (result.data || [])
-      .filter((row) => {
-        const enabled = row.is_enabled;
-        return enabled === true || enabled === 'true' || enabled === null || enabled === undefined;
-      })
-      .filter((row) => Number(row.rate_inr || 0) > 0)
-      .sort((a, b) => slabMin(a) - slabMin(b));
+    return normalizeRows(result.data || []);
+  }
 
-    // If exact network case does not match, try broader USDT-only fallback.
-    if (!rows.length) {
-      const broad = await client
-        .from('quote_slabs')
-        .select('*')
-        .eq('coin_symbol', 'USDT');
-
-      if (!broad.error) {
-        rows = (broad.data || [])
-          .filter((row) => {
-            const network = String(row.network || '').toUpperCase();
-            const enabled = row.is_enabled;
-            return (network === 'TRC20' || network === 'TRON' || network === '') &&
-              (enabled === true || enabled === 'true' || enabled === null || enabled === undefined) &&
-              Number(row.rate_inr || 0) > 0;
-          })
-          .sort((a, b) => slabMin(a) - slabMin(b));
-      }
+  function renderEmpty(message) {
+    if (marketPrice) marketPrice.textContent = '--';
+    if (marketPriceMirror) marketPriceMirror.textContent = '--';
+    if (marketChange) marketChange.textContent = 'Admin rates not loaded';
+    if (marketChangeMirror) marketChangeMirror.textContent = message;
+    if (ratesBody) {
+      ratesBody.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
     }
-
-    return rows.length ? rows : fallbackRows();
   }
 
   function renderRows(rows) {
     if (!ratesBody) return;
 
+    if (!rows.length) {
+      renderEmpty('No active admin quote slabs found for USDT/TRC20.');
+      return;
+    }
+
     const highestRate = Math.max(...rows.map((row) => Number(row.rate_inr || 0)));
     if (marketPrice) marketPrice.textContent = money(highestRate);
     if (marketPriceMirror) marketPriceMirror.textContent = money(highestRate);
-    if (marketChange) marketChange.textContent = '+ Live admin rates';
-    if (marketChangeMirror) marketChangeMirror.textContent = 'Updated from quote slabs';
+    if (marketChange) marketChange.textContent = '+ Admin live slabs';
+    if (marketChangeMirror) marketChangeMirror.textContent = 'Loaded from admin quote slabs';
 
     ratesBody.innerHTML = rows.map((row) => {
       const [label, cls] = quoteLabel(row.quote_type);
@@ -133,15 +128,15 @@
 
   async function initLandingRates() {
     if (ratesBody) {
-      ratesBody.innerHTML = '<tr><td colspan="4">Loading USDT/INR live quote slabs...</td></tr>';
+      ratesBody.innerHTML = '<tr><td colspan="4">Loading admin-created USDT quote slabs...</td></tr>';
     }
 
     try {
-      const rows = await fetchSlabs();
+      const rows = await fetchAdminSlabs();
       renderRows(rows);
     } catch (error) {
-      console.warn('Landing rates load error:', error);
-      renderRows(fallbackRows());
+      console.warn('Landing admin quote slabs load error:', error);
+      renderEmpty('Could not load admin-created quote slabs. Please check Supabase RLS/select permission for quote_slabs.');
     }
   }
 

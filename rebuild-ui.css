@@ -329,3 +329,188 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
 
 .neo-rates .neo-btn{padding:8px 12px;font-size:12px;border-radius:12px;white-space:nowrap}
 .neo-rates td strong{font-weight:950}
+
+
+/* Landing page mobile polish after screenshot review */
+@media (max-width:640px){
+  body[data-page="home"]{
+    overflow-x:hidden !important;
+  }
+  .neo-home{
+    width:100%;
+    padding:8px 8px 30px !important;
+  }
+  .neo-nav{
+    margin:0 0 12px !important;
+    padding:12px !important;
+    border-radius:22px !important;
+    display:flex !important;
+    gap:10px !important;
+  }
+  .neo-brand{
+    min-width:0;
+    flex:1;
+  }
+  .neo-brand-icon{
+    width:48px !important;
+    height:48px !important;
+    border-radius:17px !important;
+    font-size:26px !important;
+    flex-shrink:0;
+  }
+  .neo-brand-title{
+    font-size:16px !important;
+    line-height:1.15 !important;
+    white-space:normal !important;
+  }
+  .neo-brand-sub{
+    display:none !important;
+  }
+  .neo-nav-links{
+    flex-shrink:0;
+  }
+  .neo-nav-links .neo-btn{
+    width:auto !important;
+    min-width:128px;
+    padding:11px 14px !important;
+    font-size:14px !important;
+  }
+  .neo-hero{
+    padding:18px !important;
+    border-radius:24px !important;
+    gap:16px !important;
+  }
+  .neo-chip{
+    font-size:11px !important;
+    padding:8px 12px !important;
+    max-width:100%;
+    white-space:normal;
+  }
+  .neo-hero h1{
+    font-size:40px !important;
+    line-height:1.03 !important;
+    letter-spacing:-.055em !important;
+    margin:16px 0 14px !important;
+  }
+  .neo-hero p{
+    font-size:16px !important;
+    line-height:1.62 !important;
+  }
+  .neo-actions{
+    margin:18px 0 14px !important;
+  }
+  .neo-actions .neo-btn{
+    width:100% !important;
+    justify-content:center !important;
+    font-size:15px !important;
+  }
+  .neo-badges{
+    gap:8px !important;
+  }
+  .neo-badges span{
+    font-size:12px !important;
+    padding:8px 11px !important;
+  }
+  .neo-kpis{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  .neo-kpi{
+    padding:16px !important;
+    border-radius:20px !important;
+  }
+  .neo-kpi strong{
+    font-size:27px !important;
+  }
+  .neo-coin-panel{
+    display:none !important;
+  }
+  .neo-section{
+    margin-top:14px !important;
+    padding:18px !important;
+    border-radius:24px !important;
+  }
+  .neo-section-head{
+    gap:8px !important;
+    margin-bottom:14px !important;
+  }
+  .neo-section-head h2{
+    font-size:27px !important;
+    line-height:1.12 !important;
+  }
+  .neo-live{
+    font-size:15px !important;
+  }
+  .neo-tabs{
+    gap:8px !important;
+  }
+  .neo-tab{
+    padding:10px 13px !important;
+    font-size:14px !important;
+  }
+  .neo-market-row{
+    margin-top:12px !important;
+    margin-bottom:14px !important;
+  }
+  .neo-pair{
+    font-size:16px !important;
+  }
+  .neo-price{
+    font-size:44px !important;
+    line-height:1.05 !important;
+  }
+  .neo-change{
+    font-size:16px !important;
+  }
+  .neo-chart{
+    height:230px !important;
+    border-radius:22px !important;
+  }
+  .neo-rates-wrap{
+    overflow:visible !important;
+    border-radius:20px !important;
+  }
+  .neo-rates{
+    min-width:0 !important;
+    width:100% !important;
+  }
+  .neo-rates th,
+  .neo-rates td{
+    padding:14px 12px !important;
+    font-size:14px !important;
+  }
+  .neo-rates th:nth-child(3),
+  .neo-rates th:nth-child(4),
+  .neo-rates td:nth-child(3),
+  .neo-rates td:nth-child(4){
+    display:none !important;
+  }
+  .neo-rates td:first-child{
+    font-size:16px !important;
+  }
+  .neo-rates td:nth-child(2){
+    text-align:right !important;
+    font-size:16px !important;
+    white-space:nowrap;
+  }
+  .neo-steps{
+    grid-template-columns:1fr !important;
+  }
+  .neo-step{
+    padding:16px !important;
+    border-radius:20px !important;
+  }
+}
+@media (max-width:380px){
+  .neo-hero h1{
+    font-size:35px !important;
+  }
+  .neo-nav-links .neo-btn{
+    min-width:108px;
+    font-size:13px !important;
+    padding:10px 12px !important;
+  }
+  .neo-price{
+    font-size:39px !important;
+  }
+}

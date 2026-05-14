@@ -89,3 +89,10 @@ Seller auth full fix:
 - Dashboard no longer breaks if profile row was missing
 - Added seller-auth-fix-policies.sql for profile RLS/register permissions
 - Fixed auth tab panel visibility
+
+KYC final fix:
+- Compresses KYC images before saving to avoid mobile large-image submit failure
+- KYC submit button now shows Submitting and clear error/success
+- Address no longer blocks submit
+- Adds schema-cache fallback for optional columns
+- Added kyc-final-database-fix.sql

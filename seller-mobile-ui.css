@@ -632,3 +632,8 @@ body[data-page="seller-dashboard"] .panel-section.active{
     grid-template-columns:1fr;
   }
 }
+
+
+/* KYC submit UX fix */
+#submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}
+#kyc-message{font-weight:700}

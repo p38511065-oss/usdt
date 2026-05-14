@@ -101,9 +101,40 @@
     return data ? `<img src="${data}" alt="Preview" />` : '<span class="badge neutral">Not uploaded</span>';
   }
   async function readFileAsDataUrl(file) {
+    // Compress mobile camera images before saving in Supabase text columns.
+    // This avoids large payload errors during KYC submit.
+    if (!file) return null;
+    if (!file.type || !file.type.startsWith('image/')) {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxSide = 1100;
+          let { width, height } = img;
+          if (width > maxSide || height > maxSide) {
+            const ratio = Math.min(maxSide / width, maxSide / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
@@ -892,37 +923,105 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       qs('kyc-address').value = latest.address || '';
     }
     qs('submit-kyc-btn')?.addEventListener('click', async () => {
-      setText('kyc-message', 'Submitting KYC...');
-      const payload = {
-        user_id: profile.id,
-        full_name: val('kyc-full-name') || profile.full_name || '',
-        dob: val('kyc-dob') || null,
-        id_type: val('kyc-id-type'),
-        id_number: val('kyc-id-number'),
-        address: val('kyc-address'),
-        status: 'pending',
-        review_note: null
-      };
-      if (!payload.full_name || !payload.id_number || !payload.address) return setText('kyc-message', 'Please fill required KYC fields.');
-      const front = qs('kyc-front-file')?.files?.[0];
-      const back = qs('kyc-back-file')?.files?.[0];
-      const selfie = qs('kyc-selfie-file')?.files?.[0];
-      if (front) payload.front_image_data = await readFileAsDataUrl(front);
-      if (back) payload.back_image_data = await readFileAsDataUrl(back);
-      if (selfie) payload.selfie_image_data = await readFileAsDataUrl(selfie);
-      let result;
-      if (val('kyc-edit-id')) {
-        result = await sellerClient.from('kyc_submissions').update(payload).eq('id', val('kyc-edit-id')).select().single();
-      } else {
-        result = await sellerClient.from('kyc_submissions').insert(payload).select().single();
+      const btn = qs('submit-kyc-btn');
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Submitting...';
+        }
+        setText('kyc-message', 'Compressing and submitting KYC...');
+
+        const payload = {
+          user_id: profile.id,
+          full_name: val('kyc-full-name') || profile.full_name || '',
+          dob: val('kyc-dob') || null,
+          id_type: val('kyc-id-type') || 'aadhaar',
+          id_number: val('kyc-id-number'),
+          address: val('kyc-address') || null,
+          status: 'pending',
+          review_note: null,
+          updated_at: new Date().toISOString()
+        };
+
+        if (!payload.full_name || !payload.id_number) {
+          setText('kyc-message', 'Please fill name and ID number.');
+          return;
+        }
+
+        const front = qs('kyc-front-file')?.files?.[0];
+        const back = qs('kyc-back-file')?.files?.[0];
+        const selfie = qs('kyc-selfie-file')?.files?.[0];
+
+        if (front) payload.front_image_data = await readFileAsDataUrl(front);
+        if (back) payload.back_image_data = await readFileAsDataUrl(back);
+        if (selfie) payload.selfie_image_data = await readFileAsDataUrl(selfie);
+
+        let result;
+        const editId = val('kyc-edit-id');
+
+        if (editId) {
+          result = await sellerClient
+            .from('kyc_submissions')
+            .update(payload)
+            .eq('id', editId)
+            .select()
+            .single();
+        } else {
+          result = await sellerClient
+            .from('kyc_submissions')
+            .insert({ ...payload, created_at: new Date().toISOString() })
+            .select()
+            .single();
+        }
+
+        // Schema-cache fallback: if optional address/review columns still mismatch, retry without optional fields.
+        if (result.error && /column|schema cache|address|review_note|updated_at|created_at/i.test(result.error.message || '')) {
+          const fallbackPayload = { ...payload };
+          delete fallbackPayload.address;
+          delete fallbackPayload.review_note;
+          delete fallbackPayload.updated_at;
+          delete fallbackPayload.created_at;
+
+          if (editId) {
+            result = await sellerClient
+              .from('kyc_submissions')
+              .update(fallbackPayload)
+              .eq('id', editId)
+              .select()
+              .single();
+          } else {
+            result = await sellerClient
+              .from('kyc_submissions')
+              .insert(fallbackPayload)
+              .select()
+              .single();
+          }
+        }
+
+        if (result.error) {
+          setText('kyc-message', result.error.message || 'KYC submit failed.');
+          return;
+        }
+
+        await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id);
+        try {
+          await audit('kyc_submitted', 'kyc_submissions', result.data.id, { status: 'pending' });
+        } catch (_) {}
+
+        setText('kyc-message', 'KYC submitted successfully. Status: pending review.');
+        const freshProfile = await getProfile(sellerClient);
+        await loadKycSection(freshProfile || profile);
+        renderProfileBoxes(freshProfile || profile);
+      } catch (err) {
+        setText('kyc-message', err?.message || 'KYC submit failed. Try smaller images or refresh once.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Submit KYC';
+        }
       }
-      if (result.error) return setText('kyc-message', result.error.message);
-      await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id);
-      await audit('kyc_submitted', 'kyc_submissions', result.data.id, { status: 'pending' });
-      setText('kyc-message', 'KYC submitted successfully.');
-      await loadKycSection(await getProfile(sellerClient));
-      renderProfileBoxes(await getProfile(sellerClient));
     });
+
   }
 
 

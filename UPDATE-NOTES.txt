@@ -35,3 +35,9 @@ Landing rates fix:
 - Added fallback for min_amount / min_crypto_amount and max_amount / max_crypto_amount
 - Added fallback rows instead of broken ₹0.00 / loading failed
 - Uses USDT/TRC20 first, then broader USDT fallback
+
+Seller dashboard mobile app rebuild:
+- Rebuilt dashboard.html structure to match reference mobile dashboard layout
+- Added seller-mobile-ui.css with app header, overview cards, quote cards, active order, payout preview, tracking, bottom nav
+- Preserved all existing IDs and main.js logic for quotes, sell flow, payout, KYC, orders
+- Added small JS bindings for seller display name, KYC status, active payout, and preview top rate

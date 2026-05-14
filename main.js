@@ -322,6 +322,9 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     return `${row.label || row.bank_name || 'Bank'} • ${row.account_number || '-'}`;
   }
   function renderProfileBoxes(profile) {
+    setText('seller-display-name', profile.full_name || profile.email || 'Seller');
+    setText('seller-kyc-status-text', String(profile.kyc_status || 'not_submitted').replaceAll('_', ' '));
+    setText('seller-kyc-level', profile.kyc_status === 'verified' ? 'Level 2 Verified' : 'Complete verification');
     setHtml('profile-box', `
       <div class="kv-row"><span>Name</span><strong>${escapeHtml(profile.full_name || '-')}</strong></div>
       <div class="kv-row"><span>Email</span><strong>${escapeHtml(profile.email || '-')}</strong></div>
@@ -346,7 +349,21 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       body.innerHTML = '<tr><td colspan="7">No payout method added yet.</td></tr>';
       select.innerHTML = '<option value="">No payout method found</option>';
       setHtml('selected-payout-summary', 'No payout method selected. Add a bank account or UPI ID first.');
+      setText('seller-active-payout-name', 'Not selected');
+      setText('seller-active-payout-detail', 'Add bank / UPI');
+      setText('seller-payout-preview-title', 'No payout method');
+      setText('seller-payout-preview-sub', 'Add bank account or UPI ID');
+      setText('seller-payout-preview-status', 'Setup');
       return [];
+    }
+    const primaryAccount = (accounts || []).find((a) => a.is_primary) || (accounts || [])[0];
+    if (primaryAccount) {
+      const primaryDestination = payoutDestinationLabel(primaryAccount);
+      setText('seller-active-payout-name', primaryAccount.label || primaryAccount.bank_name || primaryAccount.upi_id || 'Payout Method');
+      setText('seller-active-payout-detail', primaryDestination);
+      setText('seller-payout-preview-title', primaryAccount.label || primaryAccount.bank_name || primaryAccount.upi_id || 'Payout Method');
+      setText('seller-payout-preview-sub', primaryDestination);
+      setText('seller-payout-preview-status', primaryAccount.is_active ? 'Active' : 'Inactive');
     }
     accounts.forEach((row) => {
       const destination = payoutDestinationLabel(row);
@@ -652,7 +669,18 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     });
   }
 
+
+  async function updateSellerPreviewRate() {
+    try {
+      const { data } = await sellerClient.from('quote_slabs').select('*').eq('coin_symbol', 'USDT').order('min_amount', { ascending: true });
+      const rows = (data || []).filter((r) => (r.is_enabled === true || r.is_enabled === null || r.is_enabled === undefined) && Number(r.rate_inr || 0) > 0);
+      if (!rows.length) return;
+      const highest = Math.max(...rows.map((r) => Number(r.rate_inr || 0)));
+      setText('seller-preview-rate', fmtInr(highest).replace('.00',''));
+    } catch (e) {}
+  }
   async function loadSellerStats(profile) {
+    updateSellerPreviewRate();
     const [{ data: orders }, { data: accounts }, { data: rewards }] = await Promise.all([
       sellerClient.from('sell_orders').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }),
       sellerClient.from('bank_accounts').select('*').eq('user_id', profile.id).eq('is_active', true),
@@ -662,9 +690,9 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const totalInr = (orders || []).filter((o) => o.status === 'completed').reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
     const refEarn = (rewards || []).reduce((sum, row) => sum + Number(row.reward_amount_inr || 0), 0);
     setHtml('seller-stats', `
-      <div class="card stat-card"><strong>${(orders || []).length}</strong><span>Total Orders</span></div>
-      <div class="card stat-card"><strong>${active}</strong><span>Active Orders</span></div>
-      <div class="card stat-card"><strong>${(accounts || []).length}</strong><span>Payout Methods</span></div>
+      <div class="card stat-card"><strong>▣ ${(orders || []).length}</strong><span>Total Orders</span></div>
+      <div class="card stat-card"><strong>↗ ${active}</strong><span>Active Orders</span></div>
+      <div class="card stat-card"><strong>🏦 ${(accounts || []).length}</strong><span>Payout Methods</span></div>
       <div class="card stat-card"><strong>${fmtInr(refEarn || totalInr)}</strong><span>${refEarn ? 'Referral Earnings' : 'Completed Volume'}</span></div>`);
 
     const latest = orders?.[0];

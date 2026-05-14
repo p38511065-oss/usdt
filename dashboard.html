@@ -6,71 +6,132 @@
   <title>Seller Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="rebuild-ui.css" />
+  <link rel="stylesheet" href="seller-mobile-ui.css" />
 </head>
 <body data-page="seller-dashboard">
-  <div class="panel-shell">
-    <aside class="sidebar seller-sidebar">
-      <div class="sidebar-brand">₹ Crypto Sell to INR Desk</div>
-      <nav class="sidebar-menu">
-        <button class="side-link active" data-target="seller-overview">Overview</button>
-        <button class="side-link" data-target="seller-quotes">Available Quotes</button>
-        <button class="side-link" data-target="seller-sell">Sell Crypto</button>
-        <button class="side-link" data-target="seller-payouts">Payout Methods</button>
-        <button class="side-link" data-target="seller-orders">My Orders</button>
-        <button class="side-link" data-target="seller-referrals">Referrals</button>
-        <button class="side-link" data-target="seller-kyc">KYC Submit</button>
-        <button class="side-link" data-target="seller-profile">Profile</button>
-      </nav>
-      <div class="sidebar-foot">
-        <button id="logout-btn" class="btn btn-secondary btn-block">Logout</button>
-      </div>
-    </aside>
-
-    <div class="panel-main">
-      <header class="panel-topbar">
+  <div class="seller-app-shell">
+    <header class="seller-app-top">
+      <div class="seller-app-brand">
+        <div class="seller-logo-mark">₹</div>
         <div>
-          <div class="panel-title">Seller Dashboard</div>
-          <div class="panel-subtitle">Quotes, payout methods, KYC, orders and referrals in one place.</div>
+          <div class="seller-brand-title">Crypto Sell to INR Desk</div>
+          <div class="seller-brand-sub">Seller Dashboard</div>
         </div>
-        <div class="topbar-actions">
-          <span class="nav-user-pill" id="seller-top-name">Loading...</span>
+      </div>
+      <div class="seller-top-actions">
+        <button class="seller-icon-btn" aria-label="notifications">🔔</button>
+        <button class="seller-icon-btn" id="seller-menu-toggle" aria-label="menu">☰</button>
+      </div>
+    </header>
+
+    <nav class="seller-drawer-nav" id="seller-drawer-nav">
+      <button class="side-link active" data-target="seller-overview">Dashboard</button>
+      <button class="side-link" data-target="seller-quotes">Available Quotes</button>
+      <button class="side-link" data-target="seller-sell">Sell Crypto</button>
+      <button class="side-link" data-target="seller-payouts">Payout Methods</button>
+      <button class="side-link" data-target="seller-orders">My Orders</button>
+      <button class="side-link" data-target="seller-referrals">Referrals</button>
+      <button class="side-link" data-target="seller-kyc">KYC Submit</button>
+      <button class="side-link" data-target="seller-profile">Profile</button>
+    </nav>
+
+    <main class="seller-app-content">
+      <section id="seller-overview" class="panel-section active">
+        <div class="seller-hello-row">
+          <div>
+            <h1>Hello, <span id="seller-display-name">Seller</span> <span class="verified-dot">✓</span></h1>
+            <p>Welcome back! Here is your dashboard overview.</p>
+          </div>
+          <div class="online-pill">● Online</div>
         </div>
-      </header>
 
-      <main class="panel-content">
-        <section class="workspace-banner">
-          <div class="workspace-banner__content">
-            <span class="workspace-chip">LIVE OPERATIONS</span>
-            <h2>Seller Workspace</h2>
-            <p>Quotes, payouts, KYC, deposit flow and order tracking in one premium panel.</p>
-          </div>
-          <div class="workspace-banner__cards">
-            <div class="workspace-metric">
-              <small>Premium UI</small>
-              <strong>Enabled</strong>
+        <section class="seller-identity-card">
+          <div class="identity-top">
+            <div class="identity-block">
+              <div class="identity-icon">🛡</div>
+              <div>
+                <span>KYC Status</span>
+                <strong id="seller-kyc-status-text">Loading...</strong>
+                <small id="seller-kyc-level">Seller verification</small>
+              </div>
             </div>
-            <div class="workspace-metric">
-              <small>Status Flow</small>
-              <strong>Connected</strong>
-            </div>
-          </div>
-        </section>
-        <section id="seller-overview" class="panel-section active">
-          <div class="stats-grid seller-stat-grid" id="seller-stats"></div>
-          <div class="grid-2 top-gap">
-            <div class="card">
-              <div class="section-head"><h3>Latest Order</h3></div>
-              <div id="latest-order-box" class="empty-state">No recent order yet.</div>
-            </div>
-            <div class="card">
-              <div class="section-head"><h3>Quick Status</h3></div>
-              <div class="kv-list" id="seller-quick-status"></div>
+            <div class="identity-block">
+              <div class="identity-icon">🏦</div>
+              <div>
+                <span>Active Payout Method</span>
+                <strong id="seller-active-payout-name">Not selected</strong>
+                <small id="seller-active-payout-detail">Add bank / UPI</small>
+              </div>
+              <button class="seller-mini-arrow side-link" data-target="seller-payouts">›</button>
             </div>
           </div>
+          <div class="seller-stat-strip" id="seller-stats"></div>
         </section>
 
+        <section class="seller-section-title">
+          <h2>Available USDT to INR Quotes</h2>
+          <button class="seller-link-btn side-link" data-target="seller-quotes">View All ›</button>
+        </section>
+        <div class="seller-quote-preview-row">
+          <div class="seller-rate-card featured">
+            <span class="best-rate">★ Best Rate</span>
+            <div class="coin-badge">₮</div>
+            <h3>USDT</h3>
+            <p>TRC20</p>
+            <strong id="seller-preview-rate">₹--.--</strong>
+            <small>Live admin quote slabs</small>
+            <button class="btn btn-primary side-link" data-target="seller-quotes">Choose Quote</button>
+          </div>
+          <div class="seller-rate-card">
+            <div class="coin-badge">₮</div>
+            <h3>USDT</h3>
+            <p>ERC20 / Other</p>
+            <strong>Dynamic</strong>
+            <small>As created by admin</small>
+            <button class="btn btn-secondary side-link" data-target="seller-quotes">View Quotes</button>
+          </div>
+        </div>
 
-        <section id="seller-quotes" class="panel-section">
+        <section class="seller-section-title">
+          <h2>Active Order</h2>
+          <button class="seller-link-btn side-link" data-target="seller-orders">View Details ›</button>
+        </section>
+        <div class="seller-active-order-card" id="latest-order-box">No recent order yet.</div>
+
+        <section class="seller-section-title">
+          <h2>Payout Methods</h2>
+          <button class="seller-link-btn side-link" data-target="seller-payouts">Manage ›</button>
+        </section>
+        <div class="seller-payout-preview-card">
+          <div class="payout-round-icon">🏦</div>
+          <div>
+            <strong id="seller-payout-preview-title">No payout method</strong>
+            <small id="seller-payout-preview-sub">Add bank account or UPI ID</small>
+          </div>
+          <span class="active-badge" id="seller-payout-preview-status">Setup</span>
+        </div>
+
+        <section class="seller-section-title">
+          <h2>Order Tracking</h2>
+        </section>
+        <div class="seller-tracking-preview">
+          <div class="seller-track-step done"><b>✓</b><span>Quote Selected</span></div>
+          <div class="seller-track-line"></div>
+          <div class="seller-track-step done"><b>↥</b><span>USDT Sent</span></div>
+          <div class="seller-track-line"></div>
+          <div class="seller-track-step active"><b>👤</b><span>Admin Review</span></div>
+          <div class="seller-track-line muted"></div>
+          <div class="seller-track-step"><b>◷</b><span>Payout</span></div>
+        </div>
+        <div class="seller-info-box">Our team verifies each transaction before payout. You can open the latest order for full tracking.</div>
+
+        <div class="card hidden">
+          <div class="section-head"><h3>Quick Status</h3></div>
+          <div class="kv-list" id="seller-quick-status"></div>
+        </div>
+      </section>
+
+      <section id="seller-quotes" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Available Quotes</h3></div>
@@ -101,7 +162,8 @@
           </div>
         </section>
 
-        <section id="seller-sell" class="panel-section">
+
+      <section id="seller-sell" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Create Sell Request</h3></div>
@@ -134,7 +196,8 @@
           </div>
         </section>
 
-        <section id="seller-payouts" class="panel-section">
+
+      <section id="seller-payouts" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Add / Edit Payout Method</h3></div>
@@ -183,7 +246,8 @@
           </div>
         </section>
 
-        <section id="seller-orders" class="panel-section">
+
+      <section id="seller-orders" class="panel-section">
           <div class="card">
             <div class="section-head"><h3>Your Sell Orders</h3></div>
             <div class="table-wrap">
@@ -197,7 +261,8 @@
           </div>
         </section>
 
-        <section id="seller-referrals" class="panel-section">
+
+      <section id="seller-referrals" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Your Referral Information</h3></div>
@@ -235,7 +300,8 @@
           </div>
         </section>
 
-        <section id="seller-kyc" class="panel-section">
+
+      <section id="seller-kyc" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>KYC Submit</h3></div>
@@ -270,7 +336,8 @@
           </div>
         </section>
 
-        <section id="seller-profile" class="panel-section">
+
+      <section id="seller-profile" class="panel-section">
           <div class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Profile</h3></div>
@@ -286,12 +353,29 @@
             </div>
           </div>
         </section>
-      </main>
-    </div>
+    </main>
+
+    <nav class="seller-bottom-nav">
+      <button class="side-link active" data-target="seller-overview"><span>▦</span><small>Dashboard</small></button>
+      <button class="side-link" data-target="seller-orders"><span>▤</span><small>Orders</small></button>
+      <button class="side-link center-action" data-target="seller-quotes"><span>＋</span><small>New Quote</small></button>
+      <button class="side-link" data-target="seller-payouts"><span>▣</span><small>Wallet</small></button>
+      <button class="side-link" data-target="seller-profile"><span>◎</span><small>Profile</small></button>
+    </nav>
+
+    <button id="logout-btn" class="seller-floating-logout">Logout</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="main.js"></script>
+  <script>
+    document.getElementById('seller-menu-toggle')?.addEventListener('click', function(){
+      document.getElementById('seller-drawer-nav')?.classList.toggle('open');
+    });
+    document.querySelectorAll('.seller-drawer-nav .side-link').forEach(function(btn){
+      btn.addEventListener('click', function(){ document.getElementById('seller-drawer-nav')?.classList.remove('open'); });
+    });
+  </script>
 </body>
 </html>

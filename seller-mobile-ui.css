@@ -639,3 +639,13 @@ body[data-page="seller-dashboard"] .panel-section.active{
 #kyc-message{font-weight:700}
 
 #save-payout-account[disabled],#submit-kyc-btn[disabled]{opacity:.68;cursor:not-allowed}
+
+
+/* Fixed TRC20 network field */
+#sell-network[readonly],
+#quotes-network[readonly]{
+  opacity:.9;
+  cursor:not-allowed;
+  background:rgba(55,255,193,.07) !important;
+  border-color:rgba(55,255,193,.22) !important;
+}

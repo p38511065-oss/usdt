@@ -117,3 +117,8 @@ Seller all actions fallback:
 - If main.js event binding fails, seller buttons should still show messages/actions
 
 Referral final fixed/merged with latest seller all-buttons build.
+
+Seller TRC20 default update:
+- Seller side network is now fixed/default TRC20.
+- sell-network and quotes-network fields are readonly TRC20.
+- Seller quote/sell logic uses TRC20 only.

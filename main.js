@@ -1024,14 +1024,14 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const fillNetworks = () => {
       const coin = String(coinSelect.value || '').toUpperCase();
       const nets = [...new Set([...(rates || []).filter((r) => String(r.coin_symbol || '').toUpperCase() === coin).map((r) => String(r.network || '').toUpperCase()), ...normalizedSlabsForSelect.filter((s) => s.coin_symbol === coin).map((s) => s.network)].filter(Boolean))];
-      networkSelect.innerHTML = nets.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      networkSelect.innerHTML = '<option value="TRC20">TRC20</option>'; networkSelect.value = 'TRC20';
     };
     coinSelect.addEventListener('change', fillNetworks);
     fillNetworks();
 
     qs('show-quotes-btn')?.addEventListener('click', async () => {
       const coin = val('sell-coin').toUpperCase();
-      const network = val('sell-network').toUpperCase();
+      const network = 'TRC20';
       const amount = Number(val('sell-amount'));
       const payoutId = val('bank-account-select');
       if (!coin || !network || !amount || !payoutId) return setText('quote-calc-message', 'Please select coin, network, amount and payout method.');
@@ -1269,6 +1269,10 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     }
     setText('seller-top-name', profile.full_name || profile.email || 'Seller');
     renderProfileBoxes(profile);
+
+    if (qs('sell-network')) qs('sell-network').value = 'TRC20';
+    if (qs('quotes-network')) qs('quotes-network').value = 'TRC20';
+
     updatePayoutFieldVisibility();
     qs('payout-method')?.addEventListener('change', updatePayoutFieldVisibility);
     qs('reset-payout-form')?.addEventListener('click', clearPayoutForm);

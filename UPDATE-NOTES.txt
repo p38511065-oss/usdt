@@ -136,3 +136,10 @@ Editable amount update:
 - Sell amount remains editable, so seller can enter any amount within admin slab range.
 - Added clear help message explaining amount can be edited.
 - Coin remains USDT and network remains TRC20.
+
+Payout details display fix:
+- Seller payout table now shows holder name, UPI ID, bank name, account number and IFSC.
+- Selected payout summary now shows full details.
+- New sell orders now save flat payout fields too.
+- Admin order payout section now shows holder name, UPI/bank, account and IFSC directly.
+- Added payout-details-final-fix.sql for database columns/backfill.

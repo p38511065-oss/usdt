@@ -768,3 +768,34 @@ drop policy if exists referral_withdrawals_update_admin on public.referral_withd
 create policy referral_withdrawals_update_admin on public.referral_withdrawals for update to authenticated using (public.is_admin()) with check (public.is_admin());
 drop policy if exists profiles_public_referral_lookup on public.profiles;
 create policy profiles_public_referral_lookup on public.profiles for select to anon, authenticated using (referral_code is not null);
+
+
+-- PAYOUT DETAILS FINAL FIX
+-- Adds flat payout columns to sell_orders so admin can always see holder name, bank, account, IFSC, UPI.
+alter table public.sell_orders
+add column if not exists payout_account_holder_name text,
+add column if not exists payout_bank_name text,
+add column if not exists payout_account_number text,
+add column if not exists payout_ifsc_code text,
+add column if not exists payout_upi_id text;
+
+alter table public.bank_accounts
+add column if not exists account_holder_name text,
+add column if not exists bank_name text,
+add column if not exists account_number text,
+add column if not exists ifsc_code text,
+add column if not exists upi_id text,
+add column if not exists payment_method text default 'bank',
+add column if not exists label text,
+add column if not exists is_primary boolean default false,
+add column if not exists is_active boolean default true;
+
+-- Backfill old orders from payout_details JSON if available.
+update public.sell_orders
+set
+  payout_account_holder_name = coalesce(payout_account_holder_name, payout_details->>'account_holder_name'),
+  payout_bank_name = coalesce(payout_bank_name, payout_details->>'bank_name'),
+  payout_account_number = coalesce(payout_account_number, payout_details->>'account_number'),
+  payout_ifsc_code = coalesce(payout_ifsc_code, payout_details->>'ifsc_code'),
+  payout_upi_id = coalesce(payout_upi_id, payout_details->>'upi_id')
+where payout_details is not null;

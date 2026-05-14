@@ -161,15 +161,7 @@
   }
   
   function buildPayoutDetails(row) {
-    return {
-      method: row.payout_method || row.payout_type || (row.payout_upi_id ? 'upi' : 'bank'),
-      label: row.payout_label || row.label || row.account_holder_name || row.payout_account_holder_name || 'Payout Account',
-      holder: row.payout_account_holder_name || row.account_holder_name || '-',
-      bank: row.payout_bank_name || row.bank_name || '-',
-      account: row.payout_account_number || row.account_number || '-',
-      ifsc: row.payout_ifsc_code || row.ifsc_code || '-',
-      upi: row.payout_upi_id || row.upi_id || '-'
-    };
+    return payoutDetailFromRow(row);
   }
   function ensurePayoutModal() {
     let modal = qs('#payout-view-modal');
@@ -421,10 +413,52 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     });
   }
 
+  function payoutDetailFromRow(row) {
+    if (!row) return {};
+    const raw = row.payout_details || row;
+    const method = String(
+      row.payout_method ||
+      row.payment_method ||
+      row.payout_type ||
+      raw.payment_method ||
+      raw.method ||
+      (row.payout_upi_id || raw.upi_id ? 'upi' : 'bank')
+    ).toLowerCase();
+
+    return {
+      method,
+      label: row.payout_label || row.label || raw.label || (method === 'upi' ? 'UPI' : 'Bank Account'),
+      holder: row.payout_account_holder_name || row.account_holder_name || raw.account_holder_name || raw.holder || '-',
+      bank: row.payout_bank_name || row.bank_name || raw.bank_name || raw.bank || '-',
+      account: row.payout_account_number || row.account_number || raw.account_number || raw.account || '-',
+      ifsc: row.payout_ifsc_code || row.ifsc_code || raw.ifsc_code || raw.ifsc || '-',
+      upi: row.payout_upi_id || row.upi_id || raw.upi_id || raw.upi || '-'
+    };
+  }
+
   function payoutDestinationLabel(row) {
-    if (!row) return '-';
-    if (row.payment_method === 'upi') return `${row.label || 'UPI'} • ${row.upi_id || '-'}`;
-    return `${row.label || row.bank_name || 'Bank'} • ${row.account_number || '-'}`;
+    const d = payoutDetailFromRow(row);
+    if (!d.method) return '-';
+    if (d.method === 'upi') return `${d.label || 'UPI'} • ${d.upi || '-'} • Holder: ${d.holder || '-'}`;
+    return `${d.bank || d.label || 'Bank'} • A/C: ${d.account || '-'} • IFSC: ${d.ifsc || '-'} • Holder: ${d.holder || '-'}`;
+  }
+
+  function payoutDetailsKvMarkup(row, rowClass = 'kv-row') {
+    const d = payoutDetailFromRow(row);
+    if (d.method === 'upi') {
+      return `
+        <div class="${rowClass}"><span>Payment Type</span><strong>UPI</strong></div>
+        <div class="${rowClass}"><span>Label</span><strong>${escapeHtml(d.label || '-')}</strong></div>
+        <div class="${rowClass}"><span>Holder Name</span><strong>${escapeHtml(d.holder || '-')}</strong></div>
+        <div class="${rowClass}"><span>UPI ID</span><strong class="break-anywhere">${escapeHtml(d.upi || '-')}</strong></div>`;
+    }
+    return `
+      <div class="${rowClass}"><span>Payment Type</span><strong>BANK</strong></div>
+      <div class="${rowClass}"><span>Label</span><strong>${escapeHtml(d.label || '-')}</strong></div>
+      <div class="${rowClass}"><span>Holder Name</span><strong>${escapeHtml(d.holder || '-')}</strong></div>
+      <div class="${rowClass}"><span>Bank Name</span><strong>${escapeHtml(d.bank || '-')}</strong></div>
+      <div class="${rowClass}"><span>Account Number</span><strong class="break-anywhere">${escapeHtml(d.account || '-')}</strong></div>
+      <div class="${rowClass}"><span>IFSC Code</span><strong>${escapeHtml(d.ifsc || '-')}</strong></div>`;
   }
   function renderProfileBoxes(profile) {
     setText('seller-display-name', profile.full_name || profile.email || 'Seller');
@@ -473,10 +507,19 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     accounts.forEach((row) => {
       const destination = payoutDestinationLabel(row);
       const tr = document.createElement('tr');
+      const d = payoutDetailFromRow(row);
       tr.innerHTML = `
-        <td>${escapeHtml((row.payment_method || 'bank').toUpperCase())}</td>
-        <td>${escapeHtml(row.label || '-')}</td>
-        <td>${escapeHtml(destination)}</td>
+        <td>${escapeHtml((d.method || 'bank').toUpperCase())}</td>
+        <td>
+          <strong>${escapeHtml(d.label || '-')}</strong>
+          <div class="tiny-note">Holder: ${escapeHtml(d.holder || '-')}</div>
+        </td>
+        <td>
+          ${d.method === 'upi'
+            ? `<strong>UPI:</strong> <span class="break-anywhere">${escapeHtml(d.upi || '-')}</span>`
+            : `<strong>Bank:</strong> ${escapeHtml(d.bank || '-')}<br><strong>A/C:</strong> <span class="break-anywhere">${escapeHtml(d.account || '-')}</span><br><strong>IFSC:</strong> ${escapeHtml(d.ifsc || '-')}`
+          }
+        </td>
         <td>${row.is_primary ? 'Yes' : 'No'}</td>
         <td>${row.is_verified ? 'Yes' : 'No'}</td>
         <td>${chip(row.is_active ? 'active' : 'inactive')}</td>
@@ -570,13 +613,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const opt = qs('bank-account-select')?.selectedOptions?.[0];
     if (!opt || !opt.value) return setHtml('selected-payout-summary', 'No payout method selected.');
     const details = JSON.parse(opt.dataset.details || '{}');
-    setHtml('selected-payout-summary', `
-      <div class="kv-list">
-        <div class="kv-row"><span>Method</span><strong>${escapeHtml((details.payment_method || 'bank').toUpperCase())}</strong></div>
-        <div class="kv-row"><span>Label</span><strong>${escapeHtml(details.label || '-')}</strong></div>
-        <div class="kv-row"><span>Holder</span><strong>${escapeHtml(details.account_holder_name || '-')}</strong></div>
-        <div class="kv-row"><span>Destination</span><strong>${escapeHtml(payoutDestinationLabel(details))}</strong></div>
-      </div>`);
+    setHtml('selected-payout-summary', `<div class="kv-list">${payoutDetailsKvMarkup(details)}</div>`);
   }
   function getOrderTrackingMeta(order) {
     const status = String(order?.status || '').toLowerCase();
@@ -1110,6 +1147,11 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
               estimated_inr_payout: estimated,
               payout_method: payout.payment_method,
               payout_label: payoutDestinationLabel(payout),
+              payout_account_holder_name: payout.account_holder_name || null,
+              payout_bank_name: payout.bank_name || null,
+              payout_account_number: payout.account_number || null,
+              payout_ifsc_code: payout.ifsc_code || null,
+              payout_upi_id: payout.upi_id || null,
               payout_details: payout,
               deposit_wallet_address: activeWallet.wallet_address,
               deposit_wallet_qr_url: activeWallet.qr_data_url || activeWallet.qr_image_url || activeWallet.qr_code_url || null,
@@ -1656,15 +1698,14 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
   }
 
   function payoutDisplay(row) {
-    const method = row.payout_method || row.payout_type || row.payout_details?.payment_method || 'bank';
-    const label = row.payout_label || row.payout_details?.label || (method === 'upi' ? 'Personal UPI' : row.payout_bank_name || 'Bank Transfer');
-    const value = method === 'upi'
-      ? (row.payout_upi_id || row.payout_details?.upi_id || '-')
-      : (row.payout_bank_name || row.payout_details?.bank_name || 'Bank Transfer');
-    const extra = method === 'upi'
-      ? (row.payout_account_holder_name || row.payout_details?.account_holder_name || '')
-      : (row.payout_account_number || row.payout_details?.account_number || '');
-    return { method, label, value, extra };
+    const d = payoutDetailFromRow(row);
+    const value = d.method === 'upi'
+      ? (d.upi || '-')
+      : `${d.bank || 'Bank'} • A/C: ${d.account || '-'} • IFSC: ${d.ifsc || '-'}`;
+    const extra = d.method === 'upi'
+      ? `Holder: ${d.holder || '-'}`
+      : `Holder: ${d.holder || '-'}`;
+    return { ...d, value, extra };
   }
 
   function buildOrderTimeline(row) {
@@ -1715,9 +1756,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         </div>
       </div>`);
     setHtml('admin-order-payout', `
-      <div class="summary-row"><span>Method</span><strong>${escapeHtml((payout.method || 'bank').toUpperCase())}</strong></div>
-      <div class="summary-row"><span>Destination</span><strong>${escapeHtml(payout.value || '-')}</strong></div>
-      <div class="summary-row"><span>Name / Label</span><strong>${escapeHtml(payout.label || '-')}</strong></div>
+      ${payoutDetailsKvMarkup(row, 'summary-row')}
       <div class="summary-row"><span>Status</span><strong>${chip(row.status)}</strong></div>
       <div class="top-gap-sm"><button id="admin-view-payout-details" data-id="${row.id}" data-payout='${encodePayoutDataAttr(row)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'admin-payout-inline',this);" class="btn btn-secondary btn-xs">View Payout Details</button></div>
       <div id="admin-payout-inline" class="inline-payout-box"></div>`);

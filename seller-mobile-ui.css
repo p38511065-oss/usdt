@@ -679,3 +679,7 @@ body[data-page="seller-dashboard"] .panel-section.active{
 #quotes-amount{
   cursor:text !important;
 }
+
+
+/* Payout details readability */
+.break-anywhere{overflow-wrap:anywhere;word-break:break-word}

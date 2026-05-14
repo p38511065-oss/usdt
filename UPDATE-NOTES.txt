@@ -96,3 +96,9 @@ KYC final fix:
 - Address no longer blocks submit
 - Adds schema-cache fallback for optional columns
 - Added kyc-final-database-fix.sql
+
+KYC RPC final fix:
+- Seller KYC submit now calls Supabase RPC submit_kyc()
+- RPC repairs missing profile row and inserts/updates KYC with security definer
+- Direct table insert remains fallback
+- Added kyc-rpc-final-fix.sql

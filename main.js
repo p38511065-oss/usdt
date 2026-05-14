@@ -931,89 +931,76 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         }
         setText('kyc-message', 'Compressing and submitting KYC...');
 
-        const payload = {
-          user_id: profile.id,
-          full_name: val('kyc-full-name') || profile.full_name || '',
-          dob: val('kyc-dob') || null,
-          id_type: val('kyc-id-type') || 'aadhaar',
-          id_number: val('kyc-id-number'),
-          address: val('kyc-address') || null,
-          status: 'pending',
-          review_note: null,
-          updated_at: new Date().toISOString()
-        };
-
-        if (!payload.full_name || !payload.id_number) {
-          setText('kyc-message', 'Please fill name and ID number.');
-          return;
-        }
-
         const front = qs('kyc-front-file')?.files?.[0];
         const back = qs('kyc-back-file')?.files?.[0];
         const selfie = qs('kyc-selfie-file')?.files?.[0];
 
-        if (front) payload.front_image_data = await readFileAsDataUrl(front);
-        if (back) payload.back_image_data = await readFileAsDataUrl(back);
-        if (selfie) payload.selfie_image_data = await readFileAsDataUrl(selfie);
+        const fullName = val('kyc-full-name') || profile.full_name || '';
+        const idType = val('kyc-id-type') || 'aadhaar';
+        const idNumber = val('kyc-id-number');
+        const dob = val('kyc-dob') || null;
+        const address = val('kyc-address') || null;
 
-        let result;
-        const editId = val('kyc-edit-id');
-
-        if (editId) {
-          result = await sellerClient
-            .from('kyc_submissions')
-            .update(payload)
-            .eq('id', editId)
-            .select()
-            .single();
-        } else {
-          result = await sellerClient
-            .from('kyc_submissions')
-            .insert({ ...payload, created_at: new Date().toISOString() })
-            .select()
-            .single();
-        }
-
-        // Schema-cache fallback: if optional address/review columns still mismatch, retry without optional fields.
-        if (result.error && /column|schema cache|address|review_note|updated_at|created_at/i.test(result.error.message || '')) {
-          const fallbackPayload = { ...payload };
-          delete fallbackPayload.address;
-          delete fallbackPayload.review_note;
-          delete fallbackPayload.updated_at;
-          delete fallbackPayload.created_at;
-
-          if (editId) {
-            result = await sellerClient
-              .from('kyc_submissions')
-              .update(fallbackPayload)
-              .eq('id', editId)
-              .select()
-              .single();
-          } else {
-            result = await sellerClient
-              .from('kyc_submissions')
-              .insert(fallbackPayload)
-              .select()
-              .single();
-          }
-        }
-
-        if (result.error) {
-          setText('kyc-message', result.error.message || 'KYC submit failed.');
+        if (!fullName || !idNumber) {
+          setText('kyc-message', 'Please fill name and ID number.');
           return;
         }
 
-        await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id);
-        try {
-          await audit('kyc_submitted', 'kyc_submissions', result.data.id, { status: 'pending' });
-        } catch (_) {}
+        const frontData = front ? await readFileAsDataUrl(front) : null;
+        const backData = back ? await readFileAsDataUrl(back) : null;
+        const selfieData = selfie ? await readFileAsDataUrl(selfie) : null;
+
+        // Stable path: database RPC handles profile check + KYC insert/update.
+        let rpcResult = await sellerClient.rpc('submit_kyc', {
+          p_full_name: fullName,
+          p_dob: dob,
+          p_id_type: idType,
+          p_id_number: idNumber,
+          p_address: address,
+          p_front_image_data: frontData,
+          p_back_image_data: backData,
+          p_selfie_image_data: selfieData
+        });
+
+        if (rpcResult.error) {
+          // fallback old direct insert/update if RPC is not installed yet
+          const payload = {
+            user_id: profile.id,
+            full_name: fullName,
+            dob,
+            id_type: idType,
+            id_number: idNumber,
+            address,
+            status: 'pending',
+            review_note: null
+          };
+          if (frontData) payload.front_image_data = frontData;
+          if (backData) payload.back_image_data = backData;
+          if (selfieData) payload.selfie_image_data = selfieData;
+
+          let result;
+          const editId = val('kyc-edit-id');
+          if (editId) {
+            result = await sellerClient.from('kyc_submissions').update(payload).eq('id', editId).select().single();
+          } else {
+            result = await sellerClient.from('kyc_submissions').insert(payload).select().single();
+          }
+
+          if (result.error) {
+            setText('kyc-message', result.error.message || rpcResult.error.message || 'KYC submit failed.');
+            return;
+          }
+        }
+
+        await sellerClient.from('profiles').update({ kyc_status: 'pending' }).eq('id', profile.id).then(() => null);
+        try { await audit('kyc_submitted', 'kyc_submissions', profile.id, { status: 'pending' }); } catch (_) {}
 
         setText('kyc-message', 'KYC submitted successfully. Status: pending review.');
         const freshProfile = await getProfile(sellerClient);
         await loadKycSection(freshProfile || profile);
         renderProfileBoxes(freshProfile || profile);
       } catch (err) {
-        setText('kyc-message', err?.message || 'KYC submit failed. Try smaller images or refresh once.');
+        setText('kyc-message', err?.message || 'KYC submit failed. Please refresh and try again.');
       } finally {
         if (btn) {
           btn.disabled = false;

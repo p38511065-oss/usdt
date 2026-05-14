@@ -683,3 +683,101 @@ body[data-page="seller-dashboard"] .panel-section.active{
 
 /* Payout details readability */
 .break-anywhere{overflow-wrap:anywhere;word-break:break-word}
+
+
+
+/* Seller separated order summary flow */
+.hidden-flow-card{display:none!important}
+.seller-flow-header{
+  margin-bottom:14px;
+  padding:16px;
+  border:1px solid rgba(119,190,255,.14);
+  background:linear-gradient(180deg,rgba(7,27,55,.85),rgba(3,14,31,.92));
+  border-radius:22px;
+}
+.seller-flow-header h3{margin:8px 0 6px!important;font-size:26px!important}
+.seller-flow-header p{margin:0;color:#aabbd3}
+.seller-flow-card,.seller-order-payment-card,.seller-order-tracking-card,.seller-matching-rate-card{border-radius:24px!important}
+.seller-selected-payout-mini{
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px;
+  border:1px solid rgba(119,190,255,.14);
+  background:rgba(5,18,39,.62);
+}
+.seller-selected-payout-mini .mini-title{
+  color:#37ffc1;
+  font-weight:900;
+  margin-bottom:8px;
+  font-size:13px;
+}
+.seller-selected-payout-mini .btn{margin-top:10px}
+.seller-payment-summary-grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:16px;
+}
+.seller-payment-left,.seller-payment-right{
+  border:1px solid rgba(119,190,255,.14);
+  background:rgba(5,18,39,.62);
+  border-radius:20px;
+  padding:14px;
+  min-width:0;
+}
+.seller-payment-qr{
+  display:grid;
+  place-items:center;
+  margin:10px 0 12px;
+}
+.seller-payment-qr img{
+  max-width:220px!important;
+  width:100%!important;
+}
+.seller-payment-right .deposit-submit-grid{
+  display:grid;
+  gap:10px;
+}
+.seller-sell-form-grid input[readonly]{
+  cursor:not-allowed;
+  opacity:.9;
+}
+@media(max-width:760px){
+  .seller-flow-header{padding:13px;border-radius:20px}
+  .seller-flow-header h3{font-size:23px!important}
+  .seller-sell-form-grid{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:9px!important;
+  }
+  .seller-sell-form-grid > div:nth-child(3),
+  .seller-sell-form-grid > div:nth-child(4){
+    grid-column:1 / -1!important;
+  }
+  .seller-sell-form-grid input,
+  .seller-sell-form-grid select{
+    min-height:44px!important;
+    border-radius:13px!important;
+  }
+  .seller-payment-summary-grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+  .seller-order-payment-card,
+  .seller-order-tracking-card,
+  .seller-matching-rate-card,
+  .seller-flow-card{
+    padding:14px!important;
+  }
+  .seller-payment-left,.seller-payment-right{
+    padding:12px!important;
+    border-radius:18px!important;
+  }
+  .seller-payment-qr img{max-width:190px!important}
+  .seller-order-tracking-card .timeline-row{
+    display:grid!important;
+    grid-template-columns:auto 1fr!important;
+  }
+  .seller-order-tracking-card .timeline-time{
+    grid-column:2;
+  }
+}

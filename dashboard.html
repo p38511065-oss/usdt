@@ -165,38 +165,47 @@
         </section>
 
 
-      <section id="seller-sell" class="panel-section">
-          <div class="seller-info-box sell-usdt-help-box">Sell USDT flow: amount डालें → payout select करें → best admin rate देखें → Create Sell Order करें → USDT send करें.</div>
-          <div class="seller-info-box amount-editable-hint">Rate Board से rate use करने पर minimum amount auto-fill हो सकता है, लेकिन amount editable रहेगा. आप selected slab range के बीच का amount डाल सकते हैं.</div>
-          <div class="grid-2">
-            <div class="card">
-              <div class="section-head"><h3>Sell USDT</h3></div>
-              <div id="selected-quote-banner" class="empty-state top-gap-sm">Select a quote from Rate Board to prefill this sell request, or search manually below.</div>
-              <div class="field-grid">
-                <div><label>Coin</label><select id="sell-coin"></select></div>
-                <div><label>Network</label><input id="sell-network" value="TRC20" readonly /></div>
-                <div><label>Crypto Amount</label><input id="sell-amount" type="number" step="0.0001" placeholder="Enter USDT amount" /></div>
-                <div><label>Payout Method</label><select id="bank-account-select"></select></div>
-              </div>
-              <div class="tiny-note">Quotes will use your amount slab. Small USDT can have lower rate and higher USDT can have higher rate.</div>
-              <div class="top-gap-sm">
-                <button id="show-quotes-btn" class="btn btn-primary">Get Best Admin Rate</button>
-              </div>
-              <p id="quote-calc-message" class="status-text"></p>
-            </div>
-            <div class="card">
-              <div class="section-head"><h3>Selected Payout Destination</h3></div>
-              <div id="selected-payout-summary" class="empty-state">Select a payout method to see details here.</div>
-            </div>
+      <section id="seller-sell" class="panel-section seller-sell-flow">
+          <div class="seller-flow-header">
+            <span class="badge">USDT / TRC20</span>
+            <h3>Sell USDT to INR</h3>
+            <p>Amount डालें, payout method select करें और admin rate लेकर sell order create करें.</p>
           </div>
-          <div class="card top-gap">
-            <div class="section-head"><h3>Admin Rate Board</h3></div>
+
+          <div class="card seller-flow-card" id="seller-sell-start-card">
+            <div class="section-head"><h3>1. Enter Sell Details</h3></div>
+            <div id="selected-quote-banner" class="empty-state compact-selected-banner">Rate Board से rate select कर सकते हैं, या amount डालकर best admin rate देखें.</div>
+            <div class="field-grid seller-sell-form-grid">
+              <div><label>Coin</label><input id="sell-coin" value="USDT" readonly /></div>
+              <div><label>Network</label><input id="sell-network" value="TRC20" readonly /></div>
+              <div><label>USDT Amount</label><input id="sell-amount" type="number" step="0.0001" placeholder="Enter USDT amount" /></div>
+              <div><label>Payout Method</label><select id="bank-account-select"></select></div>
+            </div>
+            <div class="seller-selected-payout-mini">
+              <div class="mini-title">Selected payout destination</div>
+              <div id="selected-payout-summary" class="empty-state">Select payout method to see bank / UPI details.</div>
+              <button class="btn btn-secondary btn-xs side-link" data-target="seller-payouts">Add / Edit Payout</button>
+            </div>
+            <div class="seller-sell-action-row">
+              <button id="show-quotes-btn" class="btn btn-primary btn-block">Get Best Admin Rate</button>
+            </div>
+            <p id="quote-calc-message" class="status-text"></p>
+          </div>
+
+          <div class="card top-gap seller-matching-rate-card">
+            <div class="section-head"><h3>2. Select Admin Rate</h3><span class="tiny-note">Shows only after amount + payout</span></div>
             <div id="quotes-container" class="quote-cards quote-cards-3"></div>
-            <div id="quotes-empty" class="empty-state">Quotes will appear after you enter coin, network, amount and payout method.</div>
+            <div id="quotes-empty" class="empty-state">Enter amount and payout method, then tap Get Best Admin Rate.</div>
           </div>
-          <div class="card top-gap">
-            <div class="section-head"><h3>Send Crypto / Deposit Step</h3></div>
-            <div id="deposit-order-box" class="empty-state">जब आप quote confirm करोगे, यहाँ wallet address, QR और TX hash submit करने का option दिखेगा.</div>
+
+          <div class="card top-gap seller-order-payment-card hidden-flow-card" id="seller-order-payment-card">
+            <div class="section-head"><h3>3. Order Summary & Payment</h3><span class="badge">Pay USDT</span></div>
+            <div id="deposit-order-box" class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>
+          </div>
+
+          <div class="card top-gap seller-order-tracking-card hidden-flow-card" id="seller-order-tracking-card">
+            <div class="section-head"><h3>Order Tracking</h3><span class="tiny-note">Payment submit के बाद tracking दिखेगी</span></div>
+            <div id="seller-post-payment-tracking" class="empty-state">TX hash submit करने के बाद tracking status यहाँ दिखेगा.</div>
           </div>
         </section>
 

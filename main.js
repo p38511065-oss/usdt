@@ -659,23 +659,26 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
 
   async function renderDepositOrderBox(order) {
     const box = qs('deposit-order-box');
+    const paymentCard = qs('seller-order-payment-card');
+    const trackingCard = qs('seller-order-tracking-card');
+    const trackingBox = qs('seller-post-payment-tracking');
+
     if (!box) return;
+
     if (!order) {
-      box.innerHTML = '<div class="empty-state">जब आप quote confirm करोगे, यहाँ wallet address, QR, TX hash और full order tracking दिखाई देगी.</div>';
+      if (paymentCard) paymentCard.classList.add('hidden-flow-card');
+      if (trackingCard) trackingCard.classList.add('hidden-flow-card');
+      box.innerHTML = '<div class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>';
+      if (trackingBox) trackingBox.innerHTML = '<div class="empty-state">TX hash submit करने के बाद tracking status यहाँ दिखेगा.</div>';
       return;
     }
+
+    if (paymentCard) paymentCard.classList.remove('hidden-flow-card');
+
     order = await ensureOrderWalletAssignment(order);
     const qr = order.deposit_wallet_qr_url || order.qr_image_url || order.qr_code_url || '';
     const walletMissing = !order.deposit_wallet_address;
     const tracking = getOrderTrackingMeta(order);
-    const progressMarkup = tracking.steps.map((step, idx) => `
-      <div class="track-step ${step.state}">
-        <div class="track-step-number">${idx + 1}</div>
-        <div class="track-step-card">
-          <div class="track-step-title">${escapeHtml(step.title)}</div>
-          <div class="track-step-subtitle">${escapeHtml(step.subtitle)}</div>
-        </div>
-      </div>`).join('');
 
     const timeline = [
       { title: 'Order placed', note: 'Sell request created successfully.', ts: fmtDate(order.created_at) },
@@ -690,60 +693,60 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     </div>`).join('');
 
     box.innerHTML = `
-      <div class="order-track-shell">
-        <div class="order-track-head">
-          <div>
-            <div class="order-track-title">Order Tracking</div>
-            <div class="order-track-subtitle">Track your order progress in real-time. We will notify you at every step.</div>
+      <div class="seller-payment-summary-grid">
+        <div class="seller-payment-left">
+          <div class="summary-title">Order Summary</div>
+          <div class="summary-list">
+            <div class="summary-row"><span>Order ID</span><strong class="code-small">${escapeHtml(order.id || '-')}</strong></div>
+            <div class="summary-row"><span>Coin / Network</span><strong>${escapeHtml(order.coin_symbol || '-')} / ${escapeHtml(order.network || '-')}</strong></div>
+            <div class="summary-row"><span>Exact USDT Amount</span><strong class="summary-copy-wrap">${escapeHtml(String(order.crypto_amount || '-'))}<button id="copy-deposit-amount" class="mini-copy inline-copy" title="Copy amount">⧉</button></strong></div>
+            <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
+            <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
+            <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'seller-payout-inline',this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
+            <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
+            <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
           </div>
-          <div class="order-track-meta"><span class="status-pill in-progress">${escapeHtml(String(order.status || '').replaceAll('_', ' '))}</span></div>
+          <div id="seller-payout-inline" class="inline-payout-box"></div>
+          <div class="deposit-warning">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
         </div>
+
+        <div class="seller-payment-right">
+          <div class="summary-title">Scan QR / Send USDT</div>
+          ${qr ? `<div class="image-preview-box fancy-qr seller-payment-qr"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
+          ${order.tx_hash ? `
+            <div class="tx-success-box">
+              <div class="tx-success-title">✓ Payment submitted successfully</div>
+              <div class="tx-success-copy">TX Hash: <span class="code-small">${escapeHtml(order.tx_hash)}</span></div>
+            </div>
+          ` : `
+            <div class="top-gap-sm deposit-submit-grid">
+              <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="" /></div>
+              <button id="mark-crypto-sent" class="btn btn-primary btn-block">I Have Sent USDT</button>
+            </div>
+            <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active admin wallet is assigned for this coin/network yet. Please contact support or wait for admin wallet setup.' : ''}</p>
+          `}
+        </div>
+      </div>`;
+
+    if (order.tx_hash && trackingCard && trackingBox) {
+      trackingCard.classList.remove('hidden-flow-card');
+      trackingBox.innerHTML = `
         <div class="order-track-card">
           <div class="order-track-topline">
             <div><strong>Order ID:</strong> <span class="code-small">${escapeHtml(order.id || '-')}</span></div>
             <div class="muted">Placed on ${fmtDate(order.created_at)}</div>
           </div>
-          <div class="track-steps-grid">${progressMarkup}</div>
           <div class="track-banner">${tracking.banner}</div>
         </div>
-        <div class="track-bottom-grid">
-          <div class="order-summary-card">
-            <div class="summary-title">Order Summary</div>
-            <div class="summary-list">
-              <div class="summary-row"><span>Coin / Network</span><strong>${escapeHtml(order.coin_symbol || '-')} / ${escapeHtml(order.network || '-')}</strong></div>
-              <div class="summary-row"><span>Exact Amount</span><strong class="summary-copy-wrap">${escapeHtml(String(order.crypto_amount || '-'))}<button id="copy-deposit-amount" class="mini-copy inline-copy" title="Copy amount">⧉</button></strong></div>
-              <div class="summary-row"><span>Locked Rate</span><strong>${Number(order.locked_rate_inr || 0).toFixed(4)} INR</strong></div>
-              <div class="summary-row"><span>Expected INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
-              <div class="summary-row"><span>Payout Method</span><strong class="summary-copy-wrap">${escapeHtml(order.payout_label || order.payout_upi_id || order.payout_account_number || '-')}<button id="view-payout-details" data-payout='${encodePayoutDataAttr(order)}' onclick="event.stopPropagation(); return toggleInlinePayoutDetails(this.getAttribute('data-payout'),'seller-payout-inline',this);" class="mini-view-btn" title="View payout details">View</button></strong></div>
-              <div class="summary-row"><span>Wallet Address</span><strong class="code-small summary-copy-wrap">${escapeHtml(order.deposit_wallet_address || 'Wallet not assigned yet')}<button id="copy-deposit-address" class="mini-copy inline-copy" title="Copy wallet">⧉</button></strong></div>
-              <div class="summary-row"><span>TX Hash</span><strong class="code-small">${escapeHtml(order.tx_hash || '-')}</strong></div>
-              <div class="summary-row"><span>Current Status</span><strong>${escapeHtml(String(order.status || '-').replaceAll('_', ' '))}</strong></div>
-            </div>
-            <div id="seller-payout-inline" class="inline-payout-box"></div>
-            ${order.tx_hash ? `
-              <div class="tx-success-box">
-                <div class="tx-success-title">✓ Crypto sent successfully</div>
-                <div class="tx-success-copy">Your transaction hash has been submitted. Our team is now reviewing your blockchain transfer.</div>
-              </div>
-            ` : `
-              <div class="top-gap-sm field-grid deposit-submit-grid">
-                <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="" /></div>
-                <div class="inline-end"><button id="mark-crypto-sent" class="btn btn-primary">I Have Sent Crypto</button></div>
-              </div>
-              <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active admin wallet is assigned for this coin/network yet. Please contact support or wait for admin wallet setup.' : ''}</p>
-            `}
-            <div class="deposit-warning">Send only ${escapeHtml(order.coin_symbol || '')} on ${escapeHtml(order.network || '')}. Wrong network can cause loss of funds.</div>
-          </div>
-          <div class="activity-card">
-            <div class="summary-title">Activity Timeline</div>
-            <div class="timeline-list">${timeline}</div>
-            <div class="summary-title top-gap-sm">Scan QR</div>
-            ${qr ? `<div class="image-preview-box fancy-qr"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
-          </div>
-        </div>
-      </div>`;
+        <div class="timeline-list top-gap-sm">${timeline}</div>`;
+    } else if (trackingCard && trackingBox) {
+      trackingCard.classList.add('hidden-flow-card');
+      trackingBox.innerHTML = '<div class="empty-state">TX hash submit करने के बाद tracking status यहाँ दिखेगा.</div>';
+    }
+
     bindInlineCopy('copy-deposit-address', order.deposit_wallet_address || '', '✓');
     bindInlineCopy('copy-deposit-amount', String(order.crypto_amount || ''), '✓');
+
     qs('mark-crypto-sent')?.addEventListener('click', async () => {
       const txHash = val('deposit-tx-hash');
       if (!txHash) return setText('deposit-order-message', 'Please enter TX hash first.');
@@ -766,7 +769,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       if (error) {
         if (btn) {
           btn.disabled = false;
-          btn.textContent = btn.dataset.original || 'I Have Sent Crypto';
+          btn.textContent = btn.dataset.original || 'I Have Sent USDT';
         }
         if (input) input.disabled = false;
         if (message) {
@@ -780,9 +783,13 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       const profile = await getProfile(sellerClient);
       await loadSellerStats(profile);
       const refreshed = await sellerClient.from('sell_orders').select('*').eq('id', order.id).single();
-      if (refreshed.data) renderDepositOrderBox(refreshed.data);
+      if (refreshed.data) {
+        renderDepositOrderBox(refreshed.data);
+        qs('seller-order-tracking-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
   }
+
   function renderSellerOrders(orders) {
     const body = qs('orders-body');
     if (!body) return;
@@ -1058,13 +1065,13 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     if (!coinSelect || !networkSelect) return;
     const normalizedSlabsForSelect = (slabs || []).map((s) => normalizeSlabRow(s, templates));
     const uniqueCoins = [...new Set([...(rates || []).map((r) => String(r.coin_symbol || '').toUpperCase()), ...normalizedSlabsForSelect.map((s) => s.coin_symbol)].filter(Boolean))];
-    coinSelect.innerHTML = uniqueCoins.map((coin) => `<option value="${escapeHtml(coin)}">${escapeHtml(coin)}</option>`).join('');
+    coinSelect.value = 'USDT';
+    networkSelect.value = 'TRC20';
     const fillNetworks = () => {
-      const coin = String(coinSelect.value || '').toUpperCase();
-      const nets = [...new Set([...(rates || []).filter((r) => String(r.coin_symbol || '').toUpperCase() === coin).map((r) => String(r.network || '').toUpperCase()), ...normalizedSlabsForSelect.filter((s) => s.coin_symbol === coin).map((s) => s.network)].filter(Boolean))];
-      networkSelect.innerHTML = '<option value="TRC20">TRC20</option>'; networkSelect.value = 'TRC20';
+      coinSelect.value = 'USDT';
+      networkSelect.value = 'TRC20';
     };
-    coinSelect.addEventListener('change', fillNetworks);
+    coinSelect.addEventListener?.('change', fillNetworks);
     fillNetworks();
 
     qs('show-quotes-btn')?.addEventListener('click', async () => {
@@ -1072,7 +1079,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       const network = 'TRC20';
       const amount = Number(val('sell-amount'));
       const payoutId = val('bank-account-select');
-      if (!coin || !network || !amount || !payoutId) return setText('quote-calc-message', 'Please select coin, network, amount and payout method.');
+      if (!coin || !network || !amount || !payoutId) return setText('quote-calc-message', 'Please enter USDT amount and select payout method.');
 
       const payoutAccounts = await renderPayoutAccounts(profile.id);
       const payout = (payoutAccounts || []).find((x) => x.id === payoutId);

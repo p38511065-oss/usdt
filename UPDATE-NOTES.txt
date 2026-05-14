@@ -172,3 +172,9 @@ Admin menu/notification fix:
 - Logout option added inside floating menu.
 - Notification icon opens notification panel.
 - Dropdowns close on outside click.
+
+Seller order summary flow update:
+- Sell page now has separated stages: sell details, admin rate, order summary/payment, tracking after TX.
+- Order tracking is hidden until TX hash is submitted.
+- QR and wallet address now appear inside Order Summary & Payment section, not timeline.
+- Payment submit success then shows tracking section.

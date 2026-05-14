@@ -210,3 +210,338 @@ body[data-page="seller-dashboard"]{
   .seller-bottom-nav{bottom:8px;width:calc(100% - 14px);border-radius:24px}
   .seller-bottom-nav .side-link small{font-size:11px}
 }
+
+
+/* Seller dashboard mobile polish pass */
+html, body{
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+body[data-page="seller-dashboard"]{
+  background:
+    radial-gradient(circle at 18% -8%, rgba(37,231,255,.14), transparent 30%),
+    radial-gradient(circle at 82% 0%, rgba(55,255,193,.10), transparent 28%),
+    linear-gradient(180deg,#020814 0%,#041126 55%,#020814 100%) !important;
+}
+body[data-page="seller-dashboard"] *{
+  max-width:100%;
+}
+.seller-app-shell{
+  overflow:hidden;
+}
+.seller-app-top{
+  width:100%;
+  box-shadow:0 10px 34px rgba(0,0,0,.22);
+}
+.seller-app-brand{
+  min-width:0;
+}
+.seller-brand-title,
+.seller-brand-sub{
+  white-space:normal;
+}
+.seller-top-actions{
+  flex-shrink:0;
+}
+.seller-hello-row{
+  position:relative;
+  padding-right:0;
+}
+.online-pill{
+  flex-shrink:0;
+}
+.seller-identity-card,
+.seller-active-order-card,
+.seller-payout-preview-card,
+.seller-tracking-preview,
+.seller-info-box{
+  width:100%;
+}
+.seller-stat-strip .stat-card{
+  overflow:hidden;
+}
+.seller-stat-strip .stat-card strong{
+  word-break:break-word;
+}
+.seller-section-title{
+  align-items:flex-start;
+}
+.seller-section-title h2{
+  max-width:62%;
+  line-height:1.1;
+}
+.seller-link-btn{
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.seller-quote-preview-row{
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding-right:12px;
+}
+.seller-quote-preview-row::-webkit-scrollbar{
+  display:none;
+}
+.seller-rate-card{
+  flex:0 0 auto;
+}
+.seller-rate-card strong{
+  overflow-wrap:anywhere;
+}
+.seller-active-order-card{
+  min-height:52px;
+}
+.seller-app-content .panel-section:not(#seller-overview){
+  width:100%;
+  overflow:hidden;
+}
+.seller-app-content .table-wrap{
+  overflow-x:auto;
+}
+.seller-bottom-nav{
+  overflow:visible;
+}
+.seller-bottom-nav .side-link:before{
+  display:none !important;
+}
+.seller-bottom-nav .side-link{
+  min-width:0;
+}
+.seller-bottom-nav .side-link small{
+  white-space:nowrap;
+}
+.seller-floating-logout{
+  display:none;
+}
+
+/* force seller panel active sections to work with rebuilt mobile app */
+body[data-page="seller-dashboard"] .panel-section{
+  display:none;
+}
+body[data-page="seller-dashboard"] .panel-section.active{
+  display:block;
+}
+
+@media (max-width:760px){
+  .seller-app-shell{
+    width:100%;
+    padding-bottom:104px;
+  }
+  .seller-app-content{
+    width:100%;
+    padding:12px 10px 104px;
+    gap:14px;
+  }
+  .seller-app-top{
+    padding:12px 10px;
+  }
+  .seller-logo-mark{
+    width:44px;
+    height:44px;
+    border-radius:15px;
+    font-size:25px;
+  }
+  .seller-brand-title{
+    font-size:15px;
+    line-height:1.12;
+    max-width:180px;
+  }
+  .seller-brand-sub{
+    font-size:11px;
+  }
+  .seller-icon-btn{
+    width:44px;
+    height:44px;
+    border-radius:15px;
+    font-size:20px;
+  }
+  .seller-hello-row{
+    flex-direction:column;
+    gap:8px;
+    margin-top:6px;
+  }
+  .seller-hello-row h1{
+    font-size:28px;
+    line-height:1.05;
+  }
+  .seller-hello-row p{
+    font-size:14px;
+  }
+  .online-pill{
+    align-self:flex-end;
+    position:absolute;
+    right:0;
+    top:0;
+    transform:translateY(2px);
+    font-size:12px;
+    padding:7px 11px;
+  }
+  .seller-identity-card{
+    border-radius:24px;
+  }
+  .identity-block{
+    padding:18px;
+    gap:14px;
+  }
+  .identity-icon{
+    width:58px;
+    height:58px;
+    border-radius:20px;
+    font-size:28px;
+    flex-shrink:0;
+  }
+  .identity-block strong{
+    font-size:23px;
+    line-height:1.05;
+  }
+  .identity-block small{
+    font-size:13px;
+  }
+  .seller-stat-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .seller-stat-strip .stat-card{
+    padding:15px !important;
+    min-height:94px !important;
+  }
+  .seller-stat-strip .stat-card strong{
+    font-size:18px !important;
+    line-height:1.15;
+  }
+  .seller-stat-strip .stat-card span{
+    font-size:11px !important;
+  }
+  .seller-section-title{
+    margin-top:8px;
+  }
+  .seller-section-title h2{
+    font-size:20px;
+    max-width:68%;
+  }
+  .seller-link-btn{
+    font-size:13px;
+    padding:4px 0 !important;
+  }
+  .seller-quote-preview-row{
+    grid-auto-columns:72%;
+    gap:12px;
+  }
+  .seller-rate-card{
+    min-height:215px;
+    border-radius:24px;
+    padding:16px;
+  }
+  .seller-rate-card strong{
+    font-size:30px;
+  }
+  .seller-rate-card .btn{
+    font-size:13px;
+  }
+  .best-rate{
+    font-size:11px;
+    padding:6px 9px;
+  }
+  .coin-badge{
+    width:54px;
+    height:54px;
+    font-size:30px;
+  }
+  .seller-payout-preview-card{
+    border-radius:22px;
+    padding:16px;
+  }
+  .payout-round-icon{
+    width:56px;
+    height:56px;
+    flex-shrink:0;
+  }
+  .active-badge{
+    font-size:12px;
+    padding:7px 10px;
+  }
+  .seller-tracking-preview{
+    grid-template-columns:repeat(4,74px);
+    gap:10px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding:16px;
+  }
+  .seller-tracking-preview::-webkit-scrollbar{
+    display:none;
+  }
+  .seller-track-line{
+    display:none;
+  }
+  .seller-track-step{
+    min-width:70px;
+  }
+  .seller-track-step b{
+    width:48px;
+    height:48px;
+  }
+  .seller-track-step span{
+    font-size:11px;
+    line-height:1.2;
+    display:block;
+  }
+  .seller-info-box{
+    font-size:13px;
+    border-radius:16px;
+    padding:13px;
+  }
+  .seller-bottom-nav{
+    width:calc(100% - 12px);
+    bottom:6px;
+    padding:8px 6px;
+    border-radius:24px;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .seller-bottom-nav .side-link{
+    padding:7px 2px !important;
+    border-radius:16px !important;
+  }
+  .seller-bottom-nav .side-link span{
+    font-size:21px;
+  }
+  .seller-bottom-nav .side-link small{
+    font-size:10px;
+  }
+  .seller-bottom-nav .center-action span{
+    width:54px;
+    height:54px;
+    font-size:30px;
+    margin-top:-30px;
+  }
+  .seller-drawer-nav{
+    top:72px;
+    right:8px;
+    width:calc(100% - 16px);
+  }
+}
+
+@media (max-width:380px){
+  .seller-brand-title{
+    max-width:145px;
+    font-size:14px;
+  }
+  .seller-icon-btn{
+    width:40px;
+    height:40px;
+  }
+  .seller-hello-row h1{
+    font-size:25px;
+  }
+  .online-pill{
+    position:static;
+    align-self:flex-start;
+  }
+  .seller-quote-preview-row{
+    grid-auto-columns:80%;
+  }
+  .seller-bottom-nav .side-link small{
+    font-size:9px;
+  }
+}

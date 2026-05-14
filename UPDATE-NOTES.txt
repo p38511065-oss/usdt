@@ -41,3 +41,11 @@ Seller dashboard mobile app rebuild:
 - Added seller-mobile-ui.css with app header, overview cards, quote cards, active order, payout preview, tracking, bottom nav
 - Preserved all existing IDs and main.js logic for quotes, sell flow, payout, KYC, orders
 - Added small JS bindings for seller display name, KYC status, active payout, and preview top rate
+
+Seller mobile polish:
+- Fixed horizontal overflow on mobile
+- Online badge no longer goes outside screen
+- Compact mobile header
+- Quote cards made controlled horizontal scroll
+- Bottom nav refined
+- Tracking preview made mobile-safe

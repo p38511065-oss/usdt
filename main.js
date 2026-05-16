@@ -1516,6 +1516,100 @@ async function getActiveBatch(client = sellerClient) {
   }
 
 
+
+  function maskSellerName(name, fallback = 'Verified Seller') {
+    const raw = String(name || '').trim();
+    if (!raw) return fallback;
+    const parts = raw.split(/\s+/).filter(Boolean);
+    const first = parts[0] || '';
+    const last = parts[1] || '';
+    if (!first) return fallback;
+    if (last) return `${first} ${last.slice(0, 1)}.`;
+    if (first.length <= 3) return `${first.slice(0, 1)}***`;
+    return `${first.slice(0, 2)}***`;
+  }
+
+  function buildGenericTickerMessages() {
+    return [
+      '🛡 USDT/TRC20 orders verified before payout',
+      '⚡ INR payout processed after admin confirmation',
+      '🔒 Duplicate TX hash protection enabled',
+      '🔥 Limited batch slots available for verified sellers',
+      '✅ Manual order tracking from crypto sent to paid',
+      '💬 Telegram support available for seller help',
+      '📌 Admin-created quantity slab rates live',
+      '🚀 Sell USDT with clear rate and payout tracking'
+    ];
+  }
+
+  function buildTickerItems(messages) {
+    const list = [...messages, ...messages];
+    return list.map((msg) => `<span class="ticker-pill">${escapeHtml(msg)}</span>`).join('');
+  }
+
+  async function loadSmartTrustTicker(targetIds = []) {
+    const targets = targetIds.map((id) => qs(id)).filter(Boolean);
+    if (!targets.length) return;
+
+    try {
+      const { data, error } = await sellerClient
+        .from('sell_orders')
+        .select('crypto_amount,estimated_inr_payout,status,created_at,profiles!sell_orders_user_id_fkey(full_name)')
+        .in('status', ['completed','paid'])
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      const completed = data || [];
+      let messages = [];
+
+      if (completed.length >= 5) {
+        messages = completed.slice(0, 12).map((row) => {
+          const name = maskSellerName(row.profiles?.full_name);
+          const usdt = Number(row.crypto_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+          return `✅ ${name} successfully sold ${usdt} USDT`;
+        });
+      } else {
+        messages = buildGenericTickerMessages();
+        if (completed.length) {
+          const realMsgs = completed.slice(0, 2).map((row) => {
+            const usdt = Number(row.crypto_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            return `✅ Verified seller completed ${usdt} USDT order`;
+          });
+          messages = [...realMsgs, ...messages];
+        }
+      }
+
+      const html = `
+        <div class="ticker-shell">
+          <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
+          <div class="ticker-track-wrap">
+            <div class="ticker-track">${buildTickerItems(messages)}</div>
+          </div>
+        </div>`;
+
+      targets.forEach((el) => {
+        el.innerHTML = html;
+        el.classList.add('loaded');
+      });
+    } catch (err) {
+      const fallback = buildGenericTickerMessages();
+      const html = `
+        <div class="ticker-shell">
+          <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
+          <div class="ticker-track-wrap">
+            <div class="ticker-track">${buildTickerItems(fallback)}</div>
+          </div>
+        </div>`;
+      targets.forEach((el) => {
+        el.innerHTML = html;
+        el.classList.add('loaded');
+      });
+    }
+  }
+
+
 async function loadSellerStats(profile) {
     updateSellerPreviewRate();
     const [{ data: orders }, { data: accounts }, { data: rewards }] = await Promise.all([
@@ -2476,6 +2570,7 @@ async function loadReferralsSection(profile) {
       renderPayoutAccounts(profile.id),
       loadSellerStats(profile),
       renderSellerBatchBanners(),
+      loadSmartTrustTicker(['seller-smart-trust-ticker']),
       loadReferralsSection(profile),
       loadRatesAndQuotes(profile),
       renderSellerDashboardQuoteSlabs(),
@@ -3934,7 +4029,12 @@ await Promise.all([
     flashInlineCopyState(btn, ok, '✓');
   });
 
-  switch (page) {
+  
+  if (qs('landing-smart-trust-ticker')) {
+    loadSmartTrustTicker(['landing-smart-trust-ticker']);
+  }
+
+switch (page) {
     case 'login':
       loadLoginPage();
       break;

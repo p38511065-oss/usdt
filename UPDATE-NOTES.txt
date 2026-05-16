@@ -409,3 +409,10 @@ Final bug fixes:
 - KYC approve/reject actions are hidden after final status, preventing approved KYC from being rejected again.
 - Referral reward/withdrawal actions are hidden after paid/rejected final status.
 - Admin Recent Order timeline no longer shows Crypto Received as ticked just because seller submitted TX; it stays current until admin flow progresses.
+
+Premium Smart Trust Ticker update:
+- Added premium trust ticker to landing page and seller dashboard.
+- If completed orders are 5 or more, ticker shows masked real seller success messages.
+- If completed orders are fewer than 5, ticker shows generic trust/batch/payment messages to avoid repeating one name.
+- No full names, phone numbers, or private payout details are shown.
+- No SQL required.

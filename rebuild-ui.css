@@ -736,3 +736,108 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
     grid-template-columns:1fr;
   }
 }
+
+
+/* Premium Smart Trust Ticker */
+.premium-trust-ticker-section{
+  padding:12px 18px;
+  background:rgba(3,13,29,.92);
+}
+.premium-trust-ticker{
+  margin:12px 0 18px;
+  border-radius:22px;
+  overflow:hidden;
+  border:1px solid rgba(55,255,193,.20);
+  background:
+    radial-gradient(circle at 0% 0%,rgba(37,231,255,.14),transparent 32%),
+    radial-gradient(circle at 100% 0%,rgba(55,255,193,.12),transparent 30%),
+    linear-gradient(135deg,rgba(7,32,62,.96),rgba(3,15,34,.98));
+  box-shadow:0 16px 45px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.03);
+}
+.premium-trust-ticker.public{
+  max-width:1120px;
+  margin:0 auto;
+}
+.ticker-loading{
+  padding:14px 16px;
+  color:#9facbd;
+  font-weight:850;
+}
+.ticker-shell{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:14px;
+  padding:12px 14px;
+}
+.ticker-label{
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#eaf4ff;
+  font-weight:950;
+  font-size:13px;
+  padding:9px 12px;
+  border-radius:999px;
+  background:rgba(5,18,39,.72);
+  border:1px solid rgba(119,190,255,.14);
+}
+.ticker-label span{
+  color:#37ffc1;
+  text-shadow:0 0 16px rgba(55,255,193,.6);
+}
+.ticker-track-wrap{
+  overflow:hidden;
+  mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+}
+.ticker-track{
+  display:inline-flex;
+  gap:10px;
+  width:max-content;
+  animation:premiumTickerMove 34s linear infinite;
+}
+.premium-trust-ticker:hover .ticker-track{
+  animation-play-state:paused;
+}
+.ticker-pill{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  padding:10px 13px;
+  border-radius:999px;
+  color:#dce9ff;
+  font-weight:850;
+  font-size:13px;
+  background:rgba(3,13,29,.58);
+  border:1px solid rgba(119,190,255,.12);
+}
+@keyframes premiumTickerMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@media(max-width:680px){
+  .ticker-shell{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .ticker-label{
+    width:max-content;
+  }
+  .ticker-track-wrap{
+    mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent);
+  }
+  .ticker-pill{
+    font-size:12px;
+    padding:9px 11px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .ticker-track{
+    animation:none!important;
+    flex-wrap:wrap;
+    width:auto;
+  }
+}

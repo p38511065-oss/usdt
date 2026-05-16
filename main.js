@@ -846,6 +846,7 @@ async function renderDepositOrderBox(order) {
 
     if (order.tx_hash && trackingCard && trackingBox) {
       trackingCard.classList.remove('hidden-flow-card');
+      setSellStep('tracking');
       trackingBox.innerHTML = `
         <div class="order-track-card">
           <div class="order-track-topline">
@@ -909,6 +910,7 @@ async function renderDepositOrderBox(order) {
       const refreshed = await sellerClient.from('sell_orders').select('*').eq('id', order.id).single();
       if (refreshed.data) {
         renderDepositOrderBox(refreshed.data);
+        setSellStep('tracking');
         qs('seller-order-tracking-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
@@ -953,7 +955,32 @@ async function renderDepositOrderBox(order) {
       setText('seller-preview-rate', fmtInr(highest).replace('.00',''));
     } catch (e) {}
   }
-  async function loadSellerStats(profile) {
+  
+  function setSellStep(step) {
+    const section = qs('seller-sell');
+    if (!section) return;
+    section.querySelectorAll('.sell-step-screen').forEach((el) => {
+      const isActive = el.dataset.sellStep === step;
+      el.classList.toggle('active', isActive);
+    });
+    const order = ['details','rate','payment','tracking'];
+    const activeIndex = order.indexOf(step);
+    section.querySelectorAll('.sell-step-pills span').forEach((pill, idx) => {
+      pill.classList.toggle('active', idx === activeIndex);
+      pill.classList.toggle('done', idx < activeIndex);
+    });
+  }
+
+  function setupSellStepButtons() {
+    qs('sell-step-back-rate')?.addEventListener('click', () => setSellStep('details'));
+    qs('sell-step-back-payment')?.addEventListener('click', () => setSellStep('rate'));
+  }
+
+  function normalizeSearchText(value) {
+    return String(value || '').toLowerCase().trim();
+  }
+
+async function loadSellerStats(profile) {
     updateSellerPreviewRate();
     const [{ data: orders }, { data: accounts }, { data: rewards }] = await Promise.all([
       sellerClient.from('sell_orders').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }),
@@ -1679,6 +1706,7 @@ async function loadReferralsSection(profile) {
     if (!force && !qs('active-order-lock-banner')?.classList.contains('hidden-flow-card')) return;
     paymentCard?.classList.add('hidden-flow-card');
     trackingCard?.classList.add('hidden-flow-card');
+    setSellStep('details');
 
     if (depositBox) {
       depositBox.innerHTML = '<div class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>';
@@ -1871,6 +1899,7 @@ async function loadReferralsSection(profile) {
       flashInlineCopyState(qs('copy-telegram-support'), ok, '✓');
     });
 
+    setupSellStepButtons();
     await Promise.all([
       renderPayoutAccounts(profile.id),
       loadSellerStats(profile),
@@ -2452,13 +2481,17 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
 
     const body = qs('admin-orders-body');
     const pagination = qs('admin-orders-pagination');
-    const search = val('admin-order-search').toLowerCase();
+    const filterValues = getAdminFilterValues('admin-orders');
+    const search = filterValues.search || val('admin-order-search').toLowerCase();
+    const statusFilter = filterValues.status;
     if (!body) return;
 
     const rows = (data || []).filter((row) => {
-      if (!search) return true;
-      return [row.id, row.profiles?.full_name, row.profiles?.email, row.profiles?.mobile, row.payout_upi_id, row.payout_account_number]
-        .filter(Boolean).join(' ').toLowerCase().includes(search);
+      const matchesStatus = !statusFilter || String(row.status || '').toLowerCase() === statusFilter;
+      const text = [row.id, row.tx_hash, row.status, row.profiles?.full_name, row.profiles?.email, row.profiles?.mobile, row.payout_upi_id, row.payout_account_number]
+        .filter(Boolean).join(' ').toLowerCase();
+      const matchesSearch = !search || text.includes(search);
+      return matchesStatus && matchesSearch;
     });
 
     window.__adminOrderRows = rows;
@@ -2662,7 +2695,60 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
     });
   }
 
-  async function loadAdminStats() {
+  
+  function getAdminFilterValues(prefix) {
+    return {
+      search: normalizeSearchText(qs(`${prefix}-search`)?.value || ''),
+      status: String(qs(`${prefix}-status-filter`)?.value || '').toLowerCase()
+    };
+  }
+
+  function setupAdminFilterEvents() {
+    [
+      ['admin-orders', loadAdminOrders],
+      ['admin-kyc', loadAdminKyc],
+      ['admin-ref', loadAdminReferralPanel]
+    ].forEach(([prefix, fn]) => {
+      const search = qs(`${prefix}-search`);
+      const status = qs(`${prefix}-status-filter`);
+      const clear = qs(`${prefix}-clear-filter`);
+      search?.addEventListener('input', () => {
+        clearTimeout(search.__filterTimer);
+        search.__filterTimer = setTimeout(() => fn(), 180);
+      });
+      status?.addEventListener('change', () => fn());
+      clear?.addEventListener('click', () => {
+        if (search) search.value = '';
+        if (status) status.value = '';
+        fn();
+      });
+    });
+  }
+
+
+  async function updateAdminNotificationCount() {
+    try {
+      const [{ data: orders }, { data: kyc }, { data: withdrawals }] = await Promise.all([
+        adminClient.from('sell_orders').select('id,status').in('status', ['awaiting_transfer','awaiting_confirmations','payout_in_progress']),
+        adminClient.from('kyc_submissions').select('id,status').in('status', ['pending','submitted']),
+        adminClient.from('referral_withdrawals').select('id,status').in('status', ['requested','approved','processing'])
+      ]);
+      const count = (orders || []).length + (kyc || []).length + (withdrawals || []).length;
+      const badge = qs('admin-notification-btn')?.querySelector('b');
+      if (badge) badge.textContent = String(count);
+      const panel = qs('admin-notification-panel');
+      if (panel) {
+        const items = panel.querySelectorAll('.admin-notification-item small');
+        if (items[0]) items[0].textContent = `${(orders || []).length} pending/active orders need review.`;
+        if (items[1]) items[1].textContent = `${(kyc || []).length} KYC submissions need review.`;
+        if (items[2]) items[2].textContent = `${(withdrawals || []).length} referral withdrawals need review.`;
+      }
+    } catch (e) {
+      console.warn('Notification count update failed:', e?.message || e);
+    }
+  }
+
+async function loadAdminStats() {
     const [
       { count: usersCount },
       { count: ordersCount },
@@ -2795,8 +2881,25 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
     if (rewardsError) console.warn('Admin referral rewards load failed:', rewardsError.message);
     if (withdrawalsError) console.warn('Admin referral withdrawals load failed:', withdrawalsError.message);
 
-    const rewardRows = rewards || [];
-    const withdrawalRows = withdrawals || [];
+    const filterValues = getAdminFilterValues('admin-ref');
+    const refSearch = filterValues.search;
+    const refStatus = filterValues.status;
+
+    const rewardRows = (rewards || []).filter((r) => {
+      const text = [r.referrer?.full_name, r.referrer?.email, r.referrer?.mobile, r.referred_user?.full_name, r.referred_user?.email, r.referred_user?.mobile, r.order_id, r.reward_status]
+        .filter(Boolean).join(' ').toLowerCase();
+      const matchesSearch = !refSearch || text.includes(refSearch);
+      const matchesStatus = !refStatus || String(r.reward_status || '').toLowerCase() === refStatus;
+      return matchesSearch && matchesStatus;
+    });
+
+    const withdrawalRows = (withdrawals || []).filter((w) => {
+      const text = [w.user?.full_name, w.user?.email, w.user?.mobile, w.payout_label, w.payout_details?.upi_id, w.payout_details?.account_number, w.status]
+        .filter(Boolean).join(' ').toLowerCase();
+      const matchesSearch = !refSearch || text.includes(refSearch);
+      const matchesStatus = !refStatus || String(w.status || '').toLowerCase() === refStatus;
+      return matchesSearch && matchesStatus;
+    });
 
     const totalRewards = rewardRows.reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const pendingRewards = rewardRows.filter((r) => r.reward_status !== 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
@@ -2987,7 +3090,9 @@ const payload = { status };
       await loadAdminOrders();
     });
 
-    await Promise.all([
+        setupAdminFilterEvents();
+    await updateAdminNotificationCount();
+await Promise.all([
       loadAdminStats(),
       loadAdminQuotes(),
       loadAdminRates(),

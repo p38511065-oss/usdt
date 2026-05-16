@@ -178,7 +178,7 @@
             आपका एक order अभी complete नहीं हुआ है. पहले वही order complete होगा; उसके बाद नया Sell USDT order start होगा.
           </div>
 
-          <div class="card seller-flow-card" id="seller-sell-start-card">
+          <div class="card seller-flow-card sell-step-screen active" data-sell-step="details" id="seller-sell-start-card">
             <div class="section-head checkout-section-head"><h3>1. Enter Amount & Payout</h3><span class="tiny-note">USDT / TRC20 fixed</span></div>
             <div id="selected-quote-banner" class="empty-state compact-selected-banner">Rate Board से rate select कर सकते हैं, या amount डालकर best admin rate देखें.</div>
             <div class="sell-mini-fixed-row"><span>Coin: <b>USDT</b></span><span>Network: <b>TRC20</b></span></div>
@@ -199,18 +199,18 @@
             <p id="quote-calc-message" class="status-text"></p>
           </div>
 
-          <div class="card top-gap seller-matching-rate-card">
-            <div class="section-head checkout-section-head"><h3>2. Best Admin Rate</h3><span class="tiny-note">Create order after selecting rate</span></div>
+          <div class="card top-gap seller-matching-rate-card sell-step-screen" data-sell-step="rate">
+            <div class="section-head checkout-section-head"><h3>2. Best Admin Rate</h3><button id="sell-step-back-rate" class="btn btn-secondary btn-xs" type="button">Back</button></div>
             <div id="quotes-container" class="quote-cards quote-cards-3"></div>
             <div id="quotes-empty" class="empty-state sell-rate-empty-note">Enter amount and payout method, then tap Get Best Admin Rate.</div>
           </div>
 
-          <div class="card top-gap seller-order-payment-card hidden-flow-card" id="seller-order-payment-card">
-            <div class="section-head checkout-section-head"><h3>3. Order Summary & Payment</h3><span class="badge">Pay USDT</span></div>
+          <div class="card top-gap seller-order-payment-card hidden-flow-card sell-step-screen" data-sell-step="payment" id="seller-order-payment-card">
+            <div class="section-head checkout-section-head"><h3>3. Order Summary & Payment</h3><button id="sell-step-back-payment" class="btn btn-secondary btn-xs" type="button">Back</button></div>
             <div id="deposit-order-box" class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>
           </div>
 
-          <div class="card top-gap seller-order-tracking-card hidden-flow-card" id="seller-order-tracking-card">
+          <div class="card top-gap seller-order-tracking-card hidden-flow-card sell-step-screen" data-sell-step="tracking" id="seller-order-tracking-card">
             <div class="section-head"><h3>Order Tracking</h3><span class="tiny-note">Payment submit के बाद tracking दिखेगी</span></div>
             <div id="seller-post-payment-tracking" class="empty-state">TX hash submit करने के बाद tracking status यहाँ दिखेगा.</div>
           </div>

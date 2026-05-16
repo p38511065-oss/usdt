@@ -1291,3 +1291,66 @@ body[data-page="seller-dashboard"] .panel-section.active{
     padding:14px!important;
   }
 }
+
+
+/* Full update: Sell USDT internal screens */
+#seller-sell .sell-step-screen{
+  display:none;
+  animation:sellStepIn .22s ease both;
+}
+#seller-sell .sell-step-screen.active{
+  display:block!important;
+}
+#seller-sell .sell-step-screen.hidden-flow-card{
+  display:none!important;
+}
+#seller-sell .sell-step-screen.active.hidden-flow-card{
+  display:block!important;
+}
+@keyframes sellStepIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.sell-step-pills span.done{
+  background:rgba(55,255,193,.12)!important;
+  border-color:rgba(55,255,193,.22)!important;
+  color:#37ffc1!important;
+}
+
+/* Full update: mini filter bars */
+.admin-filter-bar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(5,18,39,.56);
+  border:1px solid rgba(119,190,255,.12);
+  margin:12px 0;
+}
+.admin-filter-bar input,
+.admin-filter-bar select{
+  min-height:42px;
+  border-radius:13px;
+  border:1px solid rgba(119,190,255,.16);
+  background:rgba(3,13,29,.68);
+  color:#eaf4ff;
+  padding:0 12px;
+  min-width:180px;
+}
+.admin-filter-bar .btn{
+  min-height:42px;
+}
+@media(max-width:760px){
+  .admin-filter-bar{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .admin-filter-bar input,
+  .admin-filter-bar select,
+  .admin-filter-bar .btn{
+    width:100%;
+    min-width:0;
+  }
+}

@@ -307,3 +307,11 @@ Seller dashboard volume + sell cleanup:
 - Added seller Total USDT Volume, Total INR Volume and Completed Volume.
 - Sell USDT section visually redesigned as a cleaner 4-step checkout flow.
 - Coin/network fields kept for JS but shown as compact USDT/TRC20 chips to reduce confusion.
+
+One-shot full update:
+- Seller dashboard volume cards added: Total USDT Volume, Total INR Volume, Completed Volume.
+- Sell USDT section converted into internal step screens: Details, Rate, Payment, Tracking.
+- Landing page lightweight animation added: hero glow, card fade-up, CTA shine.
+- Admin filters/search added for Orders, KYC and Referral section.
+- Admin notification badge now updates from pending orders, KYC and referral withdrawals.
+- No SQL changes required.

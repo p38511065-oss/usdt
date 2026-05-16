@@ -260,6 +260,18 @@
                 <tbody id="admin-kyc-body"></tbody>
               </table>
             </div>
+
+          <div class="admin-filter-bar" id="admin-kyc-filter-bar">
+            <input id="admin-kyc-search" placeholder="Search KYC name / ID" />
+            <select id="admin-kyc-status-filter">
+              <option value="">All KYC</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <button class="btn btn-secondary btn-xs" id="admin-kyc-clear-filter" type="button">Clear</button>
+          </div>
+
           </div>
         </section>
 
@@ -349,6 +361,21 @@
               <div class="card order-timeline-card">
                 <div class="section-head"><h3>Order Progress Timeline</h3></div>
                 <div id="admin-order-timeline" class="timeline-list compact-timeline"></div>
+
+          <div class="admin-filter-bar" id="admin-orders-filter-bar">
+            <input id="admin-orders-search" placeholder="Search order / seller / TX" />
+            <select id="admin-orders-status-filter">
+              <option value="">All Status</option>
+              <option value="awaiting_transfer">Awaiting Transfer</option>
+              <option value="awaiting_confirmations">Crypto Received</option>
+              <option value="payout_in_progress">Payout Started</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <button class="btn btn-secondary btn-xs" id="admin-orders-clear-filter" type="button">Clear</button>
+          </div>
+
               </div>
 
               <div class="card order-summary-card-admin">
@@ -378,6 +405,20 @@
             <p class="tiny-note">0.10% reward on every completed referred sell order. Seller withdrawal minimum ₹2,000.</p>
           </div>
         </div>
+
+          <div class="admin-filter-bar" id="admin-ref-filter-bar">
+            <input id="admin-ref-search" placeholder="Search referral seller / payout" />
+            <select id="admin-ref-status-filter">
+              <option value="">All Referral Status</option>
+              <option value="pending">Pending</option>
+              <option value="requested">Requested</option>
+              <option value="approved">Approved</option>
+              <option value="paid">Paid</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <button class="btn btn-secondary btn-xs" id="admin-ref-clear-filter" type="button">Clear</button>
+          </div>
+
 
         <div class="stats-grid" id="admin-referral-stats"></div>
 

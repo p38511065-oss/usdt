@@ -564,3 +564,55 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
   .orders-pagination{align-items:flex-start}
   .orders-page-controls{width:100%}
 }
+
+
+/* Landing page lightweight animation */
+@keyframes softGlowFloat{
+  0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.72}
+  50%{transform:translate3d(10px,-12px,0) scale(1.05);opacity:.95}
+}
+@keyframes fadeUpLite{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes buttonShine{
+  0%{background-position:200% center}
+  100%{background-position:-200% center}
+}
+.hero, .landing-hero, .hero-section{
+  position:relative;
+  overflow:hidden;
+}
+.hero::before, .landing-hero::before, .hero-section::before{
+  content:"";
+  position:absolute;
+  width:280px;
+  height:280px;
+  border-radius:50%;
+  top:-90px;
+  right:-80px;
+  background:radial-gradient(circle,rgba(37,231,255,.18),transparent 65%);
+  animation:softGlowFloat 7s ease-in-out infinite;
+  pointer-events:none;
+}
+.hero *, .landing-hero *, .hero-section *{
+  position:relative;
+  z-index:1;
+}
+.btn-primary, .cta-button, .hero-cta{
+  background-size:200% auto!important;
+  animation:buttonShine 4.5s linear infinite;
+}
+.rate-card, .trust-card, .step-card, .seller-rate-card, .card{
+  animation:fadeUpLite .45s ease both;
+}
+.rate-card:hover, .trust-card:hover, .step-card:hover{
+  transform:translateY(-3px);
+  transition:.22s ease;
+}
+@media(prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    animation:none!important;
+    transition:none!important;
+  }
+}

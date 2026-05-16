@@ -2306,3 +2306,39 @@ body.admin-app-ui-v2 .admin-notification-item small{
     justify-content:center;
   }
 }
+
+
+/* Full update admin filters */
+.admin-filter-bar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(5,18,39,.56);
+  border:1px solid rgba(119,190,255,.12);
+  margin:12px 0;
+}
+.admin-filter-bar input,
+.admin-filter-bar select{
+  min-height:42px;
+  border-radius:13px;
+  border:1px solid rgba(119,190,255,.16);
+  background:rgba(3,13,29,.68);
+  color:#eaf4ff;
+  padding:0 12px;
+  min-width:180px;
+}
+@media(max-width:760px){
+  .admin-filter-bar{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .admin-filter-bar input,
+  .admin-filter-bar select,
+  .admin-filter-bar .btn{
+    width:100%;
+    min-width:0;
+  }
+}

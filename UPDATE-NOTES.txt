@@ -214,3 +214,14 @@ Referral referred seller names:
 - Shows referred seller name, email/mobile, user status, KYC status and joined date.
 - Referral rewards table now also shows referred seller name, email and mobile.
 - Mobile cards added for referred sellers.
+
+Telegram support update:
+- Replaced duplicate bottom nav Sell USDT with Support.
+- Added seller Support section with Telegram button.
+- Added Telegram support link in order payment step.
+- Added support button in Profile support notes.
+- Use @anmolaro placeholder and replace with real Telegram username/link.
+
+Telegram support real link update:
+- Telegram support link changed to https://t.me/anmolaro
+- Telegram username changed to @anmolaro

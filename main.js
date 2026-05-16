@@ -825,6 +825,7 @@ async function renderDepositOrderBox(order) {
 
         <div class="seller-payment-right">
           <div class="summary-title">Scan QR / Send USDT</div>
+          <a class="seller-payment-support-link" href="https://t.me/anmolaro" target="_blank" rel="noopener">Payment issue? Contact Telegram Support</a>
           ${!order.tx_hash && !isSellerOrderComplete(order) ? '<button id="cancel-active-order" class="btn btn-danger btn-block cancel-order-btn">Cancel Order & Start Again</button>' : ''}
           ${qr ? `<div class="image-preview-box fancy-qr seller-payment-qr"><img src="${escapeHtml(qr)}" alt="Wallet QR" /></div>` : '<div class="empty-state">QR not available yet. Use wallet address manually.</div>'}
           ${order.tx_hash ? `
@@ -1640,6 +1641,12 @@ async function renderDepositOrderBox(order) {
       clearPayoutForm();
       await renderPayoutAccounts(profile.id);
       await loadSellerStats(profile);
+    });
+
+
+    qs('copy-telegram-support')?.addEventListener('click', async () => {
+      const ok = await copyText('@anmolaro');
+      flashInlineCopyState(qs('copy-telegram-support'), ok, '✓');
     });
 
     await Promise.all([

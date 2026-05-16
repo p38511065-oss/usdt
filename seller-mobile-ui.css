@@ -908,3 +908,55 @@ body[data-page="seller-dashboard"] .panel-section.active{
     display:none;
   }
 }
+
+
+/* Telegram support section */
+.seller-support-section .telegram-support-card{
+  text-align:left;
+  overflow:hidden;
+  position:relative;
+}
+.support-telegram-icon{
+  width:64px;
+  height:64px;
+  display:grid;
+  place-items:center;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(37,231,255,.22),rgba(55,255,193,.16));
+  border:1px solid rgba(37,231,255,.28);
+  color:#25e7ff;
+  font-size:34px;
+  font-weight:950;
+  margin-bottom:14px;
+}
+.telegram-support-card h3{
+  margin:0 0 8px!important;
+  font-size:24px!important;
+}
+.telegram-support-card p{
+  color:#aabbd3;
+  line-height:1.5;
+}
+.seller-payment-support-link{
+  display:block;
+  margin:8px 0 12px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(37,231,255,.18);
+  background:rgba(37,231,255,.07);
+  color:#25e7ff!important;
+  font-weight:900;
+  text-align:center;
+  text-decoration:none!important;
+}
+.seller-payment-support-link:hover{
+  background:rgba(37,231,255,.12);
+}
+@media(max-width:760px){
+  .seller-support-section .grid-2{
+    grid-template-columns:1fr!important;
+  }
+  .seller-bottom-nav .center-action span{
+    font-size:22px!important;
+  }
+}

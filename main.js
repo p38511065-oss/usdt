@@ -208,7 +208,7 @@ async function ensureSellerProfileRecord(user, extra = {}) {
     return payoutDetailFromRow(row);
   }
   function ensurePayoutModal() {
-    let modal = qs('#payout-view-modal');
+    let modal = qs('payout-view-modal');
     if (modal) return modal;
     modal = document.createElement('div');
     modal.id = 'payout-view-modal';
@@ -225,14 +225,14 @@ async function ensureSellerProfileRecord(user, extra = {}) {
         <div id="payout-modal-body" class="modal-body"></div>
       </div>`;
     document.body.appendChild(modal);
-    qs('#close-payout-modal')?.addEventListener('click', closePayoutDetailsModal);
+    qs('close-payout-modal')?.addEventListener('click', closePayoutDetailsModal);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closePayoutDetailsModal();
     });
     return modal;
   }
   function closePayoutDetailsModal() {
-    qs('#payout-view-modal')?.classList.add('hidden');
+    qs('payout-view-modal')?.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
   
@@ -2864,7 +2864,7 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
         renderAdminOrderDetail(row);
         selectAdminOrderRow(tr);
         setTimeout(() => {
-          const detailBtn = qs('#admin-view-payout-details');
+          const detailBtn = qs('admin-view-payout-details');
           if (detailBtn) {
             toggleInlinePayoutDetails(detailBtn.getAttribute('data-payout'), 'admin-payout-inline', detailBtn);
           }
@@ -3209,7 +3209,30 @@ async function loadAdminStats() {
   }
 
 
-  async function renderAdminOverviewRecentOrder() {
+  
+  function adminMiniStep(row, step) {
+    const status = String(row?.status || '').toLowerCase();
+    if (step === 'created') return true;
+    if (step === 'sent') return !!row?.tx_hash || ['awaiting_confirmations','payout_in_progress','completed','paid'].includes(status);
+    if (step === 'received') return ['awaiting_confirmations','payout_in_progress','completed','paid'].includes(status);
+    if (step === 'payout') return ['payout_in_progress','completed','paid'].includes(status);
+    if (step === 'paid') return ['completed','paid'].includes(status);
+    return false;
+  }
+
+  function adminOverviewStep(title, dateValue, isDone, isCurrent) {
+    return `
+      <div class="admin-overview-step ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}">
+        <span>${isDone ? '✓' : isCurrent ? '●' : '○'}</span>
+        <div>
+          <strong>${escapeHtml(title)}</strong>
+          <small>${dateValue ? fmtDate(dateValue) : (isCurrent ? 'Current step' : 'Pending')}</small>
+        </div>
+      </div>`;
+  }
+
+
+async function renderAdminOverviewRecentOrder() {
     const box = qs('admin-overview-recent-order');
     if (!box) return;
 

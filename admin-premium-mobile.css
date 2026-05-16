@@ -2513,3 +2513,38 @@ body.admin-app-ui-v2 .admin-notification-item small{
 .admin-stat-cards{
   grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important;
 }
+
+
+/* Admin recent order overview step fix */
+.admin-overview-step{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(5,18,39,.55);
+  border:1px solid rgba(119,190,255,.10);
+}
+.admin-overview-step span{
+  color:#9facbd;
+  font-weight:950;
+}
+.admin-overview-step.done span{
+  color:#37ffc1;
+}
+.admin-overview-step.current{
+  border-color:rgba(255,199,45,.25);
+  background:rgba(255,199,45,.07);
+}
+.admin-overview-step.current span{
+  color:#ffd36a;
+}
+.admin-overview-step strong{
+  display:block;
+  color:#eaf4ff;
+}
+.admin-overview-step small{
+  display:block;
+  color:#9facbd;
+  margin-top:2px;
+}

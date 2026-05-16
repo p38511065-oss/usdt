@@ -327,3 +327,10 @@ Sell flow final no-conflict fix:
 - Get Best Admin Rate now scrolls to rate section.
 - Create Sell Order now reveals and scrolls to Payment section.
 - TX submit reveals and scrolls to Tracking section.
+
+Practical final updates:
+- Added admin CSV export buttons for Orders, KYC, Referral Rewards and Referral Withdrawals.
+- Added seller My Orders mobile card layout while keeping desktop table.
+- Added landing page trust/safety content section.
+- Made admin notification panel items clickable shortcuts.
+- No SQL changes required.

@@ -2342,3 +2342,22 @@ body.admin-app-ui-v2 .admin-notification-item small{
     min-width:0;
   }
 }
+
+
+/* Admin export bar + notification shortcuts */
+.admin-export-bar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:10px 0 12px;
+}
+.admin-notification-item:hover{
+  background:rgba(37,231,255,.08);
+  border-radius:14px;
+}
+@media(max-width:760px){
+  .admin-export-bar{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+}

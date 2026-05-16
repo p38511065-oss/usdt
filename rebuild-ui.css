@@ -616,3 +616,76 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
     transition:none!important;
   }
 }
+
+
+/* Trust polish section */
+.trust-polish-section{
+  padding:54px 18px;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(37,231,255,.10),transparent 34%),
+    radial-gradient(circle at 90% 20%,rgba(55,255,193,.09),transparent 30%),
+    rgba(3,13,29,.84);
+}
+.trust-polish-wrap{
+  max-width:1120px;
+  margin:0 auto;
+}
+.section-kicker{
+  color:#37ffc1;
+  font-weight:950;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  font-size:12px;
+  margin-bottom:8px;
+}
+.trust-polish-section h2{
+  color:#fff;
+  font-size:clamp(28px,4vw,44px);
+  margin:0 0 10px;
+}
+.trust-lead{
+  color:#9facbd;
+  max-width:760px;
+  line-height:1.6;
+}
+.trust-polish-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin-top:22px;
+}
+.trust-polish-card{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(119,190,255,.14);
+  background:rgba(5,18,39,.62);
+}
+.trust-polish-card strong{
+  display:block;
+  color:#eaf4ff;
+  margin-bottom:8px;
+  font-size:17px;
+}
+.trust-polish-card span{
+  color:#9facbd;
+  line-height:1.45;
+}
+.risk-mini-note{
+  margin-top:18px;
+  padding:12px 14px;
+  border-radius:16px;
+  background:rgba(255,199,45,.08);
+  border:1px solid rgba(255,199,45,.20);
+  color:#ffe3a3;
+  font-weight:800;
+}
+@media(max-width:840px){
+  .trust-polish-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+@media(max-width:520px){
+  .trust-polish-grid{
+    grid-template-columns:1fr;
+  }
+}

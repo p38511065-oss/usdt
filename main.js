@@ -917,10 +917,54 @@ async function renderDepositOrderBox(order) {
     });
   }
 
-  function renderSellerOrders(orders) {
+  
+  function renderSellerOrderCards(orders) {
+    const box = qs('seller-orders-cards');
+    if (!box) return;
+
+    if (!(orders || []).length) {
+      box.innerHTML = '<div class="empty-state">No sell orders found.</div>';
+      return;
+    }
+
+    box.innerHTML = (orders || []).map((row) => {
+      const payoutTo = row.payout_label || row.payout_details?.upi_id || row.payout_details?.account_number || '-';
+      return `
+        <div class="seller-order-mobile-card">
+          <div class="seller-order-mobile-top">
+            <strong>${escapeHtml(row.coin_symbol || 'USDT')} / ${escapeHtml(row.network || 'TRC20')}</strong>
+            ${chip(row.status)}
+          </div>
+          <div class="seller-order-mobile-amount">
+            <span>₮ ${Number(row.crypto_amount || 0).toFixed(2)}</span>
+            <b>${fmtInr(row.estimated_inr_payout || 0)}</b>
+          </div>
+          <div class="seller-order-mobile-meta">
+            <span>Rate: ${Number(row.locked_rate_inr || 0).toFixed(4)}</span>
+            <span>Payout: ${escapeHtml(payoutTo)}</span>
+            <span>${fmtDate(row.created_at)}</span>
+          </div>
+          <button class="btn btn-secondary btn-xs open-order-mobile" data-id="${escapeHtml(row.id)}">Open Order</button>
+        </div>`;
+    }).join('');
+
+    box.querySelectorAll('.open-order-mobile').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const order = (orders || []).find((o) => o.id === btn.dataset.id);
+        if (!order) return;
+        document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+        renderDepositOrderBox(order);
+        qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
+        setSellStep(order.tx_hash ? 'tracking' : 'payment');
+      });
+    });
+  }
+
+function renderSellerOrders(orders) {
     const body = qs('orders-body');
     if (!body) return;
     body.innerHTML = '';
+    renderSellerOrderCards(orders || []);
     if (!(orders || []).length) {
       body.innerHTML = '<tr><td colspan="8">No sell orders found.</td></tr>';
       renderDepositOrderBox(null);
@@ -2750,7 +2794,19 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
   }
 
 
-  async function updateAdminNotificationCount() {
+  
+  function setupNotificationShortcuts() {
+    qs('admin-notification-panel')?.querySelectorAll('.admin-notification-item').forEach((item, index) => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        const target = index === 0 ? 'admin-orders' : index === 1 ? 'admin-kyc' : 'admin-referrals';
+        document.querySelector(`.side-link[data-target="${target}"]`)?.click();
+        qs('admin-notification-panel')?.classList.add('hidden');
+      });
+    });
+  }
+
+async function updateAdminNotificationCount() {
     try {
       const [{ data: orders }, { data: kyc }, { data: withdrawals }] = await Promise.all([
         adminClient.from('sell_orders').select('id,status').in('status', ['awaiting_transfer','awaiting_confirmations','payout_in_progress']),
@@ -2770,6 +2826,115 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
     } catch (e) {
       console.warn('Notification count update failed:', e?.message || e);
     }
+  }
+
+
+  function csvEscape(value) {
+    const text = String(value ?? '');
+    if (/[",\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
+    return text;
+  }
+
+  function downloadCsv(filename, rows) {
+    if (!rows || !rows.length) {
+      alert('No data available to export.');
+      return;
+    }
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.map(csvEscape).join(','),
+      ...rows.map((row) => headers.map((h) => csvEscape(row[h])).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function setupAdminExportButtons() {
+    qs('export-admin-orders-csv')?.addEventListener('click', async () => {
+      const { data } = await adminClient
+        .from('sell_orders')
+        .select('*, profiles!sell_orders_user_id_fkey(full_name,email,mobile)')
+        .order('created_at', { ascending: false });
+
+      downloadCsv('orders-export.csv', (data || []).map((o) => ({
+        order_id: o.id,
+        seller: o.profiles?.full_name || o.profiles?.email || '',
+        mobile: o.profiles?.mobile || '',
+        coin: o.coin_symbol,
+        network: o.network,
+        usdt_amount: o.crypto_amount,
+        rate_inr: o.locked_rate_inr,
+        estimated_inr: o.estimated_inr_payout,
+        status: o.status,
+        tx_hash: o.tx_hash || '',
+        payout: o.payout_label || o.payout_upi_id || o.payout_account_number || '',
+        created_at: o.created_at
+      })));
+    });
+
+    qs('export-admin-kyc-csv')?.addEventListener('click', async () => {
+      const { data } = await adminClient
+        .from('kyc_submissions')
+        .select('*, profiles!kyc_submissions_user_id_fkey(full_name,email,mobile)')
+        .order('created_at', { ascending: false });
+
+      downloadCsv('kyc-export.csv', (data || []).map((k) => ({
+        kyc_id: k.id,
+        seller: k.profiles?.full_name || k.profiles?.email || '',
+        mobile: k.profiles?.mobile || '',
+        id_type: k.id_type,
+        id_number: k.id_number,
+        status: k.status,
+        review_note: k.review_note || '',
+        created_at: k.created_at
+      })));
+    });
+
+    qs('export-admin-ref-rewards-csv')?.addEventListener('click', async () => {
+      const { data } = await adminClient
+        .from('referral_rewards')
+        .select('*, referrer:referrer_user_id(full_name,email,mobile), referred_user:referred_user_id(full_name,email,mobile)')
+        .order('created_at', { ascending: false });
+
+      downloadCsv('referral-rewards-export.csv', (data || []).map((r) => ({
+        reward_id: r.id,
+        referrer: r.referrer?.full_name || r.referrer?.email || '',
+        referrer_mobile: r.referrer?.mobile || '',
+        referred_seller: r.referred_user?.full_name || r.referred_user?.email || '',
+        referred_mobile: r.referred_user?.mobile || '',
+        order_id: r.order_id,
+        order_amount: r.order_inr_amount,
+        reward_amount: r.reward_amount_inr,
+        reward_status: r.reward_status,
+        created_at: r.created_at
+      })));
+    });
+
+    qs('export-admin-ref-withdrawals-csv')?.addEventListener('click', async () => {
+      const { data } = await adminClient
+        .from('referral_withdrawals')
+        .select('*, user:user_id(full_name,email,mobile)')
+        .order('created_at', { ascending: false });
+
+      downloadCsv('referral-withdrawals-export.csv', (data || []).map((w) => ({
+        withdrawal_id: w.id,
+        seller: w.user?.full_name || w.user?.email || '',
+        mobile: w.user?.mobile || '',
+        amount: w.amount_inr,
+        status: w.status,
+        payout_label: w.payout_label || '',
+        payout_account: w.payout_details?.upi_id || w.payout_details?.account_number || '',
+        paid_at: w.paid_at || '',
+        created_at: w.created_at
+      })));
+    });
   }
 
 async function loadAdminStats() {
@@ -3115,7 +3280,9 @@ const payload = { status };
     });
 
         setupAdminFilterEvents();
+    setupAdminExportButtons();
     await updateAdminNotificationCount();
+    setupNotificationShortcuts();
 await Promise.all([
       loadAdminStats(),
       loadAdminQuotes(),

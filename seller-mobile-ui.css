@@ -1390,3 +1390,52 @@ body[data-page="seller-dashboard"] .panel-section.active{
   box-shadow:0 0 0 2px rgba(55,255,193,.38), 0 18px 55px rgba(0,0,0,.30)!important;
   transition:box-shadow .22s ease!important;
 }
+
+
+/* Seller mobile order cards */
+.seller-orders-cards{
+  display:none;
+  gap:12px;
+}
+.seller-order-mobile-card{
+  padding:14px;
+  border-radius:20px;
+  border:1px solid rgba(119,190,255,.15);
+  background:
+    radial-gradient(circle at 90% 10%,rgba(37,231,255,.08),transparent 30%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(4,17,36,.96));
+}
+.seller-order-mobile-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.seller-order-mobile-amount{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:16px;
+  margin-bottom:10px;
+}
+.seller-order-mobile-amount b{
+  color:#37ffc1;
+  font-size:20px;
+}
+.seller-order-mobile-meta{
+  display:grid;
+  gap:5px;
+  color:#9facbd;
+  font-size:12px;
+  margin-bottom:12px;
+}
+@media(max-width:760px){
+  #seller-orders .table-wrap{
+    display:none!important;
+  }
+  .seller-orders-cards{
+    display:grid!important;
+  }
+}

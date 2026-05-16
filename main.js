@@ -1253,6 +1253,184 @@ function renderSellerOrders(orders) {
     });
   }
 
+
+  async function getActiveBatch(client = sellerClient) {
+    const { data, error } = await client
+      .from('order_batches')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Batch lookup failed:', error.message);
+      return null;
+    }
+    return data || null;
+  }
+
+  function batchRemaining(batch) {
+    if (!batch) return { slots: 0, usdt: 0 };
+    return {
+      slots: Math.max(0, Number(batch.order_limit || 0) - Number(batch.used_orders || 0)),
+      usdt: Math.max(0, Number(batch.usdt_capacity || 0) - Number(batch.used_usdt || 0))
+    };
+  }
+
+  function batchIsOpen(batch, amount = 0) {
+    if (!batch || batch.status !== 'active' || batch.accept_orders === false) return false;
+    const remaining = batchRemaining(batch);
+    return remaining.slots > 0 && remaining.usdt >= Number(amount || 0);
+  }
+
+  function renderBatchBannerHtml(batch, compact = false) {
+    if (!batch) {
+      return `
+        <div class="batch-banner-content full">
+          <div><strong>Batch not open right now</strong><span>New sell orders are paused. Join next batch waitlist or contact support.</span></div>
+          <button class="btn btn-secondary btn-xs js-join-batch-waitlist">Join Waitlist</button>
+        </div>`;
+    }
+
+    const remaining = batchRemaining(batch);
+    const isFull = remaining.slots <= 0 || remaining.usdt <= 0 || batch.accept_orders === false;
+    return `
+      <div class="batch-banner-content ${isFull ? 'full' : 'live'}">
+        <div>
+          <strong>${isFull ? 'Batch Full / Paused' : '🔥 ' + escapeHtml(batch.batch_name || 'USDT/TRC20 Batch Live')}</strong>
+          <span>${escapeHtml(batch.message || 'Admin limited batch is live.')} ${isFull ? 'Join next batch waitlist.' : `${remaining.slots} slots left • ${remaining.usdt.toFixed(2)} USDT capacity available`}</span>
+        </div>
+        ${isFull ? '<button class="btn btn-secondary btn-xs js-join-batch-waitlist">Join Waitlist</button>' : '<button class="btn btn-primary btn-xs side-link" data-target="seller-sell">Sell USDT Now</button>'}
+      </div>`;
+  }
+
+  async function renderSellerBatchBanners() {
+    const batch = await getActiveBatch(sellerClient);
+    ['seller-batch-banner','sell-batch-banner'].forEach((id) => {
+      const el = qs(id);
+      if (!el) return;
+      el.classList.remove('empty-state');
+      el.innerHTML = renderBatchBannerHtml(batch, id === 'sell-batch-banner');
+    });
+
+    document.querySelectorAll('.js-join-batch-waitlist').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const user = (await sellerClient.auth.getUser()).data.user;
+        const profile = await getProfile(sellerClient);
+        const requested = Number(val('sell-amount') || prompt('Requested USDT amount for next batch?', '1000') || 0);
+        const note = 'Joined next batch from seller dashboard';
+        if (!profile?.id) return alert('Please login again.');
+        const { error } = await sellerClient.from('batch_waitlist').insert({
+          user_id: profile.id,
+          requested_usdt: requested || null,
+          message: note,
+          status: 'waiting'
+        });
+        if (error) return alert(error.message);
+        alert('Joined next batch waitlist.');
+      });
+    });
+  }
+
+  async function refreshAdminBatchControl() {
+    const box = qs('admin-batch-current');
+    const waitBody = qs('batch-waitlist-body');
+    const batch = await getActiveBatch(adminClient);
+
+    if (box) {
+      if (!batch) {
+        box.innerHTML = '<div class="empty-state">No active batch. Create a new batch to accept seller orders.</div>';
+      } else {
+        const remaining = batchRemaining(batch);
+        box.innerHTML = `
+          <div class="admin-batch-grid">
+            <div><span>Current Batch</span><strong>${escapeHtml(batch.batch_name || '-')}</strong></div>
+            <div><span>Status</span><strong>${escapeHtml(batch.accept_orders === false ? 'paused' : batch.status)}</strong></div>
+            <div><span>Order Slots</span><strong>${Number(batch.used_orders || 0)} / ${Number(batch.order_limit || 0)}</strong></div>
+            <div><span>Remaining Slots</span><strong>${remaining.slots}</strong></div>
+            <div><span>USDT Capacity</span><strong>${Number(batch.used_usdt || 0).toFixed(2)} / ${Number(batch.usdt_capacity || 0).toFixed(2)}</strong></div>
+            <div><span>Remaining USDT</span><strong>${remaining.usdt.toFixed(2)}</strong></div>
+          </div>`;
+      }
+    }
+
+    if (waitBody) {
+      const { data } = await adminClient
+        .from('batch_waitlist')
+        .select('*, profiles:user_id(full_name,email,mobile)')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      waitBody.innerHTML = !(data || []).length
+        ? '<tr><td colspan="4">No waitlist entries yet.</td></tr>'
+        : (data || []).map((w) => `<tr>
+          <td>${escapeHtml(w.profiles?.full_name || w.profiles?.email || '-')}<div class="tiny-note">${escapeHtml(w.profiles?.mobile || '')}</div></td>
+          <td>${w.requested_usdt ? Number(w.requested_usdt).toFixed(2) : '-'}</td>
+          <td>${escapeHtml(w.message || '-')}</td>
+          <td>${fmtDate(w.created_at)}</td>
+        </tr>`).join('');
+    }
+  }
+
+  function setupAdminBatchControls() {
+    qs('save-new-batch')?.addEventListener('click', async () => {
+      const payload = {
+        batch_name: val('batch-name') || 'USDT/TRC20 Batch',
+        order_limit: Number(val('batch-order-limit') || 0),
+        usdt_capacity: Number(val('batch-usdt-capacity') || 0),
+        used_orders: 0,
+        used_usdt: 0,
+        message: val('batch-message') || 'USDT/TRC20 sell batch is live now.',
+        status: 'active',
+        accept_orders: true
+      };
+      if (!payload.order_limit || !payload.usdt_capacity) return setText('batch-message-status', 'Please enter order slots and USDT capacity.');
+      await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('status', 'active');
+      const { error } = await adminClient.from('order_batches').insert(payload);
+      if (error) return setText('batch-message-status', error.message);
+      setText('batch-message-status', 'New batch created.');
+      await refreshAdminBatchControl();
+    });
+
+    qs('add-more-slots')?.addEventListener('click', async () => {
+      const batch = await getActiveBatch(adminClient);
+      if (!batch) return setText('batch-message-status', 'No active batch found.');
+      const add = Number(prompt('Add how many slots?', '10') || 0);
+      if (!add) return;
+      const { error } = await adminClient.from('order_batches').update({ order_limit: Number(batch.order_limit || 0) + add }).eq('id', batch.id);
+      if (error) return setText('batch-message-status', error.message);
+      await refreshAdminBatchControl();
+    });
+
+    qs('add-more-usdt')?.addEventListener('click', async () => {
+      const batch = await getActiveBatch(adminClient);
+      if (!batch) return setText('batch-message-status', 'No active batch found.');
+      const add = Number(prompt('Add how much USDT capacity?', '1000') || 0);
+      if (!add) return;
+      const { error } = await adminClient.from('order_batches').update({ usdt_capacity: Number(batch.usdt_capacity || 0) + add }).eq('id', batch.id);
+      if (error) return setText('batch-message-status', error.message);
+      await refreshAdminBatchControl();
+    });
+
+    qs('pause-resume-batch')?.addEventListener('click', async () => {
+      const batch = await getActiveBatch(adminClient);
+      if (!batch) return setText('batch-message-status', 'No active batch found.');
+      const { error } = await adminClient.from('order_batches').update({ accept_orders: batch.accept_orders === false }).eq('id', batch.id);
+      if (error) return setText('batch-message-status', error.message);
+      await refreshAdminBatchControl();
+    });
+
+    qs('close-batch')?.addEventListener('click', async () => {
+      const batch = await getActiveBatch(adminClient);
+      if (!batch) return setText('batch-message-status', 'No active batch found.');
+      if (!confirm('Close current batch?')) return;
+      const { error } = await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('id', batch.id);
+      if (error) return setText('batch-message-status', error.message);
+      await refreshAdminBatchControl();
+    });
+  }
+
+
 async function loadSellerStats(profile) {
     updateSellerPreviewRate();
     const [{ data: orders }, { data: accounts }, { data: rewards }] = await Promise.all([
@@ -1835,6 +2013,15 @@ async function loadReferralsSection(profile) {
       const activeWallet = await findMatchingActiveWallet(sellerClient, coin, network);
       if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please contact support.');
 
+      const activeBatch = await getActiveBatch(sellerClient);
+      if (!batchIsOpen(activeBatch, amount)) {
+        const remaining = batchRemaining(activeBatch);
+        const reason = !activeBatch ? 'No active batch is open right now.' : remaining.slots <= 0 ? 'Today’s order slots are full.' : remaining.usdt < amount ? `Only ${remaining.usdt.toFixed(2)} USDT capacity is left in this batch.` : 'New orders are paused right now.';
+        setText('quote-calc-message', `${reason} Join next batch waitlist.`);
+        await renderSellerBatchBanners();
+        return;
+      }
+
       const normalizedSlabs = (slabs || []).map((s) => normalizeSlabRow(s, templates));
       let matchingSlabs = normalizedSlabs.filter((s) =>
         s.is_enabled &&
@@ -1912,10 +2099,20 @@ async function loadReferralsSection(profile) {
               payout_details: payout,
               deposit_wallet_address: activeWallet.wallet_address,
               deposit_wallet_qr_url: activeWallet.qr_data_url || activeWallet.qr_image_url || activeWallet.qr_code_url || null,
-              status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc'
+              status: profile.kyc_status === 'verified' ? 'awaiting_transfer' : 'awaiting_kyc',
+              batch_id: activeBatch?.id || null
             };
             const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
             if (error) return setText('quote-calc-message', error.message);
+
+            if (activeBatch?.id) {
+              const freshBatch = await getActiveBatch(sellerClient);
+              await sellerClient.from('order_batches').update({
+                used_orders: Number(freshBatch?.used_orders || 0) + 1,
+                used_usdt: Number(freshBatch?.used_usdt || 0) + Number(amount || 0)
+              }).eq('id', activeBatch.id);
+              await renderSellerBatchBanners();
+            }
             await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: slab.quote_type, quote_slab_id: slab.quote_slab_id || slab.id });
             setText('quote-calc-message', `Order created. Send ${amount} ${coin} to the shown wallet.`);
             selectedSellerQuote = null;
@@ -2200,6 +2397,7 @@ async function loadReferralsSection(profile) {
     await Promise.all([
       renderPayoutAccounts(profile.id),
       loadSellerStats(profile),
+      renderSellerBatchBanners(),
       loadReferralsSection(profile),
       loadRatesAndQuotes(profile),
       renderSellerDashboardQuoteSlabs(),
@@ -3571,11 +3769,13 @@ const payload = { status };
     });
 
         setupAdminFilterEvents();
+    setupAdminBatchControls();
     setupAdminExportButtons();
     await updateAdminNotificationCount();
     setupNotificationShortcuts();
 await Promise.all([
       loadAdminStats(),
+      refreshAdminBatchControl(),
       loadAdminQuotes(),
       loadAdminRates(),
       loadAdminSlabs(),

@@ -2556,3 +2556,84 @@ body.admin-app-ui-v2 .admin-notification-item small{
   cursor:not-allowed!important;
   filter:saturate(.7);
 }
+
+
+/* Batch slots + USDT capacity system */
+.seller-batch-banner{
+  margin:12px 0 16px;
+  padding:0!important;
+  border-radius:22px!important;
+  overflow:hidden;
+  border:1px solid rgba(119,190,255,.16)!important;
+  background:
+    radial-gradient(circle at 95% 10%,rgba(55,255,193,.14),transparent 34%),
+    linear-gradient(180deg,rgba(7,27,55,.94),rgba(4,17,36,.98))!important;
+}
+.seller-batch-banner.compact{
+  margin:0 0 14px;
+}
+.batch-banner-content{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px;
+}
+.batch-banner-content strong{
+  display:block;
+  color:#fff;
+  font-size:16px;
+  margin-bottom:4px;
+}
+.batch-banner-content span{
+  display:block;
+  color:#aebbd0;
+  line-height:1.4;
+  font-size:13px;
+}
+.batch-banner-content.live{
+  border-left:4px solid #37ffc1;
+}
+.batch-banner-content.full{
+  border-left:4px solid #ffd36a;
+}
+.admin-batch-control-card{
+  margin-top:18px!important;
+}
+.admin-batch-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:10px;
+}
+.admin-batch-grid div{
+  padding:12px;
+  border-radius:16px;
+  background:rgba(5,18,39,.62);
+  border:1px solid rgba(119,190,255,.12);
+}
+.admin-batch-grid span{
+  display:block;
+  color:#9facbd;
+  font-size:12px;
+  margin-bottom:4px;
+}
+.admin-batch-grid strong{
+  color:#eaf4ff;
+  overflow-wrap:anywhere;
+}
+@media(max-width:980px){
+  .admin-batch-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+@media(max-width:640px){
+  .batch-banner-content{
+    display:grid;
+  }
+  .batch-banner-content .btn{
+    width:100%;
+  }
+  .admin-batch-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}

@@ -372,3 +372,11 @@ Admin dashboard Crypto Received button fix:
 - Added dedicated updateOverviewOrderStatus handler for Recent Orders dashboard card.
 - Crypto Received, Start Payout and Mark Paid buttons now update order status and refresh dashboard.
 - Button enable/disable rules are clearer by current order status.
+
+Batch slots + USDT capacity update:
+- Added seller dashboard and Sell USDT batch banners.
+- Added admin batch/order slots control in dashboard overview.
+- Admin can create new batch, add more slots, add more USDT capacity, pause/resume, close batch.
+- Seller order creation checks active batch, remaining order slots and remaining USDT capacity.
+- Added waitlist support for full/paused batches.
+- Requires SQL: order-batches-slots-usdt-capacity.sql.

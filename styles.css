@@ -494,3 +494,94 @@ body.modal-open{overflow:hidden}
   .inline-payout-row strong{max-width:100%;text-align:left}
 }
 
+
+
+/* Final cleanup footer + toast */
+.final-site-footer{
+  margin-top:54px;
+  padding:34px 20px 20px;
+  border-top:1px solid rgba(119,190,255,.16);
+  background:linear-gradient(180deg,rgba(3,13,29,.70),rgba(3,13,29,.96));
+  color:#dce9ff;
+}
+.final-site-footer .footer-grid{
+  max-width:1120px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1.4fr .8fr .8fr 1.2fr;
+  gap:24px;
+}
+.final-site-footer .footer-brand{
+  font-size:22px;
+  font-weight:950;
+  color:#fff;
+  margin-bottom:8px;
+}
+.final-site-footer p{
+  color:#9facbd;
+  line-height:1.55;
+  margin:8px 0;
+}
+.final-site-footer h4{
+  color:#37ffc1;
+  margin:0 0 10px;
+}
+.final-site-footer a,
+.final-site-footer span{
+  display:block;
+  color:#c8d7ed;
+  text-decoration:none;
+  margin:7px 0;
+}
+.final-site-footer .footer-support-btn{
+  display:inline-block;
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:14px;
+  background:rgba(37,231,255,.10);
+  border:1px solid rgba(37,231,255,.18);
+  color:#25e7ff;
+  font-weight:900;
+}
+.final-site-footer .footer-bottom{
+  max-width:1120px;
+  margin:22px auto 0;
+  padding-top:16px;
+  border-top:1px solid rgba(119,190,255,.10);
+  color:#8ea3be;
+  font-size:13px;
+}
+.app-toast{
+  position:fixed;
+  left:50%;
+  bottom:92px;
+  transform:translateX(-50%) translateY(20px);
+  z-index:9999;
+  max-width:min(420px,calc(100% - 28px));
+  padding:12px 16px;
+  border-radius:16px;
+  border:1px solid rgba(55,255,193,.28);
+  background:rgba(3,18,35,.94);
+  color:#eafff8;
+  font-weight:850;
+  opacity:0;
+  pointer-events:none;
+  transition:.22s ease;
+  box-shadow:0 18px 45px rgba(0,0,0,.30);
+}
+.app-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.app-toast.error{
+  border-color:rgba(255,77,109,.35);
+  color:#ffdbe2;
+}
+@media(max-width:760px){
+  .final-site-footer .footer-grid{
+    grid-template-columns:1fr;
+  }
+  .final-site-footer{
+    padding:28px 16px 18px;
+  }
+}

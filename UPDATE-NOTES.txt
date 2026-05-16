@@ -233,3 +233,10 @@ Telegram support visible fix:
 
 Support icon update:
 - Changed Support icon from airplane to headset for clearer support/help meaning.
+
+Final cleanup patch:
+- Added landing page footer with Telegram support, legal/risk links and disclaimer.
+- Added admin confirm prompts for order status, KYC and referral actions.
+- Removed visible hardcoded rate placeholders from landing/admin text where possible.
+- Added small toast UI for selected seller success messages.
+- Cleaned seller cancel SQL file to avoid invalid 'created' enum issue.

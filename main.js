@@ -733,6 +733,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     qs('quotes-empty') && (qs('quotes-empty').textContent = 'Enter amount and payout method, then tap Get Best Admin Rate.');
     qs('quotes-empty') && (qs('quotes-empty').style.display = 'block');
     setText('quote-calc-message', 'Order cancelled. You can start a new Sell USDT order.');
+    showAppToast('Order cancelled. You can start again.');
     qs('seller-sell-start-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -1099,6 +1100,7 @@ async function renderDepositOrderBox(order) {
       const { error } = await sellerClient.from('referral_withdrawals').insert({ user_id: profile.id, amount_inr: amount, status: 'requested', payout_method_id: activePayout?.id || null, payout_label: activePayout?.label || activePayout?.bank_name || activePayout?.upi_id || null, payout_details: activePayout || null });
       if (error) return setText('ref-withdraw-message', error.message);
       setText('ref-withdraw-message', 'Withdrawal request submitted. Admin will review and pay manually.');
+      showAppToast('Referral withdrawal request submitted.');
       qs('ref-withdraw-amount').value = '';
       await loadReferralsSection(profile);
     });
@@ -2139,7 +2141,27 @@ async function renderDepositOrderBox(order) {
     return Math.max(0, earned - locked);
   }
 
-  async function updateAdminOrderStatus(id, status, triggerButton = null) {
+  
+  
+  function showAppToast(message, type = 'success') {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.className = `app-toast ${type}`;
+    clearTimeout(window.__appToastTimer);
+    window.__appToastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    requestAnimationFrame(() => toast.classList.add('show'));
+  }
+
+function confirmAdminAction(message) {
+    return window.confirm(message || 'Are you sure you want to continue?');
+  }
+
+async function updateAdminOrderStatus(id, status, triggerButton = null) {
     const originalText = triggerButton ? triggerButton.textContent : '';
     try {
       if (triggerButton) {
@@ -2379,6 +2401,7 @@ async function renderDepositOrderBox(order) {
       tr.querySelector('.view-back').addEventListener('click', () => row.back_image_data && window.open(row.back_image_data, '_blank'));
       tr.querySelector('.view-selfie').addEventListener('click', () => row.selfie_image_data && window.open(row.selfie_image_data, '_blank'));
       tr.querySelector('.kyc-approve').addEventListener('click', async () => {
+        if (!confirmAdminAction('Approve this KYC request?')) return;
         await adminClient.from('kyc_submissions').update({ status: 'verified', review_note: 'Approved by admin' }).eq('id', row.id);
         await adminClient.from('profiles').update({ kyc_status: 'verified' }).eq('id', row.user_id);
         await audit('kyc_approved', 'kyc_submissions', row.id, {});
@@ -2387,6 +2410,7 @@ async function renderDepositOrderBox(order) {
         await loadAdminStats();
       });
       tr.querySelector('.kyc-reject').addEventListener('click', async () => {
+        if (!confirmAdminAction('Reject this KYC request?')) return;
         const note = prompt('Enter reject reason', 'Document unclear') || 'Rejected by admin';
         await adminClient.from('kyc_submissions').update({ status: 'rejected', review_note: note }).eq('id', row.id);
         await adminClient.from('profiles').update({ kyc_status: 'rejected' }).eq('id', row.user_id);
@@ -2583,7 +2607,8 @@ async function renderDepositOrderBox(order) {
   }
 
   async function updateReferralReward(id, status) {
-    const payload = { reward_status: status };
+        if (!confirmAdminAction(`Confirm referral reward ${status}?`)) return;
+const payload = { reward_status: status };
     if (status === 'paid') payload.paid_at = new Date().toISOString();
     const { error } = await adminClient.from('referral_rewards').update(payload).eq('id', id);
     if (error) return alert(error.message);
@@ -2591,7 +2616,8 @@ async function renderDepositOrderBox(order) {
   }
 
   async function updateReferralWithdrawal(id, status) {
-    const payload = { status };
+        if (!confirmAdminAction(`Confirm referral withdrawal ${status}?`)) return;
+const payload = { status };
     if (status === 'paid') payload.paid_at = new Date().toISOString();
     const { error } = await adminClient.from('referral_withdrawals').update(payload).eq('id', id);
     if (error) return alert(error.message);

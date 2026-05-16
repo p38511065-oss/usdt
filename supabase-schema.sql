@@ -814,7 +814,7 @@ to authenticated
 using (
   user_id = auth.uid()
   and tx_hash is null
-  and status in ('awaiting_transfer','awaiting_kyc','quote_selected','created')
+  and status in ('awaiting_transfer','awaiting_kyc','quote_selected')
 )
 with check (
   user_id = auth.uid()

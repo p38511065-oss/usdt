@@ -321,3 +321,9 @@ Sell step screen fix:
 - Create Sell Order now switches to Payment screen reliably.
 - Active order opens Payment/Tracking screen correctly.
 - Fixed hidden-flow-card CSS conflict for active step screens.
+
+Sell flow final no-conflict fix:
+- Removed strict hide/show step-screen dependency that was blocking next section.
+- Get Best Admin Rate now scrolls to rate section.
+- Create Sell Order now reveals and scrolls to Payment section.
+- TX submit reveals and scrolls to Tracking section.

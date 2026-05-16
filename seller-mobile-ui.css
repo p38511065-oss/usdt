@@ -1369,3 +1369,24 @@ body[data-page="seller-dashboard"] .panel-section.active{
 #seller-sell .sell-step-screen.step-hidden-temp{
   display:none!important;
 }
+
+
+/* Sell flow final: show sections normally, use scroll navigation instead of hidden screens */
+#seller-sell .sell-step-screen{
+  display:block!important;
+}
+#seller-sell .sell-step-screen.step-hidden-temp{
+  display:block!important;
+}
+#seller-sell .seller-order-payment-card.hidden-flow-card,
+#seller-sell .seller-order-tracking-card.hidden-flow-card{
+  display:none!important;
+}
+#seller-sell .seller-order-payment-card.active.hidden-flow-card,
+#seller-sell .seller-order-tracking-card.active.hidden-flow-card{
+  display:block!important;
+}
+.sell-step-focus{
+  box-shadow:0 0 0 2px rgba(55,255,193,.38), 0 18px 55px rgba(0,0,0,.30)!important;
+  transition:box-shadow .22s ease!important;
+}

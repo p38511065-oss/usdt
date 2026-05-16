@@ -910,6 +910,7 @@ async function renderDepositOrderBox(order) {
       const refreshed = await sellerClient.from('sell_orders').select('*').eq('id', order.id).single();
       if (refreshed.data) {
         renderDepositOrderBox(refreshed.data);
+        qs('seller-order-tracking-card')?.classList.remove('hidden-flow-card');
         setSellStep('tracking');
         qs('seller-order-tracking-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -960,24 +961,26 @@ async function renderDepositOrderBox(order) {
     const section = qs('seller-sell');
     if (!section) return;
 
-    section.querySelectorAll('.sell-step-screen').forEach((el) => {
-      const isActive = el.dataset.sellStep === step;
-      el.classList.toggle('active', isActive);
-      if (isActive) {
-        el.style.display = 'block';
-        el.classList.remove('step-hidden-temp');
-      } else {
-        el.style.display = 'none';
-        el.classList.add('step-hidden-temp');
-      }
-    });
-
     const order = ['details','rate','payment','tracking'];
     const activeIndex = order.indexOf(step);
     section.querySelectorAll('.sell-step-pills span').forEach((pill, idx) => {
       pill.classList.toggle('active', idx === activeIndex);
       pill.classList.toggle('done', idx < activeIndex);
     });
+
+    const target = {
+      details: qs('seller-sell-start-card'),
+      rate: section.querySelector('[data-sell-step="rate"]'),
+      payment: qs('seller-order-payment-card'),
+      tracking: qs('seller-order-tracking-card')
+    }[step];
+
+    if (target) {
+      target.classList.remove('hidden-flow-card');
+      target.classList.add('sell-step-focus');
+      setTimeout(() => target.classList.remove('sell-step-focus'), 1200);
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function setupSellStepButtons() {
@@ -1591,6 +1594,7 @@ async function loadReferralsSection(profile) {
         return;
       }
       empty.style.display = 'none';
+      qs('seller-matching-rate-card')?.classList?.remove('hidden-flow-card');
       setSellStep('rate');
 
       matchingSlabs
@@ -1646,6 +1650,7 @@ async function loadReferralsSection(profile) {
             await loadSellerStats(profile);
             document.querySelector('.side-link[data-target="seller-sell"]')?.click();
             await renderDepositOrderBox(order);
+            qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
             setSellStep('payment');
           });
           container.appendChild(card);

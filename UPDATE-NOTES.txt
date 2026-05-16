@@ -208,3 +208,9 @@ Referral working + mobile fix:
 - Referral rewards generate after admin marks referred seller order completed/paid.
 - Added referral-working-final-fix.sql with tables, policies, code backfill and old completed reward backfill.
 - Referral seller page mobile layout improved.
+
+Referral referred seller names:
+- Added Referred Sellers list on seller referral page.
+- Shows referred seller name, email/mobile, user status, KYC status and joined date.
+- Referral rewards table now also shows referred seller name, email and mobile.
+- Mobile cards added for referred sellers.

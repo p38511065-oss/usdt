@@ -843,3 +843,68 @@ body[data-page="seller-dashboard"] .panel-section.active{
   #seller-referrals .referral-wallet-grid{grid-template-columns:1fr!important}
   .referral-steps-mini{grid-template-columns:1fr}
 }
+
+
+/* Referred sellers name list */
+.referred-users-cards{
+  display:grid;
+  gap:10px;
+  margin-bottom:12px;
+}
+.referred-user-card{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border-radius:18px;
+  border:1px solid rgba(119,190,255,.14);
+  background:rgba(5,18,39,.62);
+}
+.referred-user-avatar{
+  width:46px;
+  height:46px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:rgba(55,255,193,.12);
+  border:1px solid rgba(55,255,193,.26);
+  color:#37ffc1;
+  font-weight:950;
+}
+.referred-user-info{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+.referred-user-info strong,
+.referred-user-info span,
+.referred-user-info small{
+  overflow-wrap:anywhere;
+}
+.referred-user-info span,
+.referred-user-info small,
+.referred-user-status small{
+  color:#9facbd;
+}
+.referred-user-status{
+  display:grid;
+  justify-items:end;
+  gap:6px;
+}
+@media(max-width:760px){
+  .referred-user-card{
+    grid-template-columns:auto 1fr;
+  }
+  .referred-user-status{
+    grid-column:1 / -1;
+    justify-items:start;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .referred-users-table-wrap{
+    display:none;
+  }
+}

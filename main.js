@@ -1002,24 +1002,93 @@ async function renderDepositOrderBox(order) {
     qs('refresh-referrals')?.addEventListener('click', () => loadReferralsSection(profile));
 
     const [{ data: referredUsers }, { data: rewards }, { data: withdrawals }] = await Promise.all([
-      sellerClient.from('profiles').select('id,user_status').eq('referred_by', profile.id),
-      sellerClient.from('referral_rewards').select('*, referred_user:referred_user_id(full_name,email)').eq('referrer_user_id', profile.id).order('created_at', { ascending: false }),
-      sellerClient.from('referral_withdrawals').select('*').eq('user_id', profile.id).order('created_at', { ascending: false })
+      sellerClient
+        .from('profiles')
+        .select('id,full_name,email,mobile,user_status,kyc_status,created_at')
+        .eq('referred_by', profile.id)
+        .order('created_at', { ascending: false }),
+      sellerClient
+        .from('referral_rewards')
+        .select('*, referred_user:referred_user_id(full_name,email,mobile)')
+        .eq('referrer_user_id', profile.id)
+        .order('created_at', { ascending: false }),
+      sellerClient
+        .from('referral_withdrawals')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
     ]);
+
     setText('stat-total-referrals', String((referredUsers || []).length));
     setText('stat-active-referrals', String((referredUsers || []).filter((u) => u.user_status === 'active').length));
+
     const totalEarned = (rewards || []).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const pendingRewards = (rewards || []).filter((r) => ['pending','approved','earned'].includes(r.reward_status)).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const paidRewards = (rewards || []).filter((r) => r.reward_status === 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
     const available = availableReferralBalance(rewards || [], withdrawals || []);
+
     setText('stat-ref-earnings', fmtInr(totalEarned));
     setText('stat-ref-available', fmtInr(available));
     setText('stat-pending-rewards', fmtInr(pendingRewards));
     setText('stat-ref-paid', fmtInr(paidRewards));
+
+    const referredBody = qs('referred-users-body');
+    const referredCards = qs('referred-users-cards');
+    const referredList = referredUsers || [];
+
+    if (referredBody) {
+      referredBody.innerHTML = !referredList.length
+        ? '<tr><td colspan="4">No referred sellers yet.</td></tr>'
+        : referredList.map((u) => `
+          <tr>
+            <td><strong>${escapeHtml(u.full_name || 'Unnamed Seller')}</strong><div class="tiny-note">KYC: ${escapeHtml(u.kyc_status || '-')}</div></td>
+            <td>${escapeHtml(u.email || '-')}<div class="tiny-note">${escapeHtml(u.mobile || '')}</div></td>
+            <td>${chip(u.user_status || 'active')}</td>
+            <td>${fmtDate(u.created_at)}</td>
+          </tr>`).join('');
+    }
+
+    if (referredCards) {
+      referredCards.innerHTML = !referredList.length
+        ? '<div class="empty-state">No referred sellers yet. Share your referral link.</div>'
+        : referredList.map((u) => `
+          <div class="referred-user-card">
+            <div class="referred-user-avatar">${escapeHtml((u.full_name || u.email || 'S').slice(0, 2).toUpperCase())}</div>
+            <div class="referred-user-info">
+              <strong>${escapeHtml(u.full_name || 'Unnamed Seller')}</strong>
+              <span>${escapeHtml(u.email || '-')}</span>
+              <small>${escapeHtml(u.mobile || '')}</small>
+            </div>
+            <div class="referred-user-status">${chip(u.user_status || 'active')}<small>KYC: ${escapeHtml(u.kyc_status || '-')}</small></div>
+          </div>`).join('');
+    }
+
     const body = qs('referrals-body');
-    if (body) body.innerHTML = !(rewards || []).length ? '<tr><td colspan="6">No referral rewards yet.</td></tr>' : (rewards || []).map((r) => `<tr><td>${escapeHtml(r.referred_user?.full_name || r.referred_user?.email || '-')}</td><td class="code-small">${escapeHtml(r.order_id || '-')}</td><td>${Number(r.reward_percent || 0.10).toFixed(2)}%</td><td>${fmtInr(r.reward_amount_inr)}</td><td>${chip(r.reward_status)}</td><td>${fmtDate(r.created_at)}</td></tr>`).join('');
+    if (body) {
+      body.innerHTML = !(rewards || []).length
+        ? '<tr><td colspan="6">No referral rewards yet.</td></tr>'
+        : (rewards || []).map((r) => `
+          <tr>
+            <td>
+              <strong>${escapeHtml(r.referred_user?.full_name || 'Unnamed Seller')}</strong>
+              <div class="tiny-note">${escapeHtml(r.referred_user?.email || '')}</div>
+              <div class="tiny-note">${escapeHtml(r.referred_user?.mobile || '')}</div>
+            </td>
+            <td class="code-small">${escapeHtml(r.order_id || '-')}</td>
+            <td>${Number(r.reward_percent || 0.10).toFixed(2)}%</td>
+            <td>${fmtInr(r.reward_amount_inr)}</td>
+            <td>${chip(r.reward_status)}</td>
+            <td>${fmtDate(r.created_at)}</td>
+          </tr>`).join('');
+    }
+
     const withdrawBody = qs('ref-withdrawals-body');
-    if (withdrawBody) withdrawBody.innerHTML = !(withdrawals || []).length ? '<tr><td colspan="4">No withdrawal request yet.</td></tr>' : (withdrawals || []).map((w) => `<tr><td>${fmtInr(w.amount_inr)}</td><td>${chip(w.status)}</td><td>${fmtDate(w.created_at)}</td><td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td></tr>`).join('');
+    if (withdrawBody) {
+      withdrawBody.innerHTML = !(withdrawals || []).length
+        ? '<tr><td colspan="4">No withdrawal request yet.</td></tr>'
+        : (withdrawals || []).map((w) => `<tr><td>${fmtInr(w.amount_inr)}</td><td>${chip(w.status)}</td><td>${fmtDate(w.created_at)}</td><td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td></tr>`).join('');
+    }
+
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
       const amount = Number(val('ref-withdraw-amount') || 0);
       if (!amount) return setText('ref-withdraw-message', 'Enter withdrawal amount.');
@@ -1033,6 +1102,7 @@ async function renderDepositOrderBox(order) {
       await loadReferralsSection(profile);
     });
   }
+
 
   async function loadKycSection(profile) {
     const { data: latest } = await sellerClient.from('kyc_submissions').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(1).maybeSingle();

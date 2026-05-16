@@ -1009,12 +1009,88 @@ async function renderDepositOrderBox(order) {
       btn.addEventListener('click', () => {
         const order = (orders || []).find((o) => o.id === btn.dataset.id);
         if (!order) return;
-        document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-        renderDepositOrderBox(order);
-        qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
-        setSellStep(order.tx_hash ? 'tracking' : 'payment');
+        openSellerOrderDetail(order);
       });
     });
+  }
+
+
+  function orderDetailRows(order, includeSeller = false) {
+    if (!order) return '';
+    const payoutTo = order.payout_label || order.payout_details?.upi_id || order.payout_details?.account_number || order.payout_upi_id || order.payout_account_number || '-';
+    const sellerName = order.profiles?.full_name || order.profiles?.email || '-';
+    return `
+      <div class="kv-list">
+        <div class="kv-row"><span>Order ID</span><strong class="break-anywhere">${escapeHtml(order.id || '-')}</strong></div>
+        ${includeSeller ? `<div class="kv-row"><span>Seller</span><strong>${escapeHtml(sellerName)}</strong></div>` : ''}
+        ${includeSeller ? `<div class="kv-row"><span>Mobile / Email</span><strong class="break-anywhere">${escapeHtml(order.profiles?.mobile || order.profiles?.email || '-')}</strong></div>` : ''}
+        <div class="kv-row"><span>Coin / Network</span><strong>${escapeHtml(order.coin_symbol || 'USDT')} / ${escapeHtml(order.network || 'TRC20')}</strong></div>
+        <div class="kv-row"><span>USDT Amount</span><strong>₮ ${Number(order.crypto_amount || 0).toFixed(4)}</strong></div>
+        <div class="kv-row"><span>Rate</span><strong>₹${Number(order.locked_rate_inr || 0).toFixed(4)}</strong></div>
+        <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(order.estimated_inr_payout || 0)}</strong></div>
+        <div class="kv-row"><span>Status</span><strong>${chip(order.status || '-')}</strong></div>
+        <div class="kv-row"><span>Payout</span><strong class="break-anywhere">${escapeHtml(payoutTo)}</strong></div>
+        <div class="kv-row"><span>Wallet Address</span><strong class="break-anywhere">${escapeHtml(order.deposit_wallet_address || '-')}</strong></div>
+        <div class="kv-row"><span>TX Hash</span><strong class="break-anywhere">${escapeHtml(order.tx_hash || 'Pending')}</strong></div>
+        <div class="kv-row"><span>Created</span><strong>${fmtDate(order.created_at)}</strong></div>
+      </div>`;
+  }
+
+  function trackingMiniHtml(order) {
+    const tracking = getOrderTrackingMeta(order);
+    return `<div class="detail-mini-timeline">${tracking.steps.map((step) => `
+      <div class="detail-mini-step ${step.done ? 'done' : ''}">
+        <span>${step.done ? '✓' : '○'}</span>
+        <div><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.note || '')}</small></div>
+      </div>`).join('')}</div>`;
+  }
+
+  function openSellerOrderDetail(order) {
+    const modal = qs('seller-order-detail-modal');
+    const content = qs('seller-order-detail-content');
+    if (!modal || !content || !order) return;
+    content.innerHTML = `
+      ${orderDetailRows(order)}
+      <div class="top-gap-sm">${trackingMiniHtml(order)}</div>
+      <div class="action-row top-gap-sm">
+        <button class="btn btn-primary" id="seller-detail-continue-order">Continue / Track Order</button>
+        <a class="btn btn-secondary" href="https://t.me/anmolaro" target="_blank" rel="noopener">Telegram Support</a>
+      </div>`;
+    modal.classList.remove('hidden');
+    qs('seller-detail-continue-order')?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      document.querySelector('.side-link[data-target="seller-sell"]')?.click();
+      renderDepositOrderBox(order);
+      qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
+      setSellStep(order.tx_hash ? 'tracking' : 'payment');
+    });
+  }
+
+  function openAdminOrderDetail(order) {
+    const modal = qs('admin-order-detail-modal');
+    const content = qs('admin-order-detail-content');
+    if (!modal || !content || !order) return;
+    content.innerHTML = `
+      ${orderDetailRows(order, true)}
+      <div class="top-gap-sm">${trackingMiniHtml(order)}</div>
+      <div class="action-row top-gap-sm">
+        <button class="btn btn-secondary js-admin-detail-copy">Copy Order ID</button>
+        ${order.tx_hash ? `<button class="btn btn-secondary js-admin-detail-copy-tx">Copy TX</button>` : ''}
+      </div>`;
+    modal.classList.remove('hidden');
+    qs('admin-order-detail-content')?.querySelector('.js-admin-detail-copy')?.addEventListener('click', () => copyText(order.id || ''));
+    qs('admin-order-detail-content')?.querySelector('.js-admin-detail-copy-tx')?.addEventListener('click', () => copyText(order.tx_hash || ''));
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close-seller-order-modal]')) qs('seller-order-detail-modal')?.classList.add('hidden');
+    if (e.target.closest('[data-close-admin-order-modal]')) qs('admin-order-detail-modal')?.classList.add('hidden');
+  });
+
+  function startOfTodayIso() {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d.toISOString();
   }
 
 function renderSellerOrders(orders) {
@@ -1039,10 +1115,7 @@ function renderSellerOrders(orders) {
         <td>${escapeHtml(payoutTo)}</td>
         <td>${chip(row.status)}<br><button class="btn btn-secondary btn-xs open-order">Open</button></td>
         <td>${fmtDate(row.created_at)}</td>`;
-      tr.querySelector('.open-order')?.addEventListener('click', () => {
-        document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-        renderDepositOrderBox(row);
-      });
+      tr.querySelector('.open-order')?.addEventListener('click', () => openSellerOrderDetail(row));
       body.appendChild(tr);
     });
   }
@@ -1207,26 +1280,45 @@ async function loadSellerStats(profile) {
       <div class="card stat-card"><strong>${fmtInr(refEarn)}</strong><span>Referral Earnings</span></div>`);
 
     const latest = orderRows?.[0];
+    const activeOrder = orderRows.find((o) => !isSellerOrderComplete(o));
     if (!latest) {
-      setHtml('latest-order-box', 'No recent order yet.');
+      setHtml('latest-order-box', `
+        <div class="active-order-empty">
+          <h3>No active order yet</h3>
+          <p>Start a new USDT / TRC20 sell order and get admin-created rate.</p>
+          <button class="btn btn-primary side-link" data-target="seller-sell">Sell USDT Now</button>
+        </div>`);
       renderDepositOrderBox(null);
     } else {
+      const displayOrder = activeOrder || latest;
+      const isActiveOrder = !!activeOrder;
       setHtml('latest-order-box', `
-        <div class="kv-list">
-          <div class="kv-row"><span>Order ID</span><strong>${escapeHtml(latest.id)}</strong></div>
-          <div class="kv-row"><span>Coin</span><strong>${escapeHtml(latest.coin_symbol)} / ${escapeHtml(latest.network)}</strong></div>
-          <div class="kv-row"><span>Status</span><strong>${escapeHtml(latest.status)}</strong></div>
-          <div class="kv-row"><span>Payout To</span><strong>${escapeHtml(latest.payout_label || '-')}</strong></div>
-          <div class="kv-row"><span>USDT Amount</span><strong>₮ ${Number(latest.crypto_amount || 0).toFixed(2)}</strong></div>
-          <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(latest.estimated_inr_payout)}</strong></div>
-          <div class="kv-row"><span>Deposit Wallet</span><strong class="code-small">${escapeHtml(latest.deposit_wallet_address || '-')}</strong></div>
-        </div>
-        <div class="action-row top-gap-sm"><button id="open-latest-order" class="btn btn-primary btn-xs">Open Deposit Step</button></div>`);
+        <div class="active-order-polish-card ${isActiveOrder ? 'has-active' : ''}">
+          <div class="active-order-top">
+            <div>
+              <span class="tiny-note">${isActiveOrder ? 'Active Order' : 'Latest Order'}</span>
+              <h3>#${escapeHtml(shortOrderId(displayOrder.id))}</h3>
+            </div>
+            ${chip(displayOrder.status)}
+          </div>
+          <div class="active-order-metrics">
+            <div><span>USDT</span><strong>₮ ${Number(displayOrder.crypto_amount || 0).toFixed(2)}</strong></div>
+            <div><span>INR</span><strong>${fmtInr(displayOrder.estimated_inr_payout || 0)}</strong></div>
+            <div><span>Payout</span><strong>${escapeHtml(displayOrder.payout_label || '-')}</strong></div>
+          </div>
+          <div class="action-row top-gap-sm">
+            <button id="open-latest-order" class="btn btn-primary btn-xs">${isActiveOrder ? 'Continue Payment / Track' : 'View Details'}</button>
+            <button id="view-latest-order-detail" class="btn btn-secondary btn-xs">Details</button>
+          </div>
+        </div>`);
       qs('open-latest-order')?.addEventListener('click', () => {
         document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-        renderDepositOrderBox(latest);
+        renderDepositOrderBox(displayOrder);
+        qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
+        setSellStep(displayOrder.tx_hash ? 'tracking' : 'payment');
       });
-      renderDepositOrderBox(latest);
+      qs('view-latest-order-detail')?.addEventListener('click', () => openSellerOrderDetail(displayOrder));
+      if (isActiveOrder) renderDepositOrderBox(activeOrder);
     }
     renderSellerOrders(orderRows);
   }
@@ -2781,6 +2873,7 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
 
       tr.querySelectorAll('.js-order-view').forEach((btn) => btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        openAdminOrderDetail(row);
         renderAdminOrderDetail(row);
         selectAdminOrderRow(tr);
       }));
@@ -3076,53 +3169,45 @@ async function updateAdminNotificationCount() {
   }
 
 async function loadAdminStats() {
+    const todayIso = startOfTodayIso();
+
     const [
-      { count: usersCount },
       { count: ordersCount },
-      { count: kycPending },
-      { data: completedOrders },
-      { count: cryptoCheckCount },
-      { count: payoutProgressCount }
+      { count: pendingKycCount },
+      { count: referralWithdrawCount },
+      { data: allOrders },
+      { data: todayOrders },
+      { data: pendingPayoutOrders }
     ] = await Promise.all([
-      adminClient.from('profiles').select('*', { count: 'exact', head: true }),
       adminClient.from('sell_orders').select('*', { count: 'exact', head: true }),
-      adminClient.from('profiles').select('*', { count: 'exact', head: true }).eq('kyc_status', 'pending'),
-      adminClient.from('sell_orders').select('estimated_inr_payout').eq('status', 'completed'),
-      adminClient.from('sell_orders').select('*', { count: 'exact', head: true }).eq('status', 'awaiting_confirmations'),
-      adminClient.from('sell_orders').select('*', { count: 'exact', head: true }).eq('status', 'payout_in_progress')
+      adminClient.from('kyc_submissions').select('*', { count: 'exact', head: true }).in('status', ['pending','submitted']),
+      adminClient.from('referral_withdrawals').select('*', { count: 'exact', head: true }).in('status', ['requested','approved','processing']),
+      adminClient.from('sell_orders').select('crypto_amount,estimated_inr_payout,status,created_at'),
+      adminClient.from('sell_orders').select('crypto_amount,estimated_inr_payout,status,created_at').gte('created_at', todayIso),
+      adminClient.from('sell_orders').select('estimated_inr_payout,status').in('status', ['awaiting_confirmations','payout_in_progress'])
     ]);
 
-    const volume = (completedOrders || []).reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
+    const completedAll = (allOrders || []).filter((o) => String(o.status || '').toLowerCase() === 'completed');
+    const completedToday = (todayOrders || []).filter((o) => String(o.status || '').toLowerCase() === 'completed');
+
+    const todayUsdt = (todayOrders || []).reduce((s, o) => s + Number(o.crypto_amount || 0), 0);
+    const todayInr = (todayOrders || []).reduce((s, o) => s + Number(o.estimated_inr_payout || 0), 0);
+    const completedTodayInr = completedToday.reduce((s, o) => s + Number(o.estimated_inr_payout || 0), 0);
+    const pendingPayoutAmount = (pendingPayoutOrders || []).reduce((s, o) => s + Number(o.estimated_inr_payout || 0), 0);
+    const totalCompletedVolume = completedAll.reduce((s, o) => s + Number(o.estimated_inr_payout || 0), 0);
 
     setHtml('admin-stats', `
-      <div class="card stat-card admin-stat-card"><span class="stat-icon">▣</span><small>Total Orders</small><strong>${ordersCount || 0}</strong><em>↗ Live count</em></div>
-      <div class="card stat-card admin-stat-card warning"><span class="stat-icon">⌕</span><small>Pending Crypto Check</small><strong>${cryptoCheckCount || 0}</strong><em>↗ Needs review</em></div>
-      <div class="card stat-card admin-stat-card success"><span class="stat-icon">✓</span><small>Payouts In Progress</small><strong>${payoutProgressCount || 0}</strong><em>↗ Active payouts</em></div>
-      <div class="card stat-card admin-stat-card rupee"><span class="stat-icon">₹</span><small>Completed Volume</small><strong>${fmtInr(volume)}</strong><em>↗ Paid orders</em></div>`);
+      <div class="card stat-card admin-stat-card"><span class="stat-icon">▣</span><small>Total Orders</small><strong>${ordersCount || 0}</strong><em>All time</em></div>
+      <div class="card stat-card admin-stat-card rupee"><span class="stat-icon">₹</span><small>Today INR Volume</small><strong>${fmtInr(todayInr)}</strong><em>₮ ${todayUsdt.toFixed(2)} today</em></div>
+      <div class="card stat-card admin-stat-card warning"><span class="stat-icon">⌕</span><small>Pending Payout Amount</small><strong>${fmtInr(pendingPayoutAmount)}</strong><em>Needs action</em></div>
+      <div class="card stat-card admin-stat-card success"><span class="stat-icon">✓</span><small>Completed Today</small><strong>${completedToday.length}</strong><em>${fmtInr(completedTodayInr)}</em></div>
+      <div class="card stat-card admin-stat-card warning"><span class="stat-icon">🛡</span><small>Pending KYC</small><strong>${pendingKycCount || 0}</strong><em>Review docs</em></div>
+      <div class="card stat-card admin-stat-card"><span class="stat-icon">↗</span><small>Referral Withdrawals</small><strong>${referralWithdrawCount || 0}</strong><em>Pending review</em></div>
+      <div class="card stat-card admin-stat-card rupee"><span class="stat-icon">₹</span><small>Total Paid Volume</small><strong>${fmtInr(totalCompletedVolume)}</strong><em>Completed orders</em></div>`);
 
     await renderAdminOverviewRecentOrder();
   }
 
-  function adminMiniStep(row, key) {
-    const status = row?.status || '';
-    const doneMap = {
-      created: true,
-      sent: ['awaiting_transfer','awaiting_confirmations','payout_in_progress','completed'].includes(status),
-      received: ['awaiting_confirmations','payout_in_progress','completed'].includes(status),
-      payout: ['payout_in_progress','completed'].includes(status),
-      paid: status === 'completed'
-    };
-    return !!doneMap[key];
-  }
-
-  function adminOverviewStep(title, time, done, active) {
-    return `
-      <div class="admin-order-step ${done ? 'done' : ''} ${active ? 'active' : ''}">
-        <span>${done ? '✓' : active ? '●' : ''}</span>
-        <strong>${escapeHtml(title)}</strong>
-        <small>${time ? fmtDate(time) : '-'}</small>
-      </div>`;
-  }
 
   async function renderAdminOverviewRecentOrder() {
     const box = qs('admin-overview-recent-order');

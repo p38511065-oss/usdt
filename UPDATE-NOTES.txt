@@ -353,3 +353,12 @@ Payout page UI fix:
 - Added primary payout preview in setup notes card.
 - Added mobile card layout for saved payout methods.
 - Added bottom spacing so bottom nav does not cover saved methods.
+
+Final polish update:
+- Seller active/latest order card upgraded with Continue/Track and Details actions.
+- Added seller order detail modal with order summary, payout, wallet, TX and tracking.
+- Admin dashboard stats upgraded: today volume, pending payout amount, completed today, pending KYC and referral withdrawal count.
+- Added admin order detail modal.
+- Landing page copy polished for USDT TRC20 only, admin slab rates, manual verification, KYC, TX protection and support.
+- Added VERSION-NOTES.txt as stable backup note.
+- No SQL changes required.

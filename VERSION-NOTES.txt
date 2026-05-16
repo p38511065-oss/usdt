@@ -1,0 +1,19 @@
+Current Stable Version: v1.0-final-polish
+Last Updated: 2026-05-16
+
+Main fixes included:
+- Seller dashboard volume stats
+- USDT/TRC20 dashboard quote slab preview
+- Dashboard rate range instead of misleading highest rate
+- Payout page toggle, primary preview and mobile cards
+- Referral remaining balance logic
+- Referral pagination for seller/admin
+- Sell USDT no-conflict flow navigation
+- Admin filters/search and CSV exports
+- Seller and admin order detail modals
+- Admin real stats
+- Landing page trust/copy polish
+
+SQL note:
+- No new SQL is required for this final polish update.
+- Keep the latest enum-safe referral withdrawal SQL already run in Supabase.

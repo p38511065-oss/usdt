@@ -1043,6 +1043,61 @@ function renderSellerOrders(orders) {
     if (e.target.closest('#sell-step-back-payment')) setSellStep('rate');
   });
 
+
+  async function renderSellerDashboardQuoteSlabs() {
+    const box = qs('seller-dashboard-slabs-preview');
+    if (!box) return;
+
+    const { data: slabs, error } = await sellerClient
+      .from('quote_slabs')
+      .select('*')
+      .eq('is_enabled', true)
+      .eq('coin_symbol', 'USDT')
+      .eq('network', 'TRC20')
+      .order('min_amount', { ascending: true });
+
+    if (error) {
+      box.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    if (!(slabs || []).length) {
+      box.innerHTML = '<div class="empty-state">No admin quote slabs available for USDT / TRC20.</div>';
+      return;
+    }
+
+    box.innerHTML = (slabs || []).map((s) => {
+      const min = Number(s.min_amount ?? s.min_crypto_amount ?? 0);
+      const rawMax = s.max_amount ?? s.max_crypto_amount;
+      const max = rawMax === null || rawMax === undefined || rawMax === '' ? 'Unlimited' : Number(rawMax);
+      const rate = Number(s.rate_inr || 0);
+      return `
+        <button type="button" class="dashboard-slab-row" data-slab-id="${escapeHtml(s.id)}">
+          <span>
+            <strong>${escapeHtml(s.quote_type || 'Admin Rate')}</strong>
+            <small>${min} - ${max} USDT</small>
+          </span>
+          <b>₹${rate.toFixed(4)}</b>
+        </button>`;
+    }).join('');
+
+    box.querySelectorAll('.dashboard-slab-row').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slab = (slabs || []).find((s) => String(s.id) === String(btn.dataset.slabId));
+        if (!slab) return;
+        const quote = {
+          ...slab,
+          coin_symbol: 'USDT',
+          network: 'TRC20',
+          min_amount: Number(slab.min_amount ?? slab.min_crypto_amount ?? 0),
+          max_amount: slab.max_amount ?? slab.max_crypto_amount,
+          rate_inr: Number(slab.rate_inr || 0)
+        };
+        primeSellFormFromQuote(quote);
+      });
+    });
+  }
+
 async function loadSellerStats(profile) {
     updateSellerPreviewRate();
     const [{ data: orders }, { data: accounts }, { data: rewards }] = await Promise.all([
@@ -1973,6 +2028,7 @@ async function loadReferralsSection(profile) {
       loadSellerStats(profile),
       loadReferralsSection(profile),
       loadRatesAndQuotes(profile),
+      renderSellerDashboardQuoteSlabs(),
       loadKycSection(profile)
     ]);
   }

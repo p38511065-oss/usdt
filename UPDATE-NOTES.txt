@@ -334,3 +334,9 @@ Practical final updates:
 - Added landing page trust/safety content section.
 - Made admin notification panel items clickable shortcuts.
 - No SQL changes required.
+
+Seller dashboard TRC20 quote preview:
+- Removed ERC20 / Other card from seller dashboard.
+- Added Admin Quote Slabs preview for USDT / TRC20.
+- Quote slabs are scrollable if many rates exist.
+- Clicking a slab prefills Sell USDT form.

@@ -84,13 +84,17 @@
             <small>Live admin quote slabs</small>
             <button class="btn btn-primary side-link" data-target="seller-sell">Sell USDT Now</button>
           </div>
-          <div class="seller-rate-card">
-            <div class="coin-badge">₮</div>
-            <h3>USDT</h3>
-            <p>ERC20 / Other</p>
-            <strong>Admin Rates</strong>
-            <small>Only admin-created slabs</small>
-            <button class="btn btn-secondary side-link" data-target="seller-quotes">View Rate Board</button>
+          <div class="seller-rate-card seller-admin-slabs-preview-card">
+            <div class="section-head mini-section-head">
+              <div>
+                <span class="best-rate">Admin Quote Slabs</span>
+                <h3>USDT / TRC20</h3>
+              </div>
+              <button class="btn btn-secondary btn-xs side-link" data-target="seller-quotes">View All</button>
+            </div>
+            <div id="seller-dashboard-slabs-preview" class="seller-dashboard-slabs-preview">
+              <div class="empty-state">Loading admin rates...</div>
+            </div>
           </div>
         </div>
 

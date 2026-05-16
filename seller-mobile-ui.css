@@ -1052,3 +1052,10 @@ body[data-page="seller-dashboard"] .panel-section.active{
     min-height:44px!important;
   }
 }
+
+
+/* Referral withdrawal pending state */
+#request-ref-withdrawal:disabled{
+  opacity:.65!important;
+  cursor:not-allowed!important;
+}

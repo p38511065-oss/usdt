@@ -1021,6 +1021,11 @@ async function renderDepositOrderBox(order) {
     </div>`;
   }
 
+
+  function hasActiveReferralWithdrawal(withdrawals) {
+    return (withdrawals || []).some((w) => ['requested','approved','processing'].includes(String(w.status || '').toLowerCase()));
+  }
+
 async function loadReferralsSection(profile) {
     const origin = window.location.origin && window.location.origin.includes('http') ? window.location.origin : window.location.href.split('/').slice(0,-1).join('/');
     const refCode = profile.referral_code || '-';
@@ -1067,6 +1072,18 @@ async function loadReferralsSection(profile) {
     setText('stat-ref-available', fmtInr(available));
     setText('stat-pending-rewards', fmtInr(pendingRewards));
     setText('stat-ref-paid', fmtInr(paidRewards));
+
+    const activeWithdrawal = (withdrawals || []).find((w) => ['requested','approved','processing'].includes(String(w.status || '').toLowerCase()));
+    const withdrawBtn = qs('request-ref-withdrawal');
+    const withdrawMsg = qs('ref-withdraw-message');
+    if (activeWithdrawal && withdrawBtn) {
+      withdrawBtn.disabled = true;
+      withdrawBtn.textContent = 'Withdrawal Request Pending';
+      if (withdrawMsg) withdrawMsg.textContent = `Your withdrawal request of ${fmtInr(activeWithdrawal.amount_inr || 0)} is already ${activeWithdrawal.status}. Wait for admin action before new request.`;
+    } else if (withdrawBtn) {
+      withdrawBtn.disabled = false;
+      withdrawBtn.textContent = 'Request Withdrawal';
+    }
 
     const payoutSelect = qs('ref-withdraw-payout-select');
     const payoutPreview = qs('ref-withdraw-payout-preview');
@@ -1153,10 +1170,15 @@ async function loadReferralsSection(profile) {
     }
 
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
+      if (hasActiveReferralWithdrawal(withdrawals || [])) {
+        return setText('ref-withdraw-message', 'You already have a pending referral withdrawal request. Please wait for admin action.');
+      }
+
       const amount = Number(val('ref-withdraw-amount') || 0);
+      const freshAvailable = availableReferralBalance(rewards || [], withdrawals || []);
       if (!amount) return setText('ref-withdraw-message', 'Enter withdrawal amount.');
       if (amount < 2000) return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
-      if (amount > available) return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(available)}.`);
+      if (amount > freshAvailable) return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(freshAvailable)}.`);
       const payoutId = val('ref-withdraw-payout-select');
       if (!payoutId) return setText('ref-withdraw-message', 'Please select payout method for withdrawal.');
       const activePayout = (payoutAccounts || []).find((p) => p.id === payoutId);
@@ -1172,6 +1194,8 @@ async function loadReferralsSection(profile) {
       if (error) return setText('ref-withdraw-message', error.message);
       setText('ref-withdraw-message', 'Withdrawal request submitted. Admin will review and pay manually.');
       showAppToast('Referral withdrawal request submitted.');
+      qs('request-ref-withdrawal') && (qs('request-ref-withdrawal').disabled = true);
+      qs('request-ref-withdrawal') && (qs('request-ref-withdrawal').textContent = 'Withdrawal Request Pending');
       qs('ref-withdraw-amount').value = '';
       await loadReferralsSection(profile);
     });
@@ -2207,9 +2231,17 @@ async function loadReferralsSection(profile) {
 
 
   function availableReferralBalance(rewards, withdrawals) {
-    const earned = (rewards || []).filter((r) => ['pending','approved','earned'].includes(r.reward_status)).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
-    const locked = (withdrawals || []).filter((w) => ['requested','approved','processing'].includes(w.status)).reduce((s, w) => s + Number(w.amount_inr || 0), 0);
-    return Math.max(0, earned - locked);
+    const earned = (rewards || [])
+      .filter((r) => !['rejected','cancelled'].includes(String(r.reward_status || '').toLowerCase()))
+      .reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+
+    // All requested/approved/processing/paid withdrawals must reduce available balance.
+    // Only rejected/cancelled withdrawals are not deducted.
+    const deducted = (withdrawals || [])
+      .filter((w) => !['rejected','cancelled'].includes(String(w.status || '').toLowerCase()))
+      .reduce((s, w) => s + Number(w.amount_inr || 0), 0);
+
+    return Math.max(0, earned - deducted);
   }
 
   

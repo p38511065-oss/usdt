@@ -963,3 +963,12 @@ alter table public.referral_withdrawals
 add column if not exists payout_method_id uuid,
 add column if not exists payout_label text,
 add column if not exists payout_details jsonb default '{}'::jsonb;
+
+
+-- REFERRAL WITHDRAWAL ACTIVE REQUEST LOCK
+-- Optional but recommended: blocks multiple active referral withdrawal requests per user.
+-- User can create a new request only after previous request is paid/rejected/cancelled.
+
+create unique index if not exists referral_withdrawals_one_active_per_user
+on public.referral_withdrawals(user_id)
+where status in ('requested','approved','processing');

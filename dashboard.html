@@ -167,10 +167,11 @@
 
 
       <section id="seller-sell" class="panel-section seller-sell-flow">
-          <div class="seller-flow-header">
-            <span class="badge">USDT / TRC20</span>
+          <div class="seller-flow-header sell-checkout-hero">
+            <span class="badge">USDT • TRC20</span>
             <h3>Sell USDT to INR</h3>
-            <p>Amount डालें, payout method select करें और admin rate लेकर sell order create करें.</p>
+            <p>Amount डालें, payout method select करें, best admin rate देखें और order create करें.</p>
+            <div class="sell-step-pills"><span class="active">1 Amount</span><span>2 Rate</span><span>3 Payment</span><span>4 Tracking</span></div>
           </div>
 
           <div id="active-order-lock-banner" class="seller-info-box active-order-lock-banner hidden-flow-card">
@@ -178,8 +179,9 @@
           </div>
 
           <div class="card seller-flow-card" id="seller-sell-start-card">
-            <div class="section-head"><h3>1. Enter Sell Details</h3></div>
+            <div class="section-head checkout-section-head"><h3>1. Enter Amount & Payout</h3><span class="tiny-note">USDT / TRC20 fixed</span></div>
             <div id="selected-quote-banner" class="empty-state compact-selected-banner">Rate Board से rate select कर सकते हैं, या amount डालकर best admin rate देखें.</div>
+            <div class="sell-mini-fixed-row"><span>Coin: <b>USDT</b></span><span>Network: <b>TRC20</b></span></div>
             <div class="field-grid seller-sell-form-grid">
               <div><label>Coin</label><input id="sell-coin" value="USDT" readonly /></div>
               <div><label>Network</label><input id="sell-network" value="TRC20" readonly /></div>
@@ -198,13 +200,13 @@
           </div>
 
           <div class="card top-gap seller-matching-rate-card">
-            <div class="section-head"><h3>2. Select Admin Rate</h3><span class="tiny-note">Shows only after amount + payout</span></div>
+            <div class="section-head checkout-section-head"><h3>2. Best Admin Rate</h3><span class="tiny-note">Create order after selecting rate</span></div>
             <div id="quotes-container" class="quote-cards quote-cards-3"></div>
-            <div id="quotes-empty" class="empty-state">Enter amount and payout method, then tap Get Best Admin Rate.</div>
+            <div id="quotes-empty" class="empty-state sell-rate-empty-note">Enter amount and payout method, then tap Get Best Admin Rate.</div>
           </div>
 
           <div class="card top-gap seller-order-payment-card hidden-flow-card" id="seller-order-payment-card">
-            <div class="section-head"><h3>3. Order Summary & Payment</h3><span class="badge">Pay USDT</span></div>
+            <div class="section-head checkout-section-head"><h3>3. Order Summary & Payment</h3><span class="badge">Pay USDT</span></div>
             <div id="deposit-order-box" class="empty-state">Create Sell Order करने के बाद order summary, wallet address, QR और TX hash submit option यहाँ दिखेगा.</div>
           </div>
 

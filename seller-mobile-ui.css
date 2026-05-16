@@ -1146,3 +1146,148 @@ body[data-page="seller-dashboard"] .panel-section.active{
     justify-content:center;
   }
 }
+
+
+/* Seller volume stats */
+.seller-stat-strip{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+.seller-stat-strip .stat-card small{
+  display:block;
+  margin-top:5px;
+  color:#9facbd;
+  font-size:12px;
+  font-weight:800;
+}
+.seller-volume-card{
+  border-color:rgba(55,255,193,.22)!important;
+  background:
+    radial-gradient(circle at 90% 12%,rgba(55,255,193,.11),transparent 34%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(4,17,36,.94))!important;
+}
+@media(max-width:980px){
+  .seller-stat-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:620px){
+  .seller-stat-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .seller-stat-strip .stat-card strong{
+    font-size:18px!important;
+    overflow-wrap:anywhere;
+  }
+}
+
+
+/* Seller Sell USDT clean checkout UI */
+.sell-checkout-hero{
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 14% 0%,rgba(37,231,255,.18),transparent 34%),
+    radial-gradient(circle at 95% 10%,rgba(55,255,193,.13),transparent 28%),
+    linear-gradient(180deg,rgba(7,27,55,.96),rgba(3,14,31,.98))!important;
+  border:1px solid rgba(119,190,255,.16)!important;
+  padding:18px!important;
+}
+.sell-checkout-hero h3{
+  font-size:30px!important;
+  margin:10px 0 8px!important;
+}
+.sell-step-pills{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-top:16px;
+}
+.sell-step-pills span{
+  border-radius:999px;
+  padding:9px 8px;
+  background:rgba(8,25,49,.78);
+  border:1px solid rgba(119,190,255,.14);
+  color:#9facbd;
+  text-align:center;
+  font-size:12px;
+  font-weight:900;
+}
+.sell-step-pills span.active{
+  background:linear-gradient(90deg,#25e7ff,#37ffc1);
+  color:#02101d;
+  border-color:transparent;
+}
+.checkout-section-head h3{
+  font-size:20px!important;
+}
+.sell-mini-fixed-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:0 0 12px;
+}
+.sell-mini-fixed-row span{
+  padding:11px 12px;
+  border-radius:16px;
+  background:rgba(37,231,255,.08);
+  border:1px solid rgba(37,231,255,.16);
+  color:#aebbd0;
+  font-weight:800;
+}
+.sell-mini-fixed-row b{
+  color:#37ffc1;
+}
+.seller-sell-form-grid > div:nth-child(1),
+.seller-sell-form-grid > div:nth-child(2){
+  display:none!important;
+}
+.seller-sell-form-grid{
+  grid-template-columns:1fr 1fr!important;
+}
+.seller-sell-form-grid > div:nth-child(3),
+.seller-sell-form-grid > div:nth-child(4){
+  grid-column:auto!important;
+}
+.seller-flow-card,
+.seller-matching-rate-card,
+.seller-order-payment-card,
+.seller-order-tracking-card{
+  border-radius:24px!important;
+  border:1px solid rgba(119,190,255,.15)!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(37,231,255,.08),transparent 30%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(4,17,36,.96))!important;
+}
+.seller-selected-payout-mini{
+  background:rgba(5,18,39,.58)!important;
+  border:1px solid rgba(119,190,255,.14)!important;
+}
+.seller-matching-rate-card .quote-card{
+  border-radius:20px!important;
+}
+.seller-matching-rate-card .quote-card strong,
+.seller-matching-rate-card .quote-card h3{
+  font-size:24px!important;
+}
+.sell-rate-empty-note{
+  border-style:dashed!important;
+}
+@media(max-width:760px){
+  .sell-checkout-hero h3{
+    font-size:25px!important;
+  }
+  .sell-step-pills{
+    grid-template-columns:1fr 1fr;
+  }
+  .seller-sell-form-grid{
+    grid-template-columns:1fr!important;
+  }
+  .sell-mini-fixed-row{
+    grid-template-columns:1fr 1fr;
+  }
+  .seller-flow-card,
+  .seller-matching-rate-card,
+  .seller-order-payment-card,
+  .seller-order-tracking-card{
+    padding:14px!important;
+  }
+}

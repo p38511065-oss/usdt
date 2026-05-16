@@ -296,3 +296,14 @@ Referral pagination safe fix:
 - Corrected admin referral reward relation alias to referred_user.
 - Added correct pagination containers in admin.html.
 - Seller referral pagination kept intact.
+
+Seller volume stats update:
+- Seller dashboard now shows Total USDT Volume.
+- Seller dashboard now shows Total INR Volume.
+- Completed Volume also shows completed USDT amount.
+- Latest order card now includes USDT Amount.
+
+Seller dashboard volume + sell cleanup:
+- Added seller Total USDT Volume, Total INR Volume and Completed Volume.
+- Sell USDT section visually redesigned as a cleaner 4-step checkout flow.
+- Coin/network fields kept for JS but shown as compact USDT/TRC20 chips to reduce confusion.

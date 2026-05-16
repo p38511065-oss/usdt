@@ -960,16 +960,26 @@ async function renderDepositOrderBox(order) {
       sellerClient.from('bank_accounts').select('*').eq('user_id', profile.id).eq('is_active', true),
       sellerClient.from('referral_rewards').select('*').eq('referrer_user_id', profile.id)
     ]);
-    const active = (orders || []).filter((o) => !['completed', 'cancelled'].includes(o.status)).length;
-    const totalInr = (orders || []).filter((o) => o.status === 'completed').reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
-    const refEarn = (rewards || []).reduce((sum, row) => sum + Number(row.reward_amount_inr || 0), 0);
-    setHtml('seller-stats', `
-      <div class="card stat-card"><strong>▣ ${(orders || []).length}</strong><span>Total Orders</span></div>
-      <div class="card stat-card"><strong>↗ ${active}</strong><span>Active Orders</span></div>
-      <div class="card stat-card"><strong>🏦 ${(accounts || []).length}</strong><span>Payout Methods</span></div>
-      <div class="card stat-card"><strong>${fmtInr(refEarn || totalInr)}</strong><span>${refEarn ? 'Referral Earnings' : 'Completed Volume'}</span></div>`);
 
-    const latest = orders?.[0];
+    const orderRows = orders || [];
+    const completedOrders = orderRows.filter((o) => String(o.status || '').toLowerCase() === 'completed');
+    const active = orderRows.filter((o) => !['completed', 'cancelled', 'rejected'].includes(String(o.status || '').toLowerCase())).length;
+
+    const totalUsdtVolume = orderRows.reduce((sum, row) => sum + Number(row.crypto_amount || 0), 0);
+    const totalInrVolume = orderRows.reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
+    const completedUsdtVolume = completedOrders.reduce((sum, row) => sum + Number(row.crypto_amount || 0), 0);
+    const completedInrVolume = completedOrders.reduce((sum, row) => sum + Number(row.estimated_inr_payout || 0), 0);
+    const refEarn = (rewards || []).reduce((sum, row) => sum + Number(row.reward_amount_inr || 0), 0);
+
+    setHtml('seller-stats', `
+      <div class="card stat-card"><strong>▣ ${orderRows.length}</strong><span>Total Orders</span></div>
+      <div class="card stat-card"><strong>↗ ${active}</strong><span>Active Orders</span></div>
+      <div class="card stat-card seller-volume-card"><strong>₮ ${totalUsdtVolume.toFixed(2)}</strong><span>Total USDT Volume</span></div>
+      <div class="card stat-card seller-volume-card"><strong>${fmtInr(totalInrVolume)}</strong><span>Total INR Volume</span></div>
+      <div class="card stat-card"><strong>${fmtInr(completedInrVolume)}</strong><span>Completed Volume</span><small>₮ ${completedUsdtVolume.toFixed(2)} completed</small></div>
+      <div class="card stat-card"><strong>${fmtInr(refEarn)}</strong><span>Referral Earnings</span></div>`);
+
+    const latest = orderRows?.[0];
     if (!latest) {
       setHtml('latest-order-box', 'No recent order yet.');
       renderDepositOrderBox(null);
@@ -980,6 +990,7 @@ async function renderDepositOrderBox(order) {
           <div class="kv-row"><span>Coin</span><strong>${escapeHtml(latest.coin_symbol)} / ${escapeHtml(latest.network)}</strong></div>
           <div class="kv-row"><span>Status</span><strong>${escapeHtml(latest.status)}</strong></div>
           <div class="kv-row"><span>Payout To</span><strong>${escapeHtml(latest.payout_label || '-')}</strong></div>
+          <div class="kv-row"><span>USDT Amount</span><strong>₮ ${Number(latest.crypto_amount || 0).toFixed(2)}</strong></div>
           <div class="kv-row"><span>Estimated INR</span><strong>${fmtInr(latest.estimated_inr_payout)}</strong></div>
           <div class="kv-row"><span>Deposit Wallet</span><strong class="code-small">${escapeHtml(latest.deposit_wallet_address || '-')}</strong></div>
         </div>
@@ -990,7 +1001,7 @@ async function renderDepositOrderBox(order) {
       });
       renderDepositOrderBox(latest);
     }
-    renderSellerOrders(orders || []);
+    renderSellerOrders(orderRows);
   }
 
   

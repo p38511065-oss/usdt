@@ -1311,21 +1311,53 @@ async function getActiveBatch(client = sellerClient) {
   function renderBatchBannerHtml(batch, compact = false) {
     if (!batch) {
       return `
-        <div class="batch-banner-content full">
-          <div><strong>Batch not open right now</strong><span>New sell orders are paused. Join next batch waitlist or contact support.</span></div>
+        <div class="batch-banner-content batch-state-closed">
+          <div class="batch-left">
+            <div class="batch-title-row">
+              <div class="batch-fire-icon">⏸</div>
+              <div>
+                <strong>Batch Not Open</strong>
+                <span class="batch-subtitle">New sell orders are paused right now.</span>
+              </div>
+              <span class="batch-live-badge paused">Paused</span>
+            </div>
+            <div class="batch-chip-row">
+              <b>0 Slots Available</b>
+              <b>0 USDT Capacity</b>
+            </div>
+          </div>
           <button class="btn btn-secondary btn-xs js-join-batch-waitlist">Join Waitlist</button>
         </div>`;
     }
 
     const remaining = batchRemaining(batch);
     const isFull = remaining.slots <= 0 || remaining.usdt <= 0 || batch.accept_orders === false;
+    const batchName = escapeHtml(batch.batch_name || 'USDT/TRC20 Batch');
+    const message = escapeHtml(batch.message || 'USDT/TRC20 batch live now');
+
     return `
-      <div class="batch-banner-content ${isFull ? 'full' : 'live'}">
-        <div>
-          <strong>${isFull ? 'Batch Full / Paused' : '🔥 ' + escapeHtml(batch.batch_name || 'USDT/TRC20 Batch Live')}</strong>
-          <span>${escapeHtml(batch.message || 'Admin limited batch is live.')} ${isFull ? 'Join next batch waitlist.' : `${remaining.slots} slots left • ${remaining.usdt.toFixed(2)} USDT capacity available`}</span>
+      <div class="batch-banner-content ${isFull ? 'batch-state-full' : 'batch-state-live'}">
+        <div class="batch-left">
+          <div class="batch-title-row">
+            <div class="batch-fire-icon">${isFull ? '⚠️' : '🔥'}</div>
+            <div>
+              <strong>${isFull ? 'Batch Full / Paused' : batchName}</strong>
+              <span class="batch-subtitle">${message}</span>
+            </div>
+            <span class="batch-live-badge ${isFull ? 'paused' : 'live'}">● ${isFull ? 'Closed' : 'Live'}</span>
+          </div>
+
+          <div class="batch-chip-row">
+            <b><span>${remaining.slots}</span> Slots Left</b>
+            <b><span>${remaining.usdt.toFixed(2)}</span> USDT Available</b>
+          </div>
         </div>
-        ${isFull ? '<button class="btn btn-secondary btn-xs js-join-batch-waitlist">Join Waitlist</button>' : '<button class="btn btn-primary btn-xs side-link" data-target="seller-sell">Sell USDT Now</button>'}
+
+        <div class="batch-action-box">
+          ${isFull
+            ? '<button class="btn btn-secondary btn-xs js-join-batch-waitlist">Join Next Batch</button>'
+            : '<button class="btn btn-primary btn-xs side-link batch-sell-now-btn" data-target="seller-sell">Sell USDT Now →</button>'}
+        </div>
       </div>`;
   }
 
@@ -2128,15 +2160,8 @@ async function loadReferralsSection(profile) {
             };
             const { data: order, error } = await sellerClient.from('sell_orders').insert(payload).select().single();
             if (error) return setText('quote-calc-message', error.message);
+            await renderSellerBatchBanners();
 
-            if (activeBatch?.id) {
-              const freshBatch = await getActiveBatch(sellerClient);
-              await sellerClient.from('order_batches').update({
-                used_orders: Number(freshBatch?.used_orders || 0) + 1,
-                used_usdt: Number(freshBatch?.used_usdt || 0) + Number(amount || 0)
-              }).eq('id', activeBatch.id);
-              await renderSellerBatchBanners();
-            }
             await audit('sell_order_created', 'sell_orders', order.id, { coin, network, amount, payout_method: payout.payment_method, quote_type: slab.quote_type, quote_slab_id: slab.quote_slab_id || slab.id });
             setText('quote-calc-message', `Order created. Send ${amount} ${coin} to the shown wallet.`);
             selectedSellerQuote = null;

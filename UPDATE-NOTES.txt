@@ -389,3 +389,17 @@ Batch name preset update:
 Batch default message update:
 - Batch Message field now loads with default text: USDT/TRC20 batch live now.
 - JS fallback also uses the same default message.
+
+Batch count trigger fix:
+- Removed frontend used_orders/used_usdt update to avoid permission issues and double counting.
+- Added SQL trigger to automatically increment used_orders and used_usdt when sell_orders row is inserted.
+- Added SQL trigger to return slot/capacity when order is cancelled/rejected.
+- Improved seller batch banner premium highlight.
+- Requires running updated order-batches-slots-usdt-capacity.sql.
+
+Final premium batch banner update:
+- Batch banner heading is larger and clearer.
+- Batch message, slots left and USDT capacity are split into separate highlighted areas.
+- Sell USDT CTA is larger and more visible.
+- Mobile layout stacks cleanly.
+- Includes previous batch trigger count fix.

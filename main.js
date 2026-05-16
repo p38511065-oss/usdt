@@ -2770,15 +2770,27 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
   }
 
   async function loadAdminReferralPanel() {
-    const [{ data: rewards }, { data: withdrawals }] = await Promise.all([
-      adminClient.from('referral_rewards').select('*, referrer:referrer_user_id(full_name,email,mobile), referred:referred_user_id(full_name,email,mobile)').order('created_at', { ascending: false }),
-      adminClient.from('referral_withdrawals').select('*, user:user_id(full_name,email,mobile)').order('created_at', { ascending: false })
+    const [{ data: rewards, error: rewardsError }, { data: withdrawals, error: withdrawalsError }] = await Promise.all([
+      adminClient
+        .from('referral_rewards')
+        .select('*, referrer:referrer_user_id(full_name,email,mobile), referred_user:referred_user_id(full_name,email,mobile)')
+        .order('created_at', { ascending: false }),
+      adminClient
+        .from('referral_withdrawals')
+        .select('*, user:user_id(full_name,email,mobile)')
+        .order('created_at', { ascending: false })
     ]);
 
-    const totalRewards = (rewards || []).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
-    const pendingRewards = (rewards || []).filter((r) => r.reward_status !== 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
-    const requestedWithdrawals = (withdrawals || []).filter((w) => ['requested','approved','processing'].includes(w.status)).reduce((s, w) => s + Number(w.amount_inr || 0), 0);
-    const paidWithdrawals = (withdrawals || []).filter((w) => w.status === 'paid').reduce((s, w) => s + Number(w.amount_inr || 0), 0);
+    if (rewardsError) console.warn('Admin referral rewards load failed:', rewardsError.message);
+    if (withdrawalsError) console.warn('Admin referral withdrawals load failed:', withdrawalsError.message);
+
+    const rewardRows = rewards || [];
+    const withdrawalRows = withdrawals || [];
+
+    const totalRewards = rewardRows.reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+    const pendingRewards = rewardRows.filter((r) => r.reward_status !== 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+    const requestedWithdrawals = withdrawalRows.filter((w) => ['requested','approved','processing'].includes(String(w.status || '').toLowerCase())).reduce((s, w) => s + Number(w.amount_inr || 0), 0);
+    const paidWithdrawals = withdrawalRows.filter((w) => String(w.status || '').toLowerCase() === 'paid').reduce((s, w) => s + Number(w.amount_inr || 0), 0);
 
     setHtml('admin-referral-stats', `
       <div class="card stat-card"><strong>${fmtInr(totalRewards)}</strong><span>Total Rewards</span></div>
@@ -2786,9 +2798,15 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
       <div class="card stat-card"><strong>${fmtInr(requestedWithdrawals)}</strong><span>Withdrawal Requests</span></div>
       <div class="card stat-card"><strong>${fmtInr(paidWithdrawals)}</strong><span>Paid Withdrawals</span></div>`);
 
+    const adminRewardPageSize = 5;
+    window.__adminReferralRewardsPage = Math.min(window.__adminReferralRewardsPage || 1, Math.max(1, Math.ceil(rewardRows.length / adminRewardPageSize)));
+    const adminRewardPageRows = paginateItems(rewardRows, window.__adminReferralRewardsPage, adminRewardPageSize);
+
     const rewardBody = qs('admin-referral-rewards-body');
     if (rewardBody) {
-      rewardBody.innerHTML = !adminRewardPageRows.length ? '<tr><td colspan="7">No referral rewards yet.</td></tr>' : adminRewardPageRows.map((r) => `
+      rewardBody.innerHTML = !adminRewardPageRows.length
+        ? '<tr><td colspan="7">No referral rewards yet.</td></tr>'
+        : adminRewardPageRows.map((r) => `
         <tr>
           <td>${escapeHtml(r.referrer?.full_name || r.referrer?.email || '-')}<div class="tiny-note">${escapeHtml(r.referrer?.mobile || '')}</div></td>
           <td>${escapeHtml(r.referred_user?.full_name || r.referred_user?.email || '-')}<div class="tiny-note">${escapeHtml(r.referred_user?.mobile || '')}</div></td>
@@ -2808,19 +2826,22 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
       rewardBody.querySelectorAll('.js-ref-approve').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'approved')));
       rewardBody.querySelectorAll('.js-ref-paid').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'paid')));
       rewardBody.querySelectorAll('.js-ref-reject').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'rejected')));
-      renderMiniPagination('admin-ref-rewards-pagination', (rewards || []).length, window.__adminReferralRewardsPage, adminRewardPageSize, (page) => {
-        window.__adminReferralRewardsPage = page;
-        loadAdminReferralPanel();
-      });
     }
 
+    renderMiniPagination('admin-referral-rewards-pagination', rewardRows.length, window.__adminReferralRewardsPage, adminRewardPageSize, (page) => {
+      window.__adminReferralRewardsPage = page;
+      loadAdminReferralPanel();
+    });
+
     const adminWithdrawalPageSize = 5;
-    window.__adminReferralWithdrawalsPage = Math.min(window.__adminReferralWithdrawalsPage || 1, Math.max(1, Math.ceil((withdrawals || []).length / adminWithdrawalPageSize)));
-    const adminWithdrawalPageRows = paginateItems(withdrawals || [], window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize);
+    window.__adminReferralWithdrawalsPage = Math.min(window.__adminReferralWithdrawalsPage || 1, Math.max(1, Math.ceil(withdrawalRows.length / adminWithdrawalPageSize)));
+    const adminWithdrawalPageRows = paginateItems(withdrawalRows, window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize);
 
     const withdrawBody = qs('admin-ref-withdrawals-body');
     if (withdrawBody) {
-      withdrawBody.innerHTML = !adminWithdrawalPageRows.length ? '<tr><td colspan="6">No referral withdrawal requests.</td></tr>' : adminWithdrawalPageRows.map((w) => `
+      withdrawBody.innerHTML = !adminWithdrawalPageRows.length
+        ? '<tr><td colspan="6">No referral withdrawal requests.</td></tr>'
+        : adminWithdrawalPageRows.map((w) => `
         <tr>
           <td>${escapeHtml(w.user?.full_name || w.user?.email || '-')}<div class="tiny-note">${escapeHtml(w.user?.mobile || '')}</div></td>
           <td>${fmtInr(w.amount_inr || 0)}</td>
@@ -2852,12 +2873,14 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
           alert('Payout details not found');
         }
       }));
-      renderMiniPagination('admin-ref-withdrawals-pagination', (withdrawals || []).length, window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize, (page) => {
-        window.__adminReferralWithdrawalsPage = page;
-        loadAdminReferralPanel();
-      });
     }
+
+    renderMiniPagination('admin-ref-withdrawals-pagination', withdrawalRows.length, window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize, (page) => {
+      window.__adminReferralWithdrawalsPage = page;
+      loadAdminReferralPanel();
+    });
   }
+
 
   async function updateReferralReward(id, status) {
         if (!confirmAdminAction(`Confirm referral reward ${status}?`)) return;

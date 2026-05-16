@@ -289,3 +289,10 @@ Referral pagination update:
 - Seller referral withdrawal requests now show 5 per page with page numbers.
 - Admin referral rewards list now shows 5 per page with page numbers.
 - Admin referral withdrawal requests now show 5 per page with page numbers.
+
+Referral pagination safe fix:
+- Fixed admin referral history blank issue caused by wrong variable/ID names.
+- Admin referral rewards and withdrawals now use safe pagination, 5 per page.
+- Corrected admin referral reward relation alias to referred_user.
+- Added correct pagination containers in admin.html.
+- Seller referral pagination kept intact.

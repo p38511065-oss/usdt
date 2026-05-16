@@ -270,3 +270,16 @@ Referral remaining balance UI:
 - Paid card renamed to Withdrawn / Locked.
 - Shows Total Earned, Withdrawn/Locked and Remaining breakdown.
 - Remaining Balance stays visible even if it is below ₹2,000.
+
+Referral withdrawal simple balance logic:
+- Removed active withdrawal blocking.
+- Remaining balance is always Total Rewards minus all non-rejected/cancelled withdrawal requests.
+- User can create multiple withdrawal requests only while remaining balance is enough.
+- Added SQL trigger that blocks withdrawal amount greater than remaining balance.
+- Added SQL to drop old active-withdrawal unique index.
+
+Referral remaining balance card final fix:
+- Remaining Balance card now uses Total Rewards minus Total Withdrawal Requests directly.
+- Supports alternate reward amount column names safely.
+- Withdrawal validation re-fetches fresh rewards/withdrawals and blocks above remaining balance.
+- Added final simple balance SQL trigger.

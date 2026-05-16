@@ -298,9 +298,9 @@
         </div>
         <div class="referral-wallet-grid">
           <div class="card referral-wallet-card"><span>Total Earned</span><strong id="stat-ref-earnings">₹0</strong><small>All referral rewards</small></div>
-          <div class="card referral-wallet-card remaining-balance-card"><span>Remaining Balance</span><strong id="stat-ref-available">₹0</strong><small>After withdrawals / locked requests</small></div>
+          <div class="card referral-wallet-card remaining-balance-card"><span>Remaining Balance</span><strong id="stat-ref-available">₹0</strong><small>After withdrawal requests</small></div>
           <div class="card referral-wallet-card"><span>Pending Rewards</span><strong id="stat-pending-rewards">₹0</strong><small>Rewards not marked paid</small></div>
-          <div class="card referral-wallet-card"><span>Withdrawn / Locked</span><strong id="stat-ref-paid">₹0</strong><small>Requested + approved + paid</small></div>
+          <div class="card referral-wallet-card"><span>Withdrawn / Requested</span><strong id="stat-ref-paid">₹0</strong><small>Requested + approved + paid</small></div>
         </div>
         <div class="grid-2 top-gap">
           <div class="card">
@@ -708,7 +708,7 @@
         const card = document.createElement('div');
         card.className = 'quote-card' + (i===slabs.length-1 ? ' recommended' : '');
         card.innerHTML = `
-          <div class="badge">${i===slabs.length-1 ? 'Best / Higher Slab' : 'Available'}</div>
+          <div class="badge">${i===slabs.length-1 ? 'Best / Higher Slab' : 'Remaining Balance'}</div>
           <h4>USDT / ${esc(s.network || 'TRC20')}</h4>
           <p>Admin-created quote slab</p>
           <div class="kv-list">
@@ -776,7 +776,7 @@
         const card = document.createElement('div');
         card.className = 'quote-card' + (i===0 ? ' recommended' : '');
         card.innerHTML = `
-          <div class="badge">${i===0 ? 'Recommended' : 'Available'}</div>
+          <div class="badge">${i===0 ? 'Recommended' : 'Remaining Balance'}</div>
           <h4>USDT / ${esc(network)}</h4>
           <p>Confirm sell request with locked admin rate.</p>
           <div class="kv-list">

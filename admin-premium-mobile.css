@@ -2548,3 +2548,11 @@ body.admin-app-ui-v2 .admin-notification-item small{
   color:#9facbd;
   margin-top:2px;
 }
+
+
+/* Admin overview action button fix */
+.admin-order-actions .btn:disabled{
+  opacity:.45!important;
+  cursor:not-allowed!important;
+  filter:saturate(.7);
+}

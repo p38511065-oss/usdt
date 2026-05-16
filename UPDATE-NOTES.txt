@@ -367,3 +367,8 @@ Admin recent orders fix:
 - Restored missing adminMiniStep and adminOverviewStep helper functions.
 - Recent Orders section now renders latest order instead of staying blank.
 - Added fallback styling for recent order timeline steps.
+
+Admin dashboard Crypto Received button fix:
+- Added dedicated updateOverviewOrderStatus handler for Recent Orders dashboard card.
+- Crypto Received, Start Payout and Mark Paid buttons now update order status and refresh dashboard.
+- Button enable/disable rules are clearer by current order status.

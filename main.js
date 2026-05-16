@@ -3232,6 +3232,51 @@ async function loadAdminStats() {
   }
 
 
+
+  async function updateOverviewOrderStatus(orderId, status, btn) {
+    const original = btn ? btn.textContent : '';
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+      }
+
+      const { error } = await adminClient
+        .from('sell_orders')
+        .update({
+          status,
+          completed_at: status === 'completed' ? new Date().toISOString() : null
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        alert(error.message || 'Order status update failed');
+        return;
+      }
+
+      if (status === 'completed') {
+        await ensureReferralRewardForOrder(orderId);
+      }
+
+      try {
+        await audit('overview_order_status_updated', 'sell_orders', orderId, { status });
+      } catch (_) {}
+
+      await loadAdminStats();
+      await loadAdminOrders(orderId);
+      await updateAdminNotificationCount?.();
+      showAppToast?.('Order status updated.');
+    } catch (err) {
+      alert(err?.message || 'Order status update failed');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    }
+  }
+
+
 async function renderAdminOverviewRecentOrder() {
     const box = qs('admin-overview-recent-order');
     if (!box) return;
@@ -3287,18 +3332,18 @@ async function renderAdminOverviewRecentOrder() {
 
       <div class="admin-order-actions">
         <button class="btn btn-secondary btn-xs js-overview-view">👁 View Details</button>
-        <button class="btn btn-secondary btn-xs js-overview-received" ${adminMiniStep(row, 'received') ? 'disabled' : ''}>✓ Crypto Received</button>
-        <button class="btn btn-secondary btn-xs js-overview-payout" ${adminMiniStep(row, 'payout') || !adminMiniStep(row, 'received') ? 'disabled' : ''}>➤ Start Payout</button>
-        <button class="btn btn-primary btn-xs js-overview-paid" ${row.status !== 'payout_in_progress' ? 'disabled' : ''}>✓ Mark Paid</button>
+        <button class="btn btn-secondary btn-xs js-overview-received" ${!['awaiting_transfer','awaiting_kyc'].includes(String(row.status || '').toLowerCase()) ? 'disabled' : ''}>✓ Crypto Received</button>
+        <button class="btn btn-secondary btn-xs js-overview-payout" ${String(row.status || '').toLowerCase() !== 'awaiting_confirmations' ? 'disabled' : ''}>➤ Start Payout</button>
+        <button class="btn btn-primary btn-xs js-overview-paid" ${String(row.status || '').toLowerCase() !== 'payout_in_progress' ? 'disabled' : ''}>✓ Mark Paid</button>
       </div>`;
 
     box.querySelector('.js-overview-view')?.addEventListener('click', async () => {
       document.querySelector('.side-link[data-target="admin-orders"]')?.click();
       await loadAdminOrders(row.id);
     });
-    box.querySelector('.js-overview-received')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget));
-    box.querySelector('.js-overview-payout')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'payout_in_progress', e.currentTarget));
-    box.querySelector('.js-overview-paid')?.addEventListener('click', async (e) => updateAdminOrderStatus(row.id, 'completed', e.currentTarget));
+    box.querySelector('.js-overview-received')?.addEventListener('click', async (e) => updateOverviewOrderStatus(row.id, 'awaiting_confirmations', e.currentTarget));
+    box.querySelector('.js-overview-payout')?.addEventListener('click', async (e) => updateOverviewOrderStatus(row.id, 'payout_in_progress', e.currentTarget));
+    box.querySelector('.js-overview-paid')?.addEventListener('click', async (e) => updateOverviewOrderStatus(row.id, 'completed', e.currentTarget));
   }
 
   async function loadAdminReferralPanel() {

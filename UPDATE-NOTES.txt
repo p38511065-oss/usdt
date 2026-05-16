@@ -380,3 +380,12 @@ Batch slots + USDT capacity update:
 - Seller order creation checks active batch, remaining order slots and remaining USDT capacity.
 - Added waitlist support for full/paused batches.
 - Requires SQL: order-batches-slots-usdt-capacity.sql.
+
+Batch name preset update:
+- Batch name now has preset dropdown: Morning Batch, Afternoon Batch, Evening Batch and Custom Batch.
+- Custom Batch reveals a custom name input.
+- Admin no longer needs to type common batch names manually.
+
+Batch default message update:
+- Batch Message field now loads with default text: USDT/TRC20 batch live now.
+- JS fallback also uses the same default message.

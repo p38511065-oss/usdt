@@ -1254,7 +1254,31 @@ function renderSellerOrders(orders) {
   }
 
 
-  async function getActiveBatch(client = sellerClient) {
+  
+  
+  function setupBatchDefaultMessage() {
+    const msg = qs('batch-message');
+    if (msg && !msg.value) msg.value = 'USDT/TRC20 batch live now';
+  }
+
+function selectedBatchName() {
+    const preset = val('batch-name-preset') || 'Morning Batch';
+    if (preset === 'custom') return val('batch-name') || 'Custom Batch';
+    return preset;
+  }
+
+  function setupBatchNamePreset() {
+    const preset = qs('batch-name-preset');
+    const customWrap = qs('batch-custom-name-wrap');
+    const sync = () => {
+      if (customWrap) customWrap.classList.toggle('hidden-flow-card', (preset?.value || '') !== 'custom');
+    };
+    preset?.addEventListener('change', sync);
+    sync();
+  }
+
+
+async function getActiveBatch(client = sellerClient) {
     const { data, error } = await client
       .from('order_batches')
       .select('*')
@@ -1375,12 +1399,12 @@ function renderSellerOrders(orders) {
   function setupAdminBatchControls() {
     qs('save-new-batch')?.addEventListener('click', async () => {
       const payload = {
-        batch_name: val('batch-name') || 'USDT/TRC20 Batch',
+        batch_name: selectedBatchName(),
         order_limit: Number(val('batch-order-limit') || 0),
         usdt_capacity: Number(val('batch-usdt-capacity') || 0),
         used_orders: 0,
         used_usdt: 0,
-        message: val('batch-message') || 'USDT/TRC20 sell batch is live now.',
+        message: val('batch-message') || 'USDT/TRC20 batch live now',
         status: 'active',
         accept_orders: true
       };
@@ -3770,6 +3794,8 @@ const payload = { status };
 
         setupAdminFilterEvents();
     setupAdminBatchControls();
+    setupBatchNamePreset();
+    setupBatchDefaultMessage();
     setupAdminExportButtons();
     await updateAdminNotificationCount();
     setupNotificationShortcuts();

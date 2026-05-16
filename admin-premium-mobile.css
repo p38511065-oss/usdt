@@ -2637,3 +2637,18 @@ body.admin-app-ui-v2 .admin-notification-item small{
     grid-template-columns:1fr 1fr;
   }
 }
+
+
+/* Batch preset dropdown */
+#batch-name-preset{
+  min-height:44px;
+  border-radius:14px;
+  border:1px solid rgba(119,190,255,.16);
+  background:rgba(3,13,29,.68);
+  color:#eaf4ff;
+  padding:0 12px;
+  width:100%;
+}
+#batch-custom-name-wrap.hidden-flow-card{
+  display:none!important;
+}

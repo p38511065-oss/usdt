@@ -101,10 +101,19 @@
             </div>
             <div id="admin-batch-current" class="admin-batch-current empty-state">Loading batch...</div>
             <div class="field-grid top-gap-sm">
-              <div><label>Batch Name</label><input id="batch-name" placeholder="Evening Batch" /></div>
+              <div>
+                <label>Batch Name</label>
+                <select id="batch-name-preset">
+                  <option value="Morning Batch">Morning Batch</option>
+                  <option value="Afternoon Batch">Afternoon Batch</option>
+                  <option value="Evening Batch">Evening Batch</option>
+                  <option value="custom">Custom Batch</option>
+                </select>
+              </div>
+              <div id="batch-custom-name-wrap" class="hidden-flow-card"><label>Custom Batch Name</label><input id="batch-name" placeholder="Custom Batch Name" /></div>
               <div><label>Order Slots</label><input id="batch-order-limit" type="number" placeholder="25" /></div>
               <div><label>USDT Capacity</label><input id="batch-usdt-capacity" type="number" step="0.0001" placeholder="10000" /></div>
-              <div><label>Batch Message</label><input id="batch-message" placeholder="USDT/TRC20 batch live now" /></div>
+              <div><label>Batch Message</label><input id="batch-message" value="USDT/TRC20 batch live now" placeholder="USDT/TRC20 batch live now" /></div>
             </div>
             <div class="action-row top-gap-sm">
               <button id="save-new-batch" class="btn btn-primary">Create New Batch</button>

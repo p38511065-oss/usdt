@@ -253,3 +253,8 @@ Referral withdrawal balance lock fix:
 - Seller cannot submit a new withdrawal while one request is active.
 - Withdrawal button shows pending state until admin action.
 - Added optional SQL unique index: referral-withdrawal-active-lock.sql.
+
+Referral withdrawal strong lock:
+- Submit now re-fetches latest rewards/withdrawals from database before allowing request.
+- Active pending withdrawal blocks new request even if page had old balance.
+- Database SQL added to reject duplicate active requests and create unique active-withdrawal lock.

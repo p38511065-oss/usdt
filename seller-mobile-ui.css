@@ -1059,3 +1059,10 @@ body[data-page="seller-dashboard"] .panel-section.active{
   opacity:.65!important;
   cursor:not-allowed!important;
 }
+
+
+/* Strong referral withdrawal lock */
+#request-ref-withdrawal[disabled]{
+  opacity:.62!important;
+  cursor:not-allowed!important;
+}

@@ -1026,6 +1026,27 @@ async function renderDepositOrderBox(order) {
     return (withdrawals || []).some((w) => ['requested','approved','processing'].includes(String(w.status || '').toLowerCase()));
   }
 
+
+  async function getFreshReferralWithdrawalState(profileId) {
+    const [{ data: rewards }, { data: withdrawals }] = await Promise.all([
+      sellerClient
+        .from('referral_rewards')
+        .select('reward_amount_inr,reward_status')
+        .eq('referrer_user_id', profileId),
+      sellerClient
+        .from('referral_withdrawals')
+        .select('amount_inr,status')
+        .eq('user_id', profileId)
+    ]);
+
+    const available = availableReferralBalance(rewards || [], withdrawals || []);
+    const activeWithdrawal = (withdrawals || []).find((w) =>
+      ['requested','approved','processing'].includes(String(w.status || '').toLowerCase())
+    );
+
+    return { available, activeWithdrawal, rewards: rewards || [], withdrawals: withdrawals || [] };
+  }
+
 async function loadReferralsSection(profile) {
     const origin = window.location.origin && window.location.origin.includes('http') ? window.location.origin : window.location.href.split('/').slice(0,-1).join('/');
     const refCode = profile.referral_code || '-';
@@ -1170,19 +1191,38 @@ async function loadReferralsSection(profile) {
     }
 
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
-      if (hasActiveReferralWithdrawal(withdrawals || [])) {
-        return setText('ref-withdraw-message', 'You already have a pending referral withdrawal request. Please wait for admin action.');
+      const btn = qs('request-ref-withdrawal');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Checking...';
+      }
+
+      const freshState = await getFreshReferralWithdrawalState(profile.id);
+      if (freshState.activeWithdrawal) {
+        if (btn) btn.textContent = 'Withdrawal Request Pending';
+        return setText('ref-withdraw-message', `You already have a pending withdrawal request of ${fmtInr(freshState.activeWithdrawal.amount_inr || 0)}. Please wait for admin action.`);
       }
 
       const amount = Number(val('ref-withdraw-amount') || 0);
-      const freshAvailable = availableReferralBalance(rewards || [], withdrawals || []);
-      if (!amount) return setText('ref-withdraw-message', 'Enter withdrawal amount.');
-      if (amount < 2000) return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
-      if (amount > freshAvailable) return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(freshAvailable)}.`);
+      const freshAvailable = Number(freshState.available || 0);
+
+      if (!amount) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; }
+        return setText('ref-withdraw-message', 'Enter withdrawal amount.');
+      }
+      if (amount < 2000) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; }
+        return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
+      }
+      if (amount > freshAvailable) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; }
+        return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(freshAvailable)} after pending withdrawals.`);
+      }
+
       const payoutId = val('ref-withdraw-payout-select');
-      if (!payoutId) return setText('ref-withdraw-message', 'Please select payout method for withdrawal.');
+      if (!payoutId) { const btn = qs('request-ref-withdrawal'); if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; } return setText('ref-withdraw-message', 'Please select payout method for withdrawal.'); }
       const activePayout = (payoutAccounts || []).find((p) => p.id === payoutId);
-      if (!activePayout) return setText('ref-withdraw-message', 'Selected payout method not found. Please add payout method again.');
+      if (!activePayout) { const btn = qs('request-ref-withdrawal'); if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; } return setText('ref-withdraw-message', 'Selected payout method not found. Please add payout method again.'); }
       const { error } = await sellerClient.from('referral_withdrawals').insert({
         user_id: profile.id,
         amount_inr: amount,
@@ -1191,7 +1231,7 @@ async function loadReferralsSection(profile) {
         payout_label: referralPayoutLabel(activePayout),
         payout_details: activePayout
       });
-      if (error) return setText('ref-withdraw-message', error.message);
+      if (error) { const btn = qs('request-ref-withdrawal'); if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; } return setText('ref-withdraw-message', /duplicate|unique/i.test(error.message || '') ? 'You already have an active withdrawal request. Please wait for admin action.' : error.message); }
       setText('ref-withdraw-message', 'Withdrawal request submitted. Admin will review and pay manually.');
       showAppToast('Referral withdrawal request submitted.');
       qs('request-ref-withdrawal') && (qs('request-ref-withdrawal').disabled = true);

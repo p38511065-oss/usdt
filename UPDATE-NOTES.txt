@@ -451,3 +451,9 @@ Landing final polish:
 - Market wording changed to Admin Quote Trend / Active Admin Slabs.
 - Batch card made more compact with action note.
 - Landing ticker remains removed; seller ticker remains unchanged.
+
+Customer-facing wording polish:
+- Removed most visible "Admin" wording from landing page and seller dashboard.
+- Replaced with premium customer-facing terms: Live Rate, Verified Rate Slabs, Active Rate Slabs, Assigned Wallet.
+- Admin panel/internal function names remain unchanged.
+- No SQL required.

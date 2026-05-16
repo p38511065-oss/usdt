@@ -815,7 +815,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     resetSellerNewOrderState(true);
     qs('sell-amount') && (qs('sell-amount').value = '');
     qs('quotes-container') && (qs('quotes-container').innerHTML = '');
-    qs('quotes-empty') && (qs('quotes-empty').textContent = 'Enter amount and payout method, then tap Get Best Admin Rate.');
+    qs('quotes-empty') && (qs('quotes-empty').textContent = 'Enter amount and payout method, then tap Get Best Live Rate.');
     qs('quotes-empty') && (qs('quotes-empty').style.display = 'block');
     setText('quote-calc-message', 'Order cancelled. You can start a new Sell USDT order.');
     showAppToast('Order cancelled. You can start again.');
@@ -924,7 +924,7 @@ async function renderDepositOrderBox(order) {
               <div><label>TX Hash</label><input id="deposit-tx-hash" placeholder="Paste blockchain tx hash" value="" /></div>
               <button id="mark-crypto-sent" class="btn btn-primary btn-block">I Have Sent USDT</button>
             </div>
-            <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active admin wallet is assigned for this coin/network yet. Please contact support or wait for admin wallet setup.' : ''}</p>
+            <p id="deposit-order-message" class="status-text">${walletMissing ? 'No active assigned wallet is assigned for this coin/network yet. Please contact support or wait for assigned wallet setup.' : ''}</p>
           `}
         </div>
       </div>`;
@@ -1163,8 +1163,8 @@ function renderSellerOrders(orders) {
         .sort((a, b) => Number(a.min_amount ?? a.min_crypto_amount ?? 0) - Number(b.min_amount ?? b.min_crypto_amount ?? 0));
 
       if (!rows.length) {
-        setText('seller-preview-rate', 'Admin Rates');
-        setText('seller-preview-rate-note', 'No active USDT / TRC20 slab');
+        setText('seller-preview-rate', 'Live Rates');
+        setText('seller-preview-rate-note', 'No active USDT / TRC20 rate slab');
         return;
       }
 
@@ -1179,7 +1179,7 @@ function renderSellerOrders(orders) {
       setText('seller-preview-rate', rateText);
       setText('seller-preview-rate-note', `Starting from ${firstMin} USDT • Higher quantity may get higher rate`);
     } catch (e) {
-      setText('seller-preview-rate', 'Admin Rates');
+      setText('seller-preview-rate', 'Live Rates');
       setText('seller-preview-rate-note', 'Rate board unavailable');
     }
   }
@@ -1245,7 +1245,7 @@ function renderSellerOrders(orders) {
     }
 
     if (!(slabs || []).length) {
-      box.innerHTML = '<div class="empty-state">No admin quote slabs available for USDT / TRC20.</div>';
+      box.innerHTML = '<div class="empty-state">No rate slabs available for USDT / TRC20.</div>';
       return;
     }
 
@@ -1257,7 +1257,7 @@ function renderSellerOrders(orders) {
       return `
         <button type="button" class="dashboard-slab-row" data-slab-id="${escapeHtml(s.id)}">
           <span>
-            <strong>${escapeHtml(s.quote_type || 'Admin Rate')}</strong>
+            <strong>${escapeHtml(s.quote_type || 'Live Rate')}</strong>
             <small>${min} - ${max} USDT</small>
           </span>
           <b>₹${rate.toFixed(4)}</b>
@@ -1588,7 +1588,7 @@ async function getActiveBatch(client = sellerClient) {
   function buildGenericTickerMessages() {
     return [
       '🛡 USDT/TRC20 orders verified before payout',
-      '⚡ INR payout processed after admin confirmation',
+      '⚡ INR payout processed after verification',
       '🔒 Duplicate TX hash protection enabled',
       '🔥 Limited batch slots available for verified sellers',
       '✅ Manual order tracking from crypto sent to paid',
@@ -1693,7 +1693,7 @@ async function loadSellerStats(profile) {
       setHtml('latest-order-box', `
         <div class="active-order-empty">
           <h3>No active order yet</h3>
-          <p>Start a new USDT / TRC20 sell order and get admin-created rate.</p>
+          <p>Start a new USDT / TRC20 sell order and get verified rate.</p>
           <button class="btn btn-primary side-link" data-target="seller-sell">Sell USDT Now</button>
         </div>`);
       renderDepositOrderBox(null);
@@ -2241,7 +2241,7 @@ async function loadReferralsSection(profile) {
       if (!payout) return setText('quote-calc-message', 'Please select a valid payout method.');
 
       const activeWallet = await findMatchingActiveWallet(sellerClient, coin, network);
-      if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active admin wallet found for this coin/network. Please contact support.');
+      if (!activeWallet?.wallet_address) return setText('quote-calc-message', 'No active assigned wallet found for this coin/network. Please contact support.');
 
       const activeBatch = await getActiveBatch(sellerClient);
       if (!batchIsOpen(activeBatch, amount)) {
@@ -2280,7 +2280,7 @@ async function loadReferralsSection(profile) {
           .sort((a, b) => Number(a.min_amount || 0) - Number(b.min_amount || 0))[0];
         empty.textContent = nextHigher
           ? `No slab matched this amount. Add ${Number(nextHigher.min_amount || 0) - amount} ${coin} more to unlock ${Number(nextHigher.rate_inr || 0).toFixed(4)} rate.`
-          : 'No admin rate slab matches this amount. Please enter an amount within an active admin slab range.';
+          : 'No rate slab matches this amount. Please enter an amount within an active admin slab range.';
         return;
       }
       empty.style.display = 'none';
@@ -2463,7 +2463,7 @@ async function loadReferralsSection(profile) {
     if (qs('sell-amount')) qs('sell-amount').value = Number(quote.min_amount ?? quote.min_crypto_amount ?? 0);
     setSelectedQuoteBanner();
     document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-    setText('quote-calc-message', 'Chosen quote prefilled. Select payout method and click Get Best Admin Rate to confirm this slab.');
+    setText('quote-calc-message', 'Chosen quote prefilled. Select payout method and click Get Best Live Rate to confirm this slab.');
   }
 
   function buildQuoteCard(quote, amount) {

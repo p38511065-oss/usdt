@@ -83,19 +83,19 @@
             <h3>USDT</h3>
             <p>TRC20</p>
             <strong id="seller-preview-rate">₹--.--</strong>
-            <small id="seller-preview-rate-note">Rate range from admin slabs</small>
+            <small id="seller-preview-rate-note">Rate range from live slabs</small>
             <button class="btn btn-primary side-link" data-target="seller-sell">Sell USDT Now</button>
           </div>
           <div class="seller-rate-card seller-admin-slabs-preview-card">
             <div class="section-head mini-section-head">
               <div>
-                <span class="best-rate">Admin Quote Slabs</span>
+                <span class="best-rate">Live Rate Slabs</span>
                 <h3>USDT / TRC20</h3>
               </div>
               <button class="btn btn-secondary btn-xs side-link" data-target="seller-quotes">View All</button>
             </div>
             <div id="seller-dashboard-slabs-preview" class="seller-dashboard-slabs-preview">
-              <div class="empty-state">Loading admin rates...</div>
+              <div class="empty-state">Loading live rates...</div>
             </div>
           </div>
         </div>
@@ -140,10 +140,10 @@
       </section>
 
       <section id="seller-quotes" class="panel-section">
-          <div class="seller-info-box rate-board-help-box">Rate Board में सिर्फ admin-created USDT/TRC20 slabs दिखते हैं. Seller यहाँ quote create नहीं करता — यहाँ से rate देखकर Sell USDT flow start करें.</div>
+          <div class="seller-info-box rate-board-help-box">Rate Board में सिर्फ verified USDT/TRC20 slabs दिखते हैं. Seller यहाँ quote create नहीं करता — यहाँ से rate देखकर Sell USDT flow start करें.</div>
           <div class="grid-2">
             <div class="card">
-              <div class="section-head"><h3>Admin Rate Board</h3></div>
+              <div class="section-head"><h3>Live Rate Board</h3></div>
               <div class="field-grid">
                 <div><label>Coin</label><select id="quotes-coin"></select></div>
                 <div><label>Network</label><input id="quotes-network" value="TRC20" readonly /></div>
@@ -176,7 +176,7 @@
           <div class="seller-flow-header sell-checkout-hero">
             <span class="badge">USDT • TRC20</span>
             <h3>Sell USDT to INR</h3>
-            <p>Amount डालें, payout method select करें, best admin rate देखें और order create करें.</p>
+            <p>Amount डालें, payout method select करें, best rate देखें और order create करें.</p>
             <div class="sell-step-pills"><span class="active">1 Amount</span><span>2 Rate</span><span>3 Payment</span><span>4 Tracking</span></div>
           </div>
 
@@ -188,7 +188,7 @@
 
           <div class="card seller-flow-card sell-step-screen active" data-sell-step="details" id="seller-sell-start-card">
             <div class="section-head checkout-section-head"><h3>1. Enter Amount & Payout</h3><span class="tiny-note">USDT / TRC20 fixed</span></div>
-            <div id="selected-quote-banner" class="empty-state compact-selected-banner">Rate Board से rate select कर सकते हैं, या amount डालकर best admin rate देखें.</div>
+            <div id="selected-quote-banner" class="empty-state compact-selected-banner">Rate Board से rate select कर सकते हैं, या amount डालकर best rate देखें.</div>
             <div class="sell-mini-fixed-row"><span>Coin: <b>USDT</b></span><span>Network: <b>TRC20</b></span></div>
             <div class="field-grid seller-sell-form-grid">
               <div><label>Coin</label><input id="sell-coin" value="USDT" readonly /></div>
@@ -202,15 +202,15 @@
               <button class="btn btn-secondary btn-xs side-link" data-target="seller-payouts">Add / Edit Payout</button>
             </div>
             <div class="seller-sell-action-row">
-              <button id="show-quotes-btn" class="btn btn-primary btn-block">Get Best Admin Rate</button>
+              <button id="show-quotes-btn" class="btn btn-primary btn-block">Get Best Live Rate</button>
             </div>
             <p id="quote-calc-message" class="status-text"></p>
           </div>
 
           <div class="card top-gap seller-matching-rate-card sell-step-screen" data-sell-step="rate" id="seller-matching-rate-card">
-            <div class="section-head checkout-section-head"><h3>2. Best Admin Rate</h3><button id="sell-step-back-rate" class="btn btn-secondary btn-xs" type="button">Back</button></div>
+            <div class="section-head checkout-section-head"><h3>2. Best Live Rate</h3><button id="sell-step-back-rate" class="btn btn-secondary btn-xs" type="button">Back</button></div>
             <div id="quotes-container" class="quote-cards quote-cards-3"></div>
-            <div id="quotes-empty" class="empty-state sell-rate-empty-note">Enter amount and payout method, then tap Get Best Admin Rate.</div>
+            <div id="quotes-empty" class="empty-state sell-rate-empty-note">Enter amount and payout method, then tap Get Best Live Rate.</div>
           </div>
 
           <div class="card top-gap seller-order-payment-card hidden-flow-card sell-step-screen" data-sell-step="payment" id="seller-order-payment-card">
@@ -715,8 +715,8 @@
       if(!box) return;
       box.innerHTML = '';
       if(!slabs.length){
-        if(empty){ empty.style.display='block'; empty.textContent='No active admin quote slabs found.'; }
-        msg('quotes-page-message','No active admin quote slabs found.');
+        if(empty){ empty.style.display='block'; empty.textContent='No active rate slabs found.'; }
+        msg('quotes-page-message','No active rate slabs found.');
         return;
       }
       if(empty) empty.style.display='none';
@@ -738,11 +738,11 @@
           if(q('sell-network')) q('sell-network').value=s.network || 'TRC20';
           if(q('sell-amount')) q('sell-amount').value=slabMin(s);
           document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-          msg('quote-calc-message','Rate selected. Amount auto-filled only as a starting value. You can edit amount within this slab range, then click Get Best Admin Rate.');
+          msg('quote-calc-message','Rate selected. Amount auto-filled only as a starting value. You can edit amount within this slab range, then click Get Best Live Rate.');
         });
         box.appendChild(card);
       });
-      msg('quotes-page-message',`Loaded ${slabs.length} admin quote slabs.`);
+      msg('quotes-page-message',`Loaded ${slabs.length} rate slabs.`);
     }catch(err){
       msg('quotes-page-message', err?.message || 'Could not load quotes.');
     }
@@ -770,7 +770,7 @@
 
       const wallet = await fetchWallet(client, coin, network);
       if(!wallet?.wallet_address){
-        msg('quote-calc-message','No active admin wallet found for this coin/network.');
+        msg('quote-calc-message','No active assigned wallet found for this coin/network.');
         return;
       }
 
@@ -781,7 +781,7 @@
       if(!container) return;
       container.innerHTML = '';
       if(!matching.length){
-        if(empty){ empty.style.display='block'; empty.textContent='No admin rate slab matches this amount.'; }
+        if(empty){ empty.style.display='block'; empty.textContent='No rate slab matches this amount.'; }
         msg('quote-calc-message','No matching admin slab found for this amount.');
         return;
       }
@@ -795,7 +795,7 @@
         card.innerHTML = `
           <div class="badge">${i===0 ? 'Recommended' : 'Remaining Balance'}</div>
           <h4>USDT / ${esc(network)}</h4>
-          <p>Confirm sell request with locked admin rate.</p>
+          <p>Confirm sell request with locked rate.</p>
           <div class="kv-list">
             <div class="kv-row"><span>Rate</span><strong>${rate.toFixed(4)} INR</strong></div>
             <div class="kv-row"><span>Estimated INR</span><strong>${inr(estimated)}</strong></div>

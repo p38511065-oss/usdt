@@ -116,7 +116,7 @@
     if (!ratesBody) return;
 
     if (!rows.length) {
-      renderEmpty('No active admin quote slabs found for USDT/TRC20.');
+      renderEmpty('No active rate slabs found for USDT/TRC20.');
       return;
     }
 
@@ -128,7 +128,7 @@
     if (marketPrice) marketPrice.textContent = rangeText;
     if (marketPriceMirror) marketPriceMirror.textContent = rangeText;
     if (marketChange) marketChange.textContent = 'Rate range by quantity slabs';
-    if (marketChangeMirror) marketChangeMirror.textContent = 'Exact rate shows after seller enters amount';
+    if (marketChangeMirror) marketChangeMirror.textContent = 'Exact rate shows after amount selection';
     if (terminalTooltipRate) terminalTooltipRate.textContent = money(highestRate);
     if (currentRateStat) currentRateStat.textContent = rangeText;
     if (highRateStat) highRateStat.textContent = money(highestRate);
@@ -185,7 +185,7 @@
 
   async function initLandingRates() {
     if (ratesBody) {
-      ratesBody.innerHTML = '<tr><td colspan="4">Loading admin-created USDT quote slabs...</td></tr>';
+      ratesBody.innerHTML = '<tr><td colspan="4">Loading verified USDT quote slabs...</td></tr>';
     }
 
     try {
@@ -193,8 +193,8 @@
       renderRows(rows);
       await loadLandingBatchStatus();
     } catch (error) {
-      console.warn('Landing admin quote slabs load error:', error);
-      renderEmpty('Could not load admin-created quote slabs. Please check Supabase RLS/select permission for quote_slabs.');
+      console.warn('Landing rate slabs load error:', error);
+      renderEmpty('Could not load verified rate slabs. Please try again later.');
     }
   }
 

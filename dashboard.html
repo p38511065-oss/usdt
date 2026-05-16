@@ -240,7 +240,13 @@
                 <div><label>Account Number</label><input id="payout-account-number" placeholder="Enter account number" /></div>
                 <div><label>IFSC Code</label><input id="payout-ifsc" placeholder="Enter IFSC" /></div>
                 <div><label>UPI ID</label><input id="payout-upi" placeholder="example@upi" /></div>
-                <div class="toggle-field"><label><input id="payout-primary" type="checkbox" /> Make primary payout method</label></div>
+                <div class="toggle-field payout-primary-toggle">
+                  <label class="switch-row">
+                    <input id="payout-primary" type="checkbox" />
+                    <span class="switch-ui"></span>
+                    <span>Make primary payout method</span>
+                  </label>
+                </div>
               </div>
               <div class="action-row top-gap-sm">
                 <button id="save-payout-account" class="btn btn-primary">Save Payout Method</button>
@@ -250,7 +256,8 @@
             </div>
             <div class="card">
               <div class="section-head"><h3>Payout Setup Notes</h3></div>
-              <ul class="clean-list">
+              <div id="primary-payout-preview" class="primary-payout-preview empty-state">No primary payout method yet.</div>
+              <ul class="clean-list top-gap-sm">
                 <li>Add bank account or UPI before submitting sell request.</li>
                 <li>Primary method will be auto-selected during sell flow.</li>
                 <li>Admin panel will see exact payout destination in each order.</li>

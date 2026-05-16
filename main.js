@@ -525,13 +525,20 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
     const { data: accounts } = await sellerClient.from('bank_accounts').select('*').eq('user_id', userId).order('is_primary', { ascending: false }).order('created_at', { ascending: false });
     const body = qs('payout-accounts-body');
     const select = qs('bank-account-select');
+    const cards = qs('payout-method-cards');
+    const primaryPreview = qs('primary-payout-preview');
     if (!body || !select) return;
+
     body.innerHTML = '';
     select.innerHTML = '';
+    if (cards) cards.innerHTML = '';
+
     if (!(accounts || []).length) {
       body.innerHTML = '<tr><td colspan="7">No payout method added yet.</td></tr>';
+      if (cards) cards.innerHTML = '<div class="empty-state">No saved payout method yet.</div>';
       select.innerHTML = '<option value="">No payout method found</option>';
       setHtml('selected-payout-summary', 'No payout method selected. Add a bank account or UPI ID first.');
+      if (primaryPreview) primaryPreview.innerHTML = 'No primary payout method yet.';
       setText('seller-active-payout-name', 'Not selected');
       setText('seller-active-payout-detail', 'Add bank / UPI');
       setText('seller-payout-preview-title', 'No payout method');
@@ -539,6 +546,7 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       setText('seller-payout-preview-status', 'Setup');
       return [];
     }
+
     const primaryAccount = (accounts || []).find((a) => a.is_primary) || (accounts || [])[0];
     if (primaryAccount) {
       const primaryDestination = payoutDestinationLabel(primaryAccount);
@@ -547,13 +555,28 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       setText('seller-payout-preview-title', primaryAccount.label || primaryAccount.bank_name || primaryAccount.upi_id || 'Payout Method');
       setText('seller-payout-preview-sub', primaryDestination);
       setText('seller-payout-preview-status', primaryAccount.is_active ? 'Active' : 'Inactive');
+
+      if (primaryPreview) {
+        const d = payoutDetailFromRow(primaryAccount);
+        primaryPreview.classList.remove('empty-state');
+        primaryPreview.innerHTML = `
+          <div class="primary-payout-title">
+            <strong>${escapeHtml(d.label || 'Primary Payout')}</strong>
+            <span>${primaryAccount.is_active ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div class="tiny-note">Holder: ${escapeHtml(d.holder || '-')}</div>
+          <div class="tiny-note break-anywhere">${d.method === 'upi' ? `UPI: ${escapeHtml(d.upi || '-')}` : `${escapeHtml(d.bank || '-')} • A/C ${escapeHtml(d.account || '-')} • IFSC ${escapeHtml(d.ifsc || '-')}`}</div>`;
+      }
     }
+
     accounts.forEach((row) => {
       const destination = payoutDestinationLabel(row);
-      const tr = document.createElement('tr');
       const d = payoutDetailFromRow(row);
+      const methodLabel = (d.method || 'bank').toUpperCase();
+
+      const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${escapeHtml((d.method || 'bank').toUpperCase())}</td>
+        <td>${escapeHtml(methodLabel)}</td>
         <td>
           <strong>${escapeHtml(d.label || '-')}</strong>
           <div class="tiny-note">Holder: ${escapeHtml(d.holder || '-')}</div>
@@ -568,7 +591,8 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         <td>${row.is_verified ? 'Yes' : 'No'}</td>
         <td>${chip(row.is_active ? 'active' : 'inactive')}</td>
         <td><div class="actions-row"><button class="btn btn-secondary btn-xs edit-payout">Edit</button><button class="btn btn-secondary btn-xs toggle-payout">${row.is_active ? 'Deactivate' : 'Activate'}</button></div></td>`;
-      tr.querySelector('.edit-payout').addEventListener('click', () => {
+
+      const bindEdit = (btn) => btn?.addEventListener('click', () => {
         qs('payout-edit-id').value = row.id;
         qs('payout-method').value = row.payment_method || 'bank';
         qs('payout-label').value = row.label || '';
@@ -580,12 +604,37 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
         qs('payout-primary').checked = !!row.is_primary;
         updatePayoutFieldVisibility();
         document.querySelector('.side-link[data-target="seller-payouts"]')?.click();
+        qs('seller-payouts')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-      tr.querySelector('.toggle-payout').addEventListener('click', async () => {
+
+      const bindToggle = (btn) => btn?.addEventListener('click', async () => {
         await sellerClient.from('bank_accounts').update({ is_active: !row.is_active }).eq('id', row.id);
         await renderPayoutAccounts(userId);
       });
+
+      bindEdit(tr.querySelector('.edit-payout'));
+      bindToggle(tr.querySelector('.toggle-payout'));
       body.appendChild(tr);
+
+      if (cards) {
+        const card = document.createElement('div');
+        card.className = 'payout-method-card';
+        card.innerHTML = `
+          <div class="payout-card-top">
+            <strong>${escapeHtml(d.label || methodLabel)}</strong>
+            <div class="payout-card-badges">
+              ${row.is_primary ? '<span class="mini-badge success">Primary</span>' : ''}
+              ${chip(row.is_active ? 'active' : 'inactive')}
+            </div>
+          </div>
+          <div class="payout-card-line">Type: <b>${escapeHtml(methodLabel)}</b></div>
+          <div class="payout-card-line">Holder: <b>${escapeHtml(d.holder || '-')}</b></div>
+          <div class="payout-card-line break-anywhere">${d.method === 'upi' ? `UPI: <b>${escapeHtml(d.upi || '-')}</b>` : `Bank: <b>${escapeHtml(d.bank || '-')}</b><br>A/C: <b>${escapeHtml(d.account || '-')}</b><br>IFSC: <b>${escapeHtml(d.ifsc || '-')}</b>`}</div>
+          <div class="actions-row top-gap-sm"><button class="btn btn-secondary btn-xs edit-payout-card">Edit</button><button class="btn btn-secondary btn-xs toggle-payout-card">${row.is_active ? 'Deactivate' : 'Activate'}</button></div>`;
+        bindEdit(card.querySelector('.edit-payout-card'));
+        bindToggle(card.querySelector('.toggle-payout-card'));
+        cards.appendChild(card);
+      }
 
       const opt = document.createElement('option');
       opt.value = row.id;
@@ -594,17 +643,25 @@ function bindInlineCopy(buttonId, text, copiedLabel = '✓') {
       if (row.is_primary) opt.selected = true;
       select.appendChild(opt);
     });
+
     onPayoutSelectorChange();
     return accounts || [];
   }
+
   function updatePayoutFieldVisibility() {
-    const method = val('payout-method');
+    const method = val('payout-method') || 'bank';
     ['payout-bank-name', 'payout-account-number', 'payout-ifsc'].forEach((id) => {
       const wrapper = qs(id)?.closest('div');
-      if (wrapper) wrapper.style.display = method === 'bank' ? '' : 'none';
+      if (wrapper) {
+        wrapper.style.display = method === 'bank' ? '' : 'none';
+        wrapper.classList.toggle('payout-field-hidden', method !== 'bank');
+      }
     });
     const upiWrap = qs('payout-upi')?.closest('div');
-    if (upiWrap) upiWrap.style.display = method === 'upi' ? '' : 'none';
+    if (upiWrap) {
+      upiWrap.style.display = method === 'upi' ? '' : 'none';
+      upiWrap.classList.toggle('payout-field-hidden', method !== 'upi');
+    }
   }
   function clearPayoutForm() {
     ['payout-edit-id','payout-label','payout-holder','payout-bank-name','payout-account-number','payout-ifsc','payout-upi'].forEach((id) => { if (qs(id)) qs(id).value = ''; });

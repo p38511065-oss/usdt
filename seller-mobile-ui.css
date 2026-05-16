@@ -1527,3 +1527,135 @@ body[data-page="seller-dashboard"] .panel-section.active{
   background:rgba(37,231,255,.10)!important;
   color:#25e7ff!important;
 }
+
+
+/* Payout page UI fix */
+.payout-primary-toggle{
+  display:flex!important;
+  align-items:center;
+  min-height:auto!important;
+  padding:0!important;
+}
+.switch-row{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%;
+  cursor:pointer;
+  color:#dce9ff;
+  font-weight:850;
+}
+.switch-row input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+.switch-ui{
+  width:46px;
+  height:26px;
+  border-radius:999px;
+  border:1px solid rgba(119,190,255,.20);
+  background:rgba(3,13,29,.78);
+  position:relative;
+  flex:0 0 auto;
+  transition:.2s ease;
+}
+.switch-ui::after{
+  content:"";
+  position:absolute;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  left:4px;
+  top:3px;
+  background:#9facbd;
+  transition:.2s ease;
+}
+.switch-row input:checked + .switch-ui{
+  background:linear-gradient(90deg,#25e7ff,#37ffc1);
+  border-color:transparent;
+}
+.switch-row input:checked + .switch-ui::after{
+  transform:translateX(19px);
+  background:#02101d;
+}
+.primary-payout-preview{
+  margin-bottom:14px!important;
+  padding:14px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(55,255,193,.18)!important;
+  background:rgba(55,255,193,.06)!important;
+}
+.primary-payout-title{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+}
+.primary-payout-title strong{
+  color:#fff;
+}
+.primary-payout-title span,
+.mini-badge{
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(55,255,193,.12);
+  color:#37ffc1;
+  font-size:11px;
+  font-weight:950;
+}
+.payout-method-cards{
+  display:none;
+  gap:12px;
+  margin-top:12px;
+}
+.payout-method-card{
+  padding:14px;
+  border-radius:20px;
+  border:1px solid rgba(119,190,255,.15);
+  background:
+    radial-gradient(circle at 95% 12%,rgba(37,231,255,.08),transparent 32%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(4,17,36,.96));
+}
+.payout-card-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.payout-card-badges{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.payout-card-line{
+  color:#aebbd0;
+  font-size:13px;
+  line-height:1.5;
+  margin:5px 0;
+}
+.payout-card-line b{
+  color:#eaf4ff;
+}
+#seller-payouts{
+  padding-bottom:140px!important;
+}
+@media(max-width:760px){
+  #seller-payouts .grid-2{
+    grid-template-columns:1fr!important;
+  }
+  #seller-payouts .table-wrap{
+    display:none!important;
+  }
+  .payout-method-cards{
+    display:grid!important;
+  }
+  #seller-payouts .card{
+    padding:14px!important;
+  }
+  .payout-card-top{
+    align-items:flex-start;
+  }
+}

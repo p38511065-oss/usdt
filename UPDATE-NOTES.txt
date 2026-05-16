@@ -346,3 +346,10 @@ Dashboard rate range fix:
 - Preview now shows USDT/TRC20 rate range: lowest to highest admin slab.
 - Note explains higher quantity may get higher rate.
 - Admin slabs preview still shows each quantity range with its own rate.
+
+Payout page UI fix:
+- Replaced large broken checkbox with clean toggle switch.
+- Bank/UPI fields hide/show properly.
+- Added primary payout preview in setup notes card.
+- Added mobile card layout for saved payout methods.
+- Added bottom spacing so bottom nav does not cover saved methods.

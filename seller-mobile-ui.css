@@ -1354,3 +1354,18 @@ body[data-page="seller-dashboard"] .panel-section.active{
     min-width:0;
   }
 }
+
+
+/* Sell step screen navigation fix */
+#seller-sell .sell-step-screen{
+  display:none!important;
+}
+#seller-sell .sell-step-screen.active{
+  display:block!important;
+}
+#seller-sell .sell-step-screen.active.hidden-flow-card{
+  display:block!important;
+}
+#seller-sell .sell-step-screen.step-hidden-temp{
+  display:none!important;
+}

@@ -959,10 +959,19 @@ async function renderDepositOrderBox(order) {
   function setSellStep(step) {
     const section = qs('seller-sell');
     if (!section) return;
+
     section.querySelectorAll('.sell-step-screen').forEach((el) => {
       const isActive = el.dataset.sellStep === step;
       el.classList.toggle('active', isActive);
+      if (isActive) {
+        el.style.display = 'block';
+        el.classList.remove('step-hidden-temp');
+      } else {
+        el.style.display = 'none';
+        el.classList.add('step-hidden-temp');
+      }
     });
+
     const order = ['details','rate','payment','tracking'];
     const activeIndex = order.indexOf(step);
     section.querySelectorAll('.sell-step-pills span').forEach((pill, idx) => {
@@ -979,6 +988,13 @@ async function renderDepositOrderBox(order) {
   function normalizeSearchText(value) {
     return String(value || '').toLowerCase().trim();
   }
+
+
+  // sell-step-delegated-back-fix
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#sell-step-back-rate')) setSellStep('details');
+    if (e.target.closest('#sell-step-back-payment')) setSellStep('rate');
+  });
 
 async function loadSellerStats(profile) {
     updateSellerPreviewRate();
@@ -1575,6 +1591,7 @@ async function loadReferralsSection(profile) {
         return;
       }
       empty.style.display = 'none';
+      setSellStep('rate');
 
       matchingSlabs
         .sort((a, b) => (selectedSellerQuote?.quote_slab_id === a.quote_slab_id ? -1 : 0) || Number(b.rate_inr || 0) - Number(a.rate_inr || 0))
@@ -1628,7 +1645,8 @@ async function loadReferralsSection(profile) {
             setSelectedQuoteBanner();
             await loadSellerStats(profile);
             document.querySelector('.side-link[data-target="seller-sell"]')?.click();
-            renderDepositOrderBox(order);
+            await renderDepositOrderBox(order);
+            setSellStep('payment');
           });
           container.appendChild(card);
         });
@@ -1687,6 +1705,7 @@ async function loadReferralsSection(profile) {
 
     await renderDepositOrderBox(activeOrder);
     qs('seller-order-payment-card')?.classList.remove('hidden-flow-card');
+    setSellStep(activeOrder.tx_hash ? 'tracking' : 'payment');
     if (activeOrder.tx_hash) qs('seller-order-tracking-card')?.classList.remove('hidden-flow-card');
 
     if (options.scroll) {

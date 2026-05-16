@@ -315,3 +315,9 @@ One-shot full update:
 - Admin filters/search added for Orders, KYC and Referral section.
 - Admin notification badge now updates from pending orders, KYC and referral withdrawals.
 - No SQL changes required.
+
+Sell step screen fix:
+- Get Best Admin Rate now switches to Rate screen reliably.
+- Create Sell Order now switches to Payment screen reliably.
+- Active order opens Payment/Tracking screen correctly.
+- Fixed hidden-flow-card CSS conflict for active step screens.

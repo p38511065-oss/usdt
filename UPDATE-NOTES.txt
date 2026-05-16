@@ -422,3 +422,10 @@ Batch waitlist clear + feedback update:
 - Waitlist table now only shows active waiting entries.
 - Batch control buttons show Processing... while running.
 - Batch status message clearly shows success/error after every action.
+
+Realtime + landing ticker fix:
+- Seller dashboard now subscribes to live database changes for orders, batches, KYC, referral, withdrawal and payout methods.
+- Admin dashboard now subscribes to live changes for orders, batches, KYC, referrals, waitlist, payout methods, slabs and wallets.
+- Live refresh uses debounce to avoid flickering.
+- Landing Smart Trust Ticker now renders generic messages immediately and no longer stays stuck on Loading.
+- Added realtime-live-updates.sql for Supabase Realtime publication.

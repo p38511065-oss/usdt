@@ -1608,8 +1608,26 @@ async function getActiveBatch(client = sellerClient) {
     const targets = targetIds.map((id) => qs(id)).filter(Boolean);
     if (!targets.length) return;
 
+    const renderTicker = (messages) => {
+      const html = `
+        <div class="ticker-shell">
+          <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
+          <div class="ticker-track-wrap">
+            <div class="ticker-track">${buildTickerItems(messages)}</div>
+          </div>
+        </div>`;
+      targets.forEach((el) => {
+        el.innerHTML = html;
+        el.classList.add('loaded');
+      });
+    };
+
+    // Instant fallback so ticker never stays on Loading...
+    renderTicker(buildGenericTickerMessages());
+
     try {
-      const { data, error } = await sellerClient
+      const client = (page === 'admin-dashboard') ? adminClient : sellerClient;
+      const { data, error } = await client
         .from('sell_orders')
         .select('crypto_amount,estimated_inr_payout,status,created_at,profiles!sell_orders_user_id_fkey(full_name)')
         .in('status', ['completed','paid'])
@@ -1638,31 +1656,9 @@ async function getActiveBatch(client = sellerClient) {
         }
       }
 
-      const html = `
-        <div class="ticker-shell">
-          <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
-          <div class="ticker-track-wrap">
-            <div class="ticker-track">${buildTickerItems(messages)}</div>
-          </div>
-        </div>`;
-
-      targets.forEach((el) => {
-        el.innerHTML = html;
-        el.classList.add('loaded');
-      });
+      renderTicker(messages);
     } catch (err) {
-      const fallback = buildGenericTickerMessages();
-      const html = `
-        <div class="ticker-shell">
-          <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
-          <div class="ticker-track-wrap">
-            <div class="ticker-track">${buildTickerItems(fallback)}</div>
-          </div>
-        </div>`;
-      targets.forEach((el) => {
-        el.innerHTML = html;
-        el.classList.add('loaded');
-      });
+      renderTicker(buildGenericTickerMessages());
     }
   }
 
@@ -2560,7 +2556,80 @@ async function loadReferralsSection(profile) {
     });
   }
 
-  async function loadSellerDashboard() {
+  
+  function debounceLiveRefresh(fn, delay = 900) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  function setupSellerRealtime(profile) {
+    if (!profile?.id || window.__sellerRealtimeBound) return;
+    window.__sellerRealtimeBound = true;
+
+    const refreshSeller = debounceLiveRefresh(async () => {
+      try {
+        await Promise.all([
+          loadSellerStats(profile),
+          renderSellerBatchBanners(),
+          loadReferralsSection(profile),
+          loadKycSection(profile),
+          renderPayoutAccounts(profile.id),
+          loadSmartTrustTicker(['seller-smart-trust-ticker'])
+        ]);
+      } catch (e) {
+        console.warn('Seller realtime refresh failed:', e?.message || e);
+      }
+    }, 1000);
+
+    sellerClient
+      .channel('seller-live-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sell_orders', filter: `user_id=eq.${profile.id}` }, refreshSeller)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_batches' }, refreshSeller)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kyc_submissions', filter: `user_id=eq.${profile.id}` }, refreshSeller)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_rewards', filter: `referrer_user_id=eq.${profile.id}` }, refreshSeller)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_withdrawals', filter: `user_id=eq.${profile.id}` }, refreshSeller)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bank_accounts', filter: `user_id=eq.${profile.id}` }, refreshSeller)
+      .subscribe((status) => console.log('Seller realtime:', status));
+  }
+
+  function setupAdminRealtime() {
+    if (window.__adminRealtimeBound) return;
+    window.__adminRealtimeBound = true;
+
+    const refreshAdmin = debounceLiveRefresh(async () => {
+      try {
+        await Promise.all([
+          loadAdminStats(),
+          loadAdminOrders(),
+          loadAdminKyc(),
+          loadAdminUsers(),
+          loadAdminWallets(),
+          loadAdminQuotes(),
+          loadAdminRates(),
+          loadAdminSlabs(),
+          loadAdminReferralPanel(),
+          refreshAdminBatchControl(),
+          updateAdminNotificationCount(),
+          loadSmartTrustTicker(['landing-smart-trust-ticker'])
+        ]);
+      } catch (e) {
+        console.warn('Admin realtime refresh failed:', e?.message || e);
+      }
+    }, 1000);
+
+    ['sell_orders','order_batches','kyc_submissions','referral_rewards','referral_withdrawals','batch_waitlist','bank_accounts','quote_slabs','wallet_pools'].forEach((table) => {
+      adminClient
+        .channel(`admin-live-${table}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, refreshAdmin)
+        .subscribe((status) => console.log(`Admin realtime ${table}:`, status));
+    });
+  }
+
+
+async function loadSellerDashboard() {
     const user = await ensureAuth('login.html', sellerClient);
     if (!user) return;
     bindSidebar();
@@ -2633,6 +2702,7 @@ async function loadReferralsSection(profile) {
       renderSellerDashboardQuoteSlabs(),
       loadKycSection(profile)
     ]);
+    setupSellerRealtime(profile);
   }
 
   function resetQuoteForm() {
@@ -4021,6 +4091,7 @@ await Promise.all([
       loadAdminOrders(),
       loadAdminLogs()
     ]);
+    setupAdminRealtime();
   }
 
   if (page === 'referrals') {

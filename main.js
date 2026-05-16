@@ -11,6 +11,39 @@
     });
   });
 
+
+  function renderLandingTickerFallback() {
+    const el = document.getElementById('landing-smart-trust-ticker');
+    if (!el) return;
+
+    const messages = [
+      '🛡 USDT/TRC20 orders verified before payout',
+      '⚡ INR payout processed after admin confirmation',
+      '🔒 Duplicate TX hash protection enabled',
+      '🔥 Limited batch slots available for verified sellers',
+      '✅ Manual order tracking from crypto sent to paid',
+      '💬 Telegram support available for seller help',
+      '📌 Admin-created quantity slab rates live',
+      '🚀 Sell USDT with clear rate and payout tracking'
+    ];
+
+    const items = [...messages, ...messages]
+      .map((msg) => `<span class="ticker-pill">${msg}</span>`)
+      .join('');
+
+    el.innerHTML = `
+      <div class="ticker-shell">
+        <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
+        <div class="ticker-track-wrap">
+          <div class="ticker-track">${items}</div>
+        </div>
+      </div>`;
+    el.classList.add('loaded');
+  }
+
+  renderLandingTickerFallback();
+
+
   if (!hasConfig) {
     console.warn('Supabase config missing');
     return;

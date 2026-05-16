@@ -12,7 +12,7 @@
   });
 
 
-  function renderLandingTickerFallback() {
+  function renderLandingTickerFallbackSafe() {
     const el = document.getElementById('landing-smart-trust-ticker');
     if (!el) return;
 
@@ -27,10 +27,7 @@
       '🚀 Sell USDT with clear rate and payout tracking'
     ];
 
-    const items = [...messages, ...messages]
-      .map((msg) => `<span class="ticker-pill">${msg}</span>`)
-      .join('');
-
+    const items = messages.concat(messages).map((msg) => `<span class="ticker-pill">${msg}</span>`).join('');
     el.innerHTML = `
       <div class="ticker-shell">
         <div class="ticker-label"><span>● LIVE</span> Trust Feed</div>
@@ -41,7 +38,7 @@
     el.classList.add('loaded');
   }
 
-  renderLandingTickerFallback();
+  renderLandingTickerFallbackSafe();
 
 
   if (!hasConfig) {
@@ -1641,6 +1638,7 @@ async function getActiveBatch(client = sellerClient) {
     const targets = targetIds.map((id) => qs(id)).filter(Boolean);
     if (!targets.length) return;
 
+    const generic = buildGenericTickerMessages();
     const renderTicker = (messages) => {
       const html = `
         <div class="ticker-shell">
@@ -1655,12 +1653,10 @@ async function getActiveBatch(client = sellerClient) {
       });
     };
 
-    // Instant fallback so ticker never stays on Loading...
-    renderTicker(buildGenericTickerMessages());
+    renderTicker(generic);
 
     try {
-      const client = (page === 'admin-dashboard') ? adminClient : sellerClient;
-      const { data, error } = await client
+      const { data, error } = await sellerClient
         .from('sell_orders')
         .select('crypto_amount,estimated_inr_payout,status,created_at,profiles!sell_orders_user_id_fkey(full_name)')
         .in('status', ['completed','paid'])
@@ -1679,7 +1675,7 @@ async function getActiveBatch(client = sellerClient) {
           return `✅ ${name} successfully sold ${usdt} USDT`;
         });
       } else {
-        messages = buildGenericTickerMessages();
+        messages = generic;
         if (completed.length) {
           const realMsgs = completed.slice(0, 2).map((row) => {
             const usdt = Number(row.crypto_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
@@ -1691,7 +1687,7 @@ async function getActiveBatch(client = sellerClient) {
 
       renderTicker(messages);
     } catch (err) {
-      renderTicker(buildGenericTickerMessages());
+      renderTicker(generic);
     }
   }
 

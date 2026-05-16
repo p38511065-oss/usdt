@@ -843,7 +843,7 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
 }
 
 
-/* Landing Premium Smart Trust Ticker hard fix */
+/* Safe landing premium smart trust ticker */
 .premium-trust-ticker-section{
   padding:12px 18px;
   background:rgba(3,13,29,.92);
@@ -903,9 +903,6 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
   width:max-content;
   animation:premiumTickerMove 34s linear infinite;
 }
-.premium-trust-ticker:hover .ticker-track{
-  animation-play-state:paused;
-}
 .ticker-pill{
   display:inline-flex;
   align-items:center;
@@ -929,9 +926,5 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
   }
   .ticker-label{
     width:max-content;
-  }
-  .ticker-track-wrap{
-    mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent);
-    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent);
   }
 }

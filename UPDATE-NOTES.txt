@@ -430,8 +430,8 @@ Realtime + landing ticker fix:
 - Landing Smart Trust Ticker now renders generic messages immediately and no longer stays stuck on Loading.
 - Added realtime-live-updates.sql for Supabase Realtime publication.
 
-Landing ticker hard fix:
-- Added immediate landing ticker fallback before Supabase config check.
-- Added inline landing fallback script directly in index.html so ticker never remains on Loading.
-- Landing ticker now works even if Supabase config/realtime is delayed or blocked.
-- Existing Supabase completed-order ticker can still update it later.
+Homepage restore + safe ticker fix:
+- Restored homepage from previous stable realtime version so live rates, live quotes, chart and footer remain intact.
+- Removed risky inline ticker script from index.html.
+- Added safe main.js landing ticker fallback so ticker does not stay on Loading.
+- No SQL required beyond realtime SQL already provided.

@@ -64,34 +64,122 @@
       <div class="ticker-loading">Loading verified activity...</div>
     </div>
   </section>
-    <!-- landing-ticker-inline-fallback -->
-    <script>
-      (function () {
-        function renderTicker() {
-          var el = document.getElementById('landing-smart-trust-ticker');
-          if (!el || (el.classList && el.classList.contains('loaded'))) return;
-          var messages = [
-            '🛡 USDT/TRC20 orders verified before payout',
-            '⚡ INR payout processed after admin confirmation',
-            '🔒 Duplicate TX hash protection enabled',
-            '🔥 Limited batch slots available for verified sellers',
-            '✅ Manual order tracking from crypto sent to paid',
-            '💬 Telegram support available for seller help',
-            '📌 Admin-created quantity slab rates live',
-            '🚀 Sell USDT with clear rate and payout tracking'
-          ];
-          var html = messages.concat(messages).map(function (msg) {
-            return '<span class="ticker-pill">' + msg + '</span>';
-          }).join('');
-          el.innerHTML = '<div class="ticker-shell"><div class="ticker-label"><span>● LIVE</span> Trust Feed</div><div class="ticker-track-wrap"><div class="ticker-track">' + html + '</div></div></div>';
-          el.classList.add('loaded');
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', renderTicker);
-        } else {
-          renderTicker();
-        }
-        setTimeout(renderTicker, 800);
-      })();
-    </script>
 
+
+      <section class="neo-section">
+        <div class="neo-section-head">
+          <h2>Live USDT to INR Market</h2>
+          <span class="neo-live">● Live</span>
+        </div>
+        <div class="neo-tabs">
+          <button class="neo-tab active">USDT / INR</button>
+          <button class="neo-tab">Fast Payout</button>
+          <button class="neo-tab">Priority</button>
+          <button class="neo-tab">Bulk OTC</button>
+        </div>
+        <div class="neo-market-row">
+          <div>
+            <div class="neo-pair">USDT / INR</div>
+            <div class="neo-price" id="lpMarketPriceMirror">Admin Rate</div>
+          </div>
+          <div class="neo-change" id="lpMarketChangeMirror">Admin-created slabs</div>
+        </div>
+        <div class="neo-chart"></div>
+      </section>
+
+      <section id="rates" class="neo-section">
+        <div class="neo-section-head">
+          <h2>USDT to INR Best Rates</h2>
+          <span class="neo-live">Higher amount = better rate</span>
+        </div>
+        <div class="neo-rates-wrap">
+          <table class="neo-rates">
+            <thead>
+              <tr><th>Amount Range</th><th>Rate / USDT</th><th>Quote Type</th><th>Action</th></tr>
+            </thead>
+            <tbody id="lpRatesBody">
+              <tr><td colspan="4">Loading active quote slabs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="neo-section">
+        <div class="neo-section-head"><h2>How it works</h2><span class="neo-live">4 simple steps</span></div>
+        <div class="neo-steps">
+          <div class="neo-step"><b>1</b><h3>Choose Quote</h3><p>View all available slabs and select the best USDT rate.</p></div>
+          <div class="neo-step"><b>2</b><h3>Send USDT</h3><p>Use the assigned wallet address or QR code.</p></div>
+          <div class="neo-step"><b>3</b><h3>Submit TX Hash</h3><p>Submit your blockchain transaction hash for review.</p></div>
+          <div class="neo-step"><b>4</b><h3>Receive INR</h3><p>Admin verifies and processes payout to Bank/UPI.</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  
+  
+  
+  <section class="final-copy-polish" id="usdt-trc20-info">
+    <div class="final-copy-wrap">
+      <div>
+        <span class="section-kicker">USDT TRC20 Only</span>
+        <h2>Admin slab rates, manual verification and secure tracking</h2>
+        <p>Every sell order uses admin-created quantity slabs. Seller receives the exact rate after amount match, submits TX hash, and admin verifies before INR payout.</p>
+      </div>
+      <div class="final-copy-points">
+        <span>✓ KYC required</span>
+        <span>✓ Manual payout verification</span>
+        <span>✓ Duplicate TX hash protection</span>
+        <span>✓ Telegram support</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-polish-section" id="trust-safety">
+    <div class="trust-polish-wrap">
+      <div class="section-kicker">Trust & Safety</div>
+      <h2>Simple USDT sell flow with clear tracking</h2>
+      <p class="trust-lead">Admin-created rates, KYC-based order review, duplicate TX protection and Telegram support help sellers understand every step.</p>
+      <div class="trust-polish-grid">
+        <div class="trust-polish-card"><strong>Admin Rates</strong><span>Rates come from admin-created slabs, not random placeholders.</span></div>
+        <div class="trust-polish-card"><strong>Order Tracking</strong><span>Seller can track transfer, verification, payout progress and paid status.</span></div>
+        <div class="trust-polish-card"><strong>TX Protection</strong><span>Duplicate TX hash is blocked to prevent repeated claims.</span></div>
+        <div class="trust-polish-card"><strong>Support</strong><span>Telegram support is available for order, payout, KYC and referral help.</span></div>
+      </div>
+      <div class="risk-mini-note">Crypto transactions involve market and network risks. KYC and verification may be required before payout.</div>
+    </div>
+  </section>
+
+  <footer class="site-footer final-site-footer">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Crypto Sell to INR Desk</div>
+        <p>Admin-created USDT/INR rate slabs, seller order tracking and verified Bank/UPI payout process.</p>
+        <a class="footer-support-btn" href="https://t.me/anmolaro" target="_blank" rel="noopener">Telegram Support: @anmolaro</a>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <a href="#best-rates">Best Rates</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="login.html">Seller Login</a>
+      </div>
+      <div>
+        <h4>Legal & Risk</h4>
+        <span>Terms & Conditions</span>
+        <span>Privacy Policy</span>
+        <span>Risk Notice</span>
+        <span>KYC / AML Check</span>
+      </div>
+      <div>
+        <h4>Important</h4>
+        <p>Crypto transactions involve market and network risks. Rates are admin-created and may change before order confirmation. KYC and verification may be required.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Crypto Sell to INR Desk • Secure OTC Operations</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="landing-home.js"></script>
+</body>
+</html>

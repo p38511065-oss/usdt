@@ -201,3 +201,10 @@ Duplicate TX hash fix:
 - Seller side checks if TX hash already exists in another order.
 - Duplicate TX hash shows clear error message.
 - Added database unique index in tx-hash-duplicate-fix.sql.
+
+Referral working + mobile fix:
+- Referral code captured from ?ref= and stored until profile creation.
+- Seller profile now resolves referred_by from referral_code.
+- Referral rewards generate after admin marks referred seller order completed/paid.
+- Added referral-working-final-fix.sql with tables, policies, code backfill and old completed reward backfill.
+- Referral seller page mobile layout improved.

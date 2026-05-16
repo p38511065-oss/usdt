@@ -817,3 +817,29 @@ body[data-page="seller-dashboard"] .panel-section.active{
   border-color:rgba(255,77,109,.30)!important;
   background:rgba(255,77,109,.10)!important;
 }
+
+
+/* Referral mobile final fix */
+.referral-how-it-works-card{margin-bottom:14px!important}
+.referral-steps-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.referral-steps-mini span{
+  padding:10px 8px;border-radius:14px;background:rgba(37,231,255,.08);
+  border:1px solid rgba(37,231,255,.16);color:#dff9ff;font-weight:850;text-align:center;font-size:12px
+}
+#seller-referrals .section-head{gap:10px}
+#seller-referrals .copy-line{align-items:center}
+#seller-referrals .copy-line span{min-width:0;overflow-wrap:anywhere;white-space:normal!important}
+#seller-referrals .table-wrap{overflow-x:auto}
+@media(max-width:760px){
+  #seller-referrals .section-head{align-items:flex-start!important;flex-direction:column!important}
+  #seller-referrals .referral-wallet-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
+  #seller-referrals .referral-wallet-card{padding:14px!important;border-radius:18px!important}
+  #seller-referrals .referral-wallet-card strong{font-size:22px!important;overflow-wrap:anywhere}
+  #seller-referrals .grid-2{grid-template-columns:1fr!important}
+  #seller-referrals .copy-line{display:grid!important;grid-template-columns:1fr auto;gap:8px!important;padding:10px!important}
+  .referral-steps-mini{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  #seller-referrals .referral-wallet-grid{grid-template-columns:1fr!important}
+  .referral-steps-mini{grid-template-columns:1fr}
+}

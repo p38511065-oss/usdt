@@ -45,7 +45,41 @@
     const seed = (mobile || user?.email || user?.id || '').replace(/\D/g, '').slice(-5) || String(user?.id || '').slice(0, 5).replace(/-/g, '').toUpperCase();
     return 'SELL' + seed;
   }
-  async function ensureSellerProfileRecord(user, extra = {}) {
+  
+  function getReferralCodeFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = (params.get('ref') || params.get('referral') || params.get('code') || '').trim();
+      if (ref) {
+        localStorage.setItem('pending_referral_code', ref);
+        return ref;
+      }
+      return (localStorage.getItem('pending_referral_code') || '').trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  async function resolveReferrerId(referralCode, currentUserId = null) {
+    const code = String(referralCode || '').trim();
+    if (!code) return null;
+
+    const { data, error } = await sellerClient
+      .from('profiles')
+      .select('id, referral_code')
+      .eq('referral_code', code)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Referral lookup failed:', error.message);
+      return null;
+    }
+
+    if (!data?.id || data.id === currentUserId) return null;
+    return data.id;
+  }
+
+async function ensureSellerProfileRecord(user, extra = {}) {
     if (!user?.id) return null;
     const email = user.email || extra.email || '';
     const meta = user.user_metadata || {};
@@ -70,8 +104,14 @@
       referral_code: existing?.referral_code || referralCode
     };
 
-    if (extra.referred_by && extra.referred_by !== user.id && !existing?.referred_by) {
-      payload.referred_by = extra.referred_by;
+    let resolvedReferrerId = extra.referred_by || null;
+    if (!resolvedReferrerId) {
+      const pendingReferralCode = extra.referral_code || getReferralCodeFromUrl();
+      resolvedReferrerId = await resolveReferrerId(pendingReferralCode, user.id);
+    }
+
+    if (resolvedReferrerId && resolvedReferrerId !== user.id && !existing?.referred_by) {
+      payload.referred_by = resolvedReferrerId;
     }
 
     const { error } = await sellerClient.from('profiles').upsert(payload, { onConflict: 'id' });
@@ -81,6 +121,9 @@
     }
 
     const { data } = await sellerClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if ((data || payload)?.referred_by) {
+      try { localStorage.removeItem('pending_referral_code'); } catch (_) {}
+    }
     return data || payload;
   }
   function bindSidebar() {
@@ -949,13 +992,14 @@ async function renderDepositOrderBox(order) {
   }
 
   async function loadReferralsSection(profile) {
-    const origin = window.location.origin.includes('http') ? window.location.origin : '';
+    const origin = window.location.origin && window.location.origin.includes('http') ? window.location.origin : window.location.href.split('/').slice(0,-1).join('/');
     const refCode = profile.referral_code || '-';
     const refLink = `${origin}/login.html?ref=${refCode}`;
     setText('ref-code-box', refCode);
     setText('ref-link-box', refLink);
     qs('copy-ref-code')?.addEventListener('click', async () => { const ok = await copyText(refCode); flashInlineCopyState(qs('copy-ref-code'), ok, '✓'); });
     qs('copy-ref-link')?.addEventListener('click', async () => { const ok = await copyText(refLink); flashInlineCopyState(qs('copy-ref-link'), ok, '✓'); });
+    qs('refresh-referrals')?.addEventListener('click', () => loadReferralsSection(profile));
 
     const [{ data: referredUsers }, { data: rewards }, { data: withdrawals }] = await Promise.all([
       sellerClient.from('profiles').select('id,user_status').eq('referred_by', profile.id),
@@ -1967,13 +2011,16 @@ async function renderDepositOrderBox(order) {
         .eq('id', orderId)
         .single();
 
-      if (orderError || !order || order.status !== 'completed') return;
+      if (orderError || !order) return;
+      if (!['completed','paid'].includes(String(order.status || '').toLowerCase())) return;
 
-      const { data: sellerProfile } = await adminClient
+      const { data: sellerProfile, error: profileError } = await adminClient
         .from('profiles')
         .select('id,referred_by')
         .eq('id', order.user_id)
         .single();
+
+      if (profileError || !sellerProfile) return;
 
       const referrerId = sellerProfile?.referred_by;
       if (!referrerId || referrerId === order.user_id) return;
@@ -1992,7 +2039,7 @@ async function renderDepositOrderBox(order) {
       const rewardPercent = 0.10;
       const rewardAmount = +(orderAmount * 0.001).toFixed(2);
 
-      await adminClient.from('referral_rewards').insert({
+      const { error: insertError } = await adminClient.from('referral_rewards').insert({
         referrer_user_id: referrerId,
         referred_user_id: order.user_id,
         order_id: order.id,
@@ -2001,10 +2048,13 @@ async function renderDepositOrderBox(order) {
         reward_amount_inr: rewardAmount,
         reward_status: 'pending'
       });
+
+      if (insertError) console.warn('Referral reward insert failed:', insertError.message);
     } catch (e) {
       console.warn('Referral reward generation failed', e);
     }
   }
+
 
   function availableReferralBalance(rewards, withdrawals) {
     const earned = (rewards || []).filter((r) => ['pending','approved','earned'].includes(r.reward_status)).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);

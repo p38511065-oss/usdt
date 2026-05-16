@@ -1444,6 +1444,7 @@ async function getActiveBatch(client = sellerClient) {
       const { data } = await adminClient
         .from('batch_waitlist')
         .select('*, profiles:user_id(full_name,email,mobile)')
+        .eq('status', 'waiting')
         .order('created_at', { ascending: false })
         .limit(30);
       waitBody.innerHTML = !(data || []).length
@@ -1458,60 +1459,116 @@ async function getActiveBatch(client = sellerClient) {
   }
 
   function setupAdminBatchControls() {
-    qs('save-new-batch')?.addEventListener('click', async () => {
-      const payload = {
-        batch_name: selectedBatchName(),
-        order_limit: Number(val('batch-order-limit') || 0),
-        usdt_capacity: Number(val('batch-usdt-capacity') || 0),
-        used_orders: 0,
-        used_usdt: 0,
-        message: val('batch-message') || 'USDT/TRC20 batch live now',
-        status: 'active',
-        accept_orders: true
-      };
-      if (!payload.order_limit || !payload.usdt_capacity) return setText('batch-message-status', 'Please enter order slots and USDT capacity.');
-      await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('status', 'active');
-      const { error } = await adminClient.from('order_batches').insert(payload);
-      if (error) return setText('batch-message-status', error.message);
-      setText('batch-message-status', 'New batch created.');
-      await refreshAdminBatchControl();
+    const setBatchStatus = (message, type = 'info') => {
+      const el = qs('batch-message-status');
+      if (!el) return;
+      el.textContent = message || '';
+      el.className = `status-text batch-status-text ${type}`;
+    };
+
+    const withButtonProcessing = async (btn, label, task) => {
+      const original = btn?.textContent || '';
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Processing...';
+        }
+        setBatchStatus(`${label} processing...`, 'processing');
+        await task();
+        setBatchStatus(`${label} done successfully.`, 'success');
+        try { showAppToast?.(`${label} done.`); } catch (_) {}
+      } catch (err) {
+        setBatchStatus(err?.message || `${label} failed.`, 'error');
+        alert(err?.message || `${label} failed.`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      }
+    };
+
+    qs('save-new-batch')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      await withButtonProcessing(btn, 'New batch create', async () => {
+        const payload = {
+          batch_name: selectedBatchName(),
+          order_limit: Number(val('batch-order-limit') || 0),
+          usdt_capacity: Number(val('batch-usdt-capacity') || 0),
+          used_orders: 0,
+          used_usdt: 0,
+          message: val('batch-message') || 'USDT/TRC20 batch live now',
+          status: 'active',
+          accept_orders: true
+        };
+
+        if (!payload.order_limit || !payload.usdt_capacity) {
+          throw new Error('Please enter order slots and USDT capacity.');
+        }
+
+        await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('status', 'active');
+
+        const { error } = await adminClient.from('order_batches').insert(payload);
+        if (error) throw error;
+
+        // Clear old waitlist/messages after new batch opens.
+        await adminClient
+          .from('batch_waitlist')
+          .update({ status: 'batch_opened' })
+          .eq('status', 'waiting');
+
+        await refreshAdminBatchControl();
+        setBatchStatus('New batch created. Old waitlist cleared.', 'success');
+      });
     });
 
-    qs('add-more-slots')?.addEventListener('click', async () => {
-      const batch = await getActiveBatch(adminClient);
-      if (!batch) return setText('batch-message-status', 'No active batch found.');
+    qs('add-more-slots')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
       const add = Number(prompt('Add how many slots?', '10') || 0);
       if (!add) return;
-      const { error } = await adminClient.from('order_batches').update({ order_limit: Number(batch.order_limit || 0) + add }).eq('id', batch.id);
-      if (error) return setText('batch-message-status', error.message);
-      await refreshAdminBatchControl();
+      await withButtonProcessing(btn, 'Add slots', async () => {
+        const batch = await getActiveBatch(adminClient);
+        if (!batch) throw new Error('No active batch found.');
+        const { error } = await adminClient.from('order_batches').update({ order_limit: Number(batch.order_limit || 0) + add }).eq('id', batch.id);
+        if (error) throw error;
+        await refreshAdminBatchControl();
+      });
     });
 
-    qs('add-more-usdt')?.addEventListener('click', async () => {
-      const batch = await getActiveBatch(adminClient);
-      if (!batch) return setText('batch-message-status', 'No active batch found.');
+    qs('add-more-usdt')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
       const add = Number(prompt('Add how much USDT capacity?', '1000') || 0);
       if (!add) return;
-      const { error } = await adminClient.from('order_batches').update({ usdt_capacity: Number(batch.usdt_capacity || 0) + add }).eq('id', batch.id);
-      if (error) return setText('batch-message-status', error.message);
-      await refreshAdminBatchControl();
+      await withButtonProcessing(btn, 'Add USDT capacity', async () => {
+        const batch = await getActiveBatch(adminClient);
+        if (!batch) throw new Error('No active batch found.');
+        const { error } = await adminClient.from('order_batches').update({ usdt_capacity: Number(batch.usdt_capacity || 0) + add }).eq('id', batch.id);
+        if (error) throw error;
+        await refreshAdminBatchControl();
+      });
     });
 
-    qs('pause-resume-batch')?.addEventListener('click', async () => {
-      const batch = await getActiveBatch(adminClient);
-      if (!batch) return setText('batch-message-status', 'No active batch found.');
-      const { error } = await adminClient.from('order_batches').update({ accept_orders: batch.accept_orders === false }).eq('id', batch.id);
-      if (error) return setText('batch-message-status', error.message);
-      await refreshAdminBatchControl();
+    qs('pause-resume-batch')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      await withButtonProcessing(btn, 'Pause / Resume batch', async () => {
+        const batch = await getActiveBatch(adminClient);
+        if (!batch) throw new Error('No active batch found.');
+        const { error } = await adminClient.from('order_batches').update({ accept_orders: batch.accept_orders === false }).eq('id', batch.id);
+        if (error) throw error;
+        await refreshAdminBatchControl();
+      });
     });
 
-    qs('close-batch')?.addEventListener('click', async () => {
-      const batch = await getActiveBatch(adminClient);
-      if (!batch) return setText('batch-message-status', 'No active batch found.');
+    qs('close-batch')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
       if (!confirm('Close current batch?')) return;
-      const { error } = await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('id', batch.id);
-      if (error) return setText('batch-message-status', error.message);
-      await refreshAdminBatchControl();
+      await withButtonProcessing(btn, 'Close batch', async () => {
+        const batch = await getActiveBatch(adminClient);
+        if (!batch) throw new Error('No active batch found.');
+        const { error } = await adminClient.from('order_batches').update({ status: 'closed', accept_orders: false }).eq('id', batch.id);
+        if (error) throw error;
+        await refreshAdminBatchControl();
+      });
     });
   }
 

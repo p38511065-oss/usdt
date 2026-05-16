@@ -2664,3 +2664,34 @@ body.admin-app-ui-v2 .admin-notification-item small{
   background:rgba(119,190,255,.08);
   border:1px solid rgba(119,190,255,.12);
 }
+
+
+/* Batch action feedback */
+.batch-status-text{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  font-weight:850;
+  border:1px solid rgba(119,190,255,.12);
+  background:rgba(5,18,39,.55);
+  color:#aebbd0;
+}
+.batch-status-text.processing{
+  color:#25e7ff;
+  border-color:rgba(37,231,255,.22);
+  background:rgba(37,231,255,.08);
+}
+.batch-status-text.success{
+  color:#37ffc1;
+  border-color:rgba(55,255,193,.22);
+  background:rgba(55,255,193,.08);
+}
+.batch-status-text.error{
+  color:#ffb3b3;
+  border-color:rgba(255,123,123,.24);
+  background:rgba(255,123,123,.08);
+}
+.admin-batch-control-card .btn:disabled{
+  opacity:.58!important;
+  cursor:wait!important;
+}

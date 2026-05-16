@@ -416,3 +416,9 @@ Premium Smart Trust Ticker update:
 - If completed orders are fewer than 5, ticker shows generic trust/batch/payment messages to avoid repeating one name.
 - No full names, phone numbers, or private payout details are shown.
 - No SQL required.
+
+Batch waitlist clear + feedback update:
+- Creating a new batch now clears old waitlist entries by marking them batch_opened.
+- Waitlist table now only shows active waiting entries.
+- Batch control buttons show Processing... while running.
+- Batch status message clearly shows success/error after every action.

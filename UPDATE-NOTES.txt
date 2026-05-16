@@ -403,3 +403,9 @@ Final premium batch banner update:
 - Sell USDT CTA is larger and more visible.
 - Mobile layout stacks cleanly.
 - Includes previous batch trigger count fix.
+
+Final bug fixes:
+- Batch banner Sell USDT Now button works via delegated side-link handler.
+- KYC approve/reject actions are hidden after final status, preventing approved KYC from being rejected again.
+- Referral reward/withdrawal actions are hidden after paid/rejected final status.
+- Admin Recent Order timeline no longer shows Crypto Received as ticked just because seller submitted TX; it stays current until admin flow progresses.

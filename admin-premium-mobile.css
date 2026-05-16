@@ -2652,3 +2652,15 @@ body.admin-app-ui-v2 .admin-notification-item small{
 #batch-custom-name-wrap.hidden-flow-card{
   display:none!important;
 }
+
+
+/* Final bug fixes: disabled/final admin actions */
+.actions-stack .tiny-note,
+.actions-row .tiny-note{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(119,190,255,.08);
+  border:1px solid rgba(119,190,255,.12);
+}

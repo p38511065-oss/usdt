@@ -126,7 +126,36 @@ async function ensureSellerProfileRecord(user, extra = {}) {
     }
     return data || payload;
   }
-  function bindSidebar() {
+  
+  // Delegated side-link handler for dynamically inserted buttons like batch banner Sell USDT Now
+  if (!window.__delegatedSideLinkBound) {
+    window.__delegatedSideLinkBound = true;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.side-link[data-target]');
+      if (!btn) return;
+      const targetId = btn.dataset.target;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      e.preventDefault();
+
+      document.querySelectorAll('.side-link').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.panel-section').forEach((s) => s.classList.remove('active'));
+
+      btn.classList.add('active');
+      const navBtn = document.querySelector(`.side-link[data-target="${targetId}"]`);
+      navBtn?.classList.add('active');
+      target.classList.add('active');
+
+      if (targetId === 'admin-referrals') loadAdminReferralPanel?.();
+      if (targetId === 'admin-overview') renderAdminOverviewRecentOrder?.();
+      if (history.replaceState) history.replaceState(null, '', '#' + targetId);
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+function bindSidebar() {
     document.querySelectorAll('.side-link').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.side-link').forEach((b) => b.classList.remove('active'));
@@ -2987,6 +3016,7 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
         completed_at: status === 'completed' ? new Date().toISOString() : null
       };
 
+
       const { error } = await adminClient
         .from('sell_orders')
         .update(payload)
@@ -3211,14 +3241,13 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
         </td>
         <td>
           <div class="actions-row">
-            <button class="btn btn-primary btn-xs kyc-approve">Approve</button>
-            <button class="btn btn-danger btn-xs kyc-reject">Reject</button>
+            ${['pending','submitted'].includes(String(row.status || '').toLowerCase()) ? '<button class="btn btn-primary btn-xs kyc-approve">Approve</button><button class="btn btn-danger btn-xs kyc-reject">Reject</button>' : `<span class="tiny-note">Final: ${escapeHtml(row.status || '-')}</span>`}
           </div>
         </td>`;
       tr.querySelector('.view-front').addEventListener('click', () => row.front_image_data && window.open(row.front_image_data, '_blank'));
       tr.querySelector('.view-back').addEventListener('click', () => row.back_image_data && window.open(row.back_image_data, '_blank'));
       tr.querySelector('.view-selfie').addEventListener('click', () => row.selfie_image_data && window.open(row.selfie_image_data, '_blank'));
-      tr.querySelector('.kyc-approve').addEventListener('click', async () => {
+      tr.querySelector('.kyc-approve')?.addEventListener('click', async () => {
         if (!confirmAdminAction('Approve this KYC request?')) return;
         await adminClient.from('kyc_submissions').update({ status: 'verified', review_note: 'Approved by admin' }).eq('id', row.id);
         await adminClient.from('profiles').update({ kyc_status: 'verified' }).eq('id', row.user_id);
@@ -3227,7 +3256,7 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
         await loadAdminUsers();
         await loadAdminStats();
       });
-      tr.querySelector('.kyc-reject').addEventListener('click', async () => {
+      tr.querySelector('.kyc-reject')?.addEventListener('click', async () => {
         if (!confirmAdminAction('Reject this KYC request?')) return;
         const note = prompt('Enter reject reason', 'Document unclear') || 'Rejected by admin';
         await adminClient.from('kyc_submissions').update({ status: 'rejected', review_note: note }).eq('id', row.id);
@@ -3461,7 +3490,9 @@ async function loadAdminStats() {
     const status = String(row?.status || '').toLowerCase();
     if (step === 'created') return true;
     if (step === 'sent') return !!row?.tx_hash || ['awaiting_confirmations','payout_in_progress','completed','paid'].includes(status);
-    if (step === 'received') return ['awaiting_confirmations','payout_in_progress','completed','paid'].includes(status);
+    // Important: awaiting_confirmations means seller has submitted TX / waiting for admin verification.
+    // Crypto Received should tick only after admin starts payout or marks paid.
+    if (step === 'received') return !!row?.crypto_received_at || ['payout_in_progress','completed','paid'].includes(status);
     if (step === 'payout') return ['payout_in_progress','completed','paid'].includes(status);
     if (step === 'paid') return ['completed','paid'].includes(status);
     return false;
@@ -3572,7 +3603,7 @@ async function renderAdminOverviewRecentOrder() {
       <div class="admin-order-steps">
         ${adminOverviewStep('Order Created', row.created_at, adminMiniStep(row, 'created'), false)}
         ${adminOverviewStep('Crypto Sent', row.tx_hash ? row.updated_at : null, adminMiniStep(row, 'sent'), row.status === 'awaiting_transfer')}
-        ${adminOverviewStep('Crypto Received', row.updated_at, adminMiniStep(row, 'received'), row.status === 'awaiting_confirmations')}
+        ${adminOverviewStep('Crypto Received', row.crypto_received_at || null, adminMiniStep(row, 'received'), row.status === 'awaiting_confirmations')}
         ${adminOverviewStep('Payout Started', row.updated_at, adminMiniStep(row, 'payout'), row.status === 'payout_in_progress')}
         ${adminOverviewStep('Paid', row.completed_at || row.updated_at, adminMiniStep(row, 'paid'), false)}
       </div>
@@ -3657,9 +3688,10 @@ async function renderAdminOverviewRecentOrder() {
           <td>${chip(r.reward_status)}</td>
           <td>
             <div class="actions-stack">
-              ${r.reward_status !== 'approved' && r.reward_status !== 'paid' ? `<button class="btn btn-secondary btn-xs js-ref-approve" data-id="${r.id}">Approve</button>` : ''}
-              ${r.reward_status !== 'paid' ? `<button class="btn btn-primary btn-xs js-ref-paid" data-id="${r.id}">Mark Paid</button>` : ''}
-              ${r.reward_status !== 'rejected' && r.reward_status !== 'paid' ? `<button class="btn btn-danger btn-xs js-ref-reject" data-id="${r.id}">Reject</button>` : ''}
+              ${['pending','earned'].includes(String(r.reward_status || '').toLowerCase()) ? `<button class="btn btn-secondary btn-xs js-ref-approve" data-id="${r.id}">Approve</button>` : ''}
+              ${['approved'].includes(String(r.reward_status || '').toLowerCase()) ? `<button class="btn btn-primary btn-xs js-ref-paid" data-id="${r.id}">Mark Paid</button>` : ''}
+              ${['pending','earned','approved'].includes(String(r.reward_status || '').toLowerCase()) ? `<button class="btn btn-danger btn-xs js-ref-reject" data-id="${r.id}">Reject</button>` : ''}
+              ${['paid','rejected'].includes(String(r.reward_status || '').toLowerCase()) ? `<span class="tiny-note">Final: ${escapeHtml(r.reward_status || '-')}</span>` : ''}
             </div>
           </td>
         </tr>`).join('');
@@ -3696,9 +3728,10 @@ async function renderAdminOverviewRecentOrder() {
           <td>${fmtDate(w.created_at)}</td>
           <td>
             <div class="actions-stack">
-              ${w.status !== 'approved' && w.status !== 'paid' ? `<button class="btn btn-secondary btn-xs js-wd-approve" data-id="${w.id}">Approve</button>` : ''}
-              ${w.status !== 'paid' ? `<button class="btn btn-primary btn-xs js-wd-paid" data-id="${w.id}">Mark Paid</button>` : ''}
-              ${w.status !== 'rejected' && w.status !== 'paid' ? `<button class="btn btn-danger btn-xs js-wd-reject" data-id="${w.id}">Reject</button>` : ''}
+              ${['requested','processing'].includes(String(w.status || '').toLowerCase()) ? `<button class="btn btn-secondary btn-xs js-wd-approve" data-id="${w.id}">Approve</button>` : ''}
+              ${['approved','processing'].includes(String(w.status || '').toLowerCase()) ? `<button class="btn btn-primary btn-xs js-wd-paid" data-id="${w.id}">Mark Paid</button>` : ''}
+              ${['requested','approved','processing'].includes(String(w.status || '').toLowerCase()) ? `<button class="btn btn-danger btn-xs js-wd-reject" data-id="${w.id}">Reject</button>` : ''}
+              ${['paid','rejected','cancelled'].includes(String(w.status || '').toLowerCase()) ? `<span class="tiny-note">Final: ${escapeHtml(w.status || '-')}</span>` : ''}
             </div>
           </td>
         </tr>`).join('');

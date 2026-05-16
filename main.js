@@ -993,7 +993,35 @@ async function renderDepositOrderBox(order) {
     renderSellerOrders(orders || []);
   }
 
-  async function loadReferralsSection(profile) {
+  
+  function referralPayoutLabel(row) {
+    if (!row) return '-';
+    if ((row.payment_method || '').toLowerCase() === 'upi') {
+      return `${row.label || 'UPI'} • ${row.upi_id || '-'}`;
+    }
+    return `${row.label || row.bank_name || 'Bank'} • ${row.account_number || '-'}`;
+  }
+
+  function renderReferralPayoutPreview(row) {
+    if (!row) return '<div class="empty-state">Select payout method for referral withdrawal.</div>';
+    const method = String(row.payment_method || 'bank').toLowerCase();
+    if (method === 'upi') {
+      return `<div class="kv-list compact-kv">
+        <div class="kv-row"><span>Type</span><strong>UPI</strong></div>
+        <div class="kv-row"><span>Holder</span><strong>${escapeHtml(row.account_holder_name || '-')}</strong></div>
+        <div class="kv-row"><span>UPI ID</span><strong class="break-anywhere">${escapeHtml(row.upi_id || '-')}</strong></div>
+      </div>`;
+    }
+    return `<div class="kv-list compact-kv">
+      <div class="kv-row"><span>Type</span><strong>Bank</strong></div>
+      <div class="kv-row"><span>Holder</span><strong>${escapeHtml(row.account_holder_name || '-')}</strong></div>
+      <div class="kv-row"><span>Bank</span><strong>${escapeHtml(row.bank_name || '-')}</strong></div>
+      <div class="kv-row"><span>Account</span><strong class="break-anywhere">${escapeHtml(row.account_number || '-')}</strong></div>
+      <div class="kv-row"><span>IFSC</span><strong>${escapeHtml(row.ifsc_code || '-')}</strong></div>
+    </div>`;
+  }
+
+async function loadReferralsSection(profile) {
     const origin = window.location.origin && window.location.origin.includes('http') ? window.location.origin : window.location.href.split('/').slice(0,-1).join('/');
     const refCode = profile.referral_code || '-';
     const refLink = `${origin}/login.html?ref=${refCode}`;
@@ -1003,7 +1031,7 @@ async function renderDepositOrderBox(order) {
     qs('copy-ref-link')?.addEventListener('click', async () => { const ok = await copyText(refLink); flashInlineCopyState(qs('copy-ref-link'), ok, '✓'); });
     qs('refresh-referrals')?.addEventListener('click', () => loadReferralsSection(profile));
 
-    const [{ data: referredUsers }, { data: rewards }, { data: withdrawals }] = await Promise.all([
+    const [{ data: referredUsers }, { data: rewards }, { data: withdrawals }, { data: payoutAccounts }] = await Promise.all([
       sellerClient
         .from('profiles')
         .select('id,full_name,email,mobile,user_status,kyc_status,created_at')
@@ -1018,7 +1046,13 @@ async function renderDepositOrderBox(order) {
         .from('referral_withdrawals')
         .select('*')
         .eq('user_id', profile.id)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      sellerClient
+        .from('bank_accounts')
+        .select('*')
+        .eq('user_id', profile.id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false })
     ]);
 
     setText('stat-total-referrals', String((referredUsers || []).length));
@@ -1033,6 +1067,27 @@ async function renderDepositOrderBox(order) {
     setText('stat-ref-available', fmtInr(available));
     setText('stat-pending-rewards', fmtInr(pendingRewards));
     setText('stat-ref-paid', fmtInr(paidRewards));
+
+    const payoutSelect = qs('ref-withdraw-payout-select');
+    const payoutPreview = qs('ref-withdraw-payout-preview');
+    if (payoutSelect) {
+      const list = payoutAccounts || [];
+      payoutSelect.innerHTML = list.length
+        ? '<option value="">Select payout method</option>' + list.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(referralPayoutLabel(p))}${p.is_primary ? ' • Primary' : ''}</option>`).join('')
+        : '<option value="">No payout method found</option>';
+      payoutSelect.onchange = () => {
+        const selected = list.find((p) => p.id === payoutSelect.value);
+        if (payoutPreview) payoutPreview.innerHTML = renderReferralPayoutPreview(selected);
+      };
+      const primary = list.find((p) => p.is_primary) || list[0];
+      if (primary) {
+        payoutSelect.value = primary.id;
+        if (payoutPreview) payoutPreview.innerHTML = renderReferralPayoutPreview(primary);
+      } else if (payoutPreview) {
+        payoutPreview.innerHTML = '<div class="empty-state">Please add payout method first from Payout section.</div>';
+      }
+    }
+
 
     const referredBody = qs('referred-users-body');
     const referredCards = qs('referred-users-cards');
@@ -1087,8 +1142,14 @@ async function renderDepositOrderBox(order) {
     const withdrawBody = qs('ref-withdrawals-body');
     if (withdrawBody) {
       withdrawBody.innerHTML = !(withdrawals || []).length
-        ? '<tr><td colspan="4">No withdrawal request yet.</td></tr>'
-        : (withdrawals || []).map((w) => `<tr><td>${fmtInr(w.amount_inr)}</td><td>${chip(w.status)}</td><td>${fmtDate(w.created_at)}</td><td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td></tr>`).join('');
+        ? '<tr><td colspan="5">No withdrawal request yet.</td></tr>'
+        : (withdrawals || []).map((w) => `<tr>
+          <td>${fmtInr(w.amount_inr)}</td>
+          <td>${escapeHtml(w.payout_label || 'Saved payout method')}<div class="tiny-note break-anywhere">${escapeHtml(w.payout_details?.upi_id || w.payout_details?.account_number || '')}</div></td>
+          <td>${chip(w.status)}</td>
+          <td>${fmtDate(w.created_at)}</td>
+          <td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td>
+        </tr>`).join('');
     }
 
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
@@ -1096,8 +1157,18 @@ async function renderDepositOrderBox(order) {
       if (!amount) return setText('ref-withdraw-message', 'Enter withdrawal amount.');
       if (amount < 2000) return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
       if (amount > available) return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(available)}.`);
-      const { data: activePayout } = await sellerClient.from('bank_accounts').select('*').eq('user_id', profile.id).eq('is_active', true).order('is_primary', { ascending: false }).limit(1).maybeSingle();
-      const { error } = await sellerClient.from('referral_withdrawals').insert({ user_id: profile.id, amount_inr: amount, status: 'requested', payout_method_id: activePayout?.id || null, payout_label: activePayout?.label || activePayout?.bank_name || activePayout?.upi_id || null, payout_details: activePayout || null });
+      const payoutId = val('ref-withdraw-payout-select');
+      if (!payoutId) return setText('ref-withdraw-message', 'Please select payout method for withdrawal.');
+      const activePayout = (payoutAccounts || []).find((p) => p.id === payoutId);
+      if (!activePayout) return setText('ref-withdraw-message', 'Selected payout method not found. Please add payout method again.');
+      const { error } = await sellerClient.from('referral_withdrawals').insert({
+        user_id: profile.id,
+        amount_inr: amount,
+        status: 'requested',
+        payout_method_id: activePayout.id,
+        payout_label: referralPayoutLabel(activePayout),
+        payout_details: activePayout
+      });
       if (error) return setText('ref-withdraw-message', error.message);
       setText('ref-withdraw-message', 'Withdrawal request submitted. Admin will review and pay manually.');
       showAppToast('Referral withdrawal request submitted.');
@@ -2588,7 +2659,12 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
         <tr>
           <td>${escapeHtml(w.user?.full_name || w.user?.email || '-')}<div class="tiny-note">${escapeHtml(w.user?.mobile || '')}</div></td>
           <td>${fmtInr(w.amount_inr || 0)}</td>
-          <td>${escapeHtml(w.payout_label || 'Saved payout method')}<div class="tiny-note">${escapeHtml(w.payout_details?.upi_id || w.payout_details?.account_number || '')}</div></td>
+          <td>
+            <strong>${escapeHtml(w.payout_label || 'Saved payout method')}</strong>
+            <div class="tiny-note break-anywhere">${escapeHtml(w.payout_details?.upi_id || w.payout_details?.account_number || '')}</div>
+            <div class="tiny-note">${escapeHtml(w.payout_details?.account_holder_name || '')}</div>
+            <button class="btn btn-secondary btn-xs js-ref-wd-payout" data-payout='${escapeHtml(JSON.stringify(w.payout_details || {}))}'>View Payout</button>
+          </td>
           <td>${chip(w.status)}</td>
           <td>${fmtDate(w.created_at)}</td>
           <td>
@@ -2603,6 +2679,14 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
       withdrawBody.querySelectorAll('.js-wd-approve').forEach((btn) => btn.addEventListener('click', async () => updateReferralWithdrawal(btn.dataset.id, 'approved')));
       withdrawBody.querySelectorAll('.js-wd-paid').forEach((btn) => btn.addEventListener('click', async () => updateReferralWithdrawal(btn.dataset.id, 'paid')));
       withdrawBody.querySelectorAll('.js-wd-reject').forEach((btn) => btn.addEventListener('click', async () => updateReferralWithdrawal(btn.dataset.id, 'rejected')));
+      withdrawBody.querySelectorAll('.js-ref-wd-payout').forEach((btn) => btn.addEventListener('click', () => {
+        try {
+          const details = JSON.parse(btn.getAttribute('data-payout') || '{}');
+          openPayoutDetailsModal(details);
+        } catch (_) {
+          alert('Payout details not found');
+        }
+      }));
     }
   }
 

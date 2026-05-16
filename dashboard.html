@@ -313,7 +313,9 @@
             <div class="section-head"><h3>Withdraw Referral Reward</h3></div>
             <div class="minimum-box"><span>Minimum Withdrawal</span><strong>₹2,000</strong></div>
             <div class="form-group top-gap-sm"><label>Withdrawal Amount</label><input id="ref-withdraw-amount" type="number" placeholder="Enter amount" /></div>
-            <button id="request-ref-withdrawal" class="btn btn-primary btn-block">Request Withdrawal</button>
+            <div class="form-group top-gap-sm"><label>Payout Method</label><select id="ref-withdraw-payout-select"></select></div>
+            <div id="ref-withdraw-payout-preview" class="ref-withdraw-payout-preview empty-state">Select payout method for referral withdrawal.</div>
+            <button id="request-ref-withdrawal" class="btn btn-primary btn-block top-gap-sm">Request Withdrawal</button>
             <p id="ref-withdraw-message" class="status-text"></p>
           </div>
         </div>
@@ -334,7 +336,7 @@
         </div>
         <div class="card top-gap">
           <div class="section-head"><h3>Withdrawal Requests</h3></div>
-          <div class="table-wrap"><table><thead><tr><th>Amount</th><th>Status</th><th>Requested</th><th>Paid At</th></tr></thead><tbody id="ref-withdrawals-body"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Amount</th><th>Payout Method</th><th>Status</th><th>Requested</th><th>Paid At</th></tr></thead><tbody id="ref-withdrawals-body"></tbody></table></div>
         </div>
       </section>
 

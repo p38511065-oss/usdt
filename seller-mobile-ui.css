@@ -1033,3 +1033,22 @@ body[data-page="seller-dashboard"] .panel-section.active{
 .seller-bottom-nav .support-nav-btn span{
   font-size:24px!important;
 }
+
+
+/* Referral withdrawal payout method */
+.ref-withdraw-payout-preview{
+  margin-top:10px!important;
+  border-radius:16px!important;
+}
+.ref-withdraw-payout-preview .compact-kv{
+  margin:0!important;
+}
+.ref-withdraw-payout-preview .kv-row{
+  padding:7px 0!important;
+}
+@media(max-width:760px){
+  .referral-withdraw-card select,
+  .referral-withdraw-card input{
+    min-height:44px!important;
+  }
+}

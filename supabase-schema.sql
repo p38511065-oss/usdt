@@ -954,3 +954,12 @@ where p.referred_by is not null
   and o.status::text in ('completed','paid')
   and coalesce(o.estimated_inr_payout, 0) > 0
   and rr.id is null;
+
+
+-- REFERRAL WITHDRAWAL PAYOUT METHOD SAFE CHECK
+-- Optional safe SQL if payout fields are missing.
+
+alter table public.referral_withdrawals
+add column if not exists payout_method_id uuid,
+add column if not exists payout_label text,
+add column if not exists payout_details jsonb default '{}'::jsonb;

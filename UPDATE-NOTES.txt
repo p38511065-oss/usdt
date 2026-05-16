@@ -240,3 +240,10 @@ Final cleanup patch:
 - Removed visible hardcoded rate placeholders from landing/admin text where possible.
 - Added small toast UI for selected seller success messages.
 - Cleaned seller cancel SQL file to avoid invalid 'created' enum issue.
+
+Referral withdrawal payout method update:
+- Seller can choose payout method before referral withdrawal request.
+- Selected payout details preview is shown before request.
+- Withdrawal request saves payout_method_id, payout_label and payout_details.
+- Seller withdrawal history now shows payout method.
+- Admin referral withdrawals now show payout method details with View Payout button.

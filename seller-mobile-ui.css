@@ -1024,3 +1024,12 @@ body[data-page="seller-dashboard"] .panel-section.active{
     line-height:1.45!important;
   }
 }
+
+
+/* Support icon changed from airplane to headset */
+.support-telegram-icon{
+  font-size:30px!important;
+}
+.seller-bottom-nav .support-nav-btn span{
+  font-size:24px!important;
+}

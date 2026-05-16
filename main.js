@@ -1040,6 +1040,48 @@ async function renderDepositOrderBox(order) {
     return { available, rewards: rewards || [], withdrawals: withdrawals || [] };
   }
 
+
+  function renderMiniPagination(containerId, totalItems, currentPage, pageSize, onPageChange) {
+    const container = qs(containerId);
+    if (!container) return;
+    const totalPages = Math.max(1, Math.ceil(Number(totalItems || 0) / Number(pageSize || 5)));
+
+    if (!totalItems || totalPages <= 1) {
+      container.innerHTML = totalItems ? `<div class="mini-page-info">Showing ${totalItems} item${totalItems === 1 ? '' : 's'}</div>` : '';
+      return;
+    }
+
+    const page = Math.min(Math.max(1, Number(currentPage || 1)), totalPages);
+    const from = ((page - 1) * pageSize) + 1;
+    const to = Math.min(page * pageSize, totalItems);
+
+    const buttons = Array.from({ length: totalPages }, (_, i) => {
+      const p = i + 1;
+      return `<button type="button" class="mini-page-btn ${p === page ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="mini-page-info">Showing ${from}-${to} of ${totalItems}</div>
+      <div class="mini-page-controls">
+        <button type="button" class="mini-page-btn" data-page="${Math.max(1, page - 1)}" ${page === 1 ? 'disabled' : ''}>‹</button>
+        ${buttons}
+        <button type="button" class="mini-page-btn" data-page="${Math.min(totalPages, page + 1)}" ${page === totalPages ? 'disabled' : ''}>›</button>
+      </div>`;
+
+    container.querySelectorAll('.mini-page-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        onPageChange(Number(btn.dataset.page || 1));
+      });
+    });
+  }
+
+  function paginateItems(items, page, pageSize) {
+    const list = items || [];
+    const safePage = Math.max(1, Number(page || 1));
+    return list.slice((safePage - 1) * pageSize, safePage * pageSize);
+  }
+
 async function loadReferralsSection(profile) {
     const origin = window.location.origin && window.location.origin.includes('http') ? window.location.origin : window.location.href.split('/').slice(0,-1).join('/');
     const refCode = profile.referral_code || '-';
@@ -1162,10 +1204,13 @@ async function loadReferralsSection(profile) {
     }
 
     const body = qs('referrals-body');
+    const rewardPageSize = 5;
+    window.__sellerReferralRewardsPage = Math.min(window.__sellerReferralRewardsPage || 1, Math.max(1, Math.ceil((rewards || []).length / rewardPageSize)));
+    const rewardPageRows = paginateItems(rewards || [], window.__sellerReferralRewardsPage, rewardPageSize);
     if (body) {
-      body.innerHTML = !(rewards || []).length
+      body.innerHTML = !rewardPageRows.length
         ? '<tr><td colspan="6">No referral rewards yet.</td></tr>'
-        : (rewards || []).map((r) => `
+        : rewardPageRows.map((r) => `
           <tr>
             <td>
               <strong>${escapeHtml(r.referred_user?.full_name || 'Unnamed Seller')}</strong>
@@ -1179,12 +1224,19 @@ async function loadReferralsSection(profile) {
             <td>${fmtDate(r.created_at)}</td>
           </tr>`).join('');
     }
+    renderMiniPagination('referrals-pagination', (rewards || []).length, window.__sellerReferralRewardsPage, rewardPageSize, (page) => {
+      window.__sellerReferralRewardsPage = page;
+      loadReferralsSection(profile);
+    });
 
     const withdrawBody = qs('ref-withdrawals-body');
+    const withdrawalPageSize = 5;
+    window.__sellerReferralWithdrawalsPage = Math.min(window.__sellerReferralWithdrawalsPage || 1, Math.max(1, Math.ceil((withdrawals || []).length / withdrawalPageSize)));
+    const withdrawalPageRows = paginateItems(withdrawals || [], window.__sellerReferralWithdrawalsPage, withdrawalPageSize);
     if (withdrawBody) {
-      withdrawBody.innerHTML = !(withdrawals || []).length
+      withdrawBody.innerHTML = !withdrawalPageRows.length
         ? '<tr><td colspan="5">No withdrawal request yet.</td></tr>'
-        : (withdrawals || []).map((w) => `<tr>
+        : withdrawalPageRows.map((w) => `<tr>
           <td>${fmtInr(w.amount_inr)}</td>
           <td>${escapeHtml(w.payout_label || 'Saved payout method')}<div class="tiny-note break-anywhere">${escapeHtml(w.payout_details?.upi_id || w.payout_details?.account_number || '')}</div></td>
           <td>${chip(w.status)}</td>
@@ -1192,6 +1244,10 @@ async function loadReferralsSection(profile) {
           <td>${w.paid_at ? fmtDate(w.paid_at) : '-'}</td>
         </tr>`).join('');
     }
+    renderMiniPagination('ref-withdrawals-pagination', (withdrawals || []).length, window.__sellerReferralWithdrawalsPage, withdrawalPageSize, (page) => {
+      window.__sellerReferralWithdrawalsPage = page;
+      loadReferralsSection(profile);
+    });
 
     // ref-withdraw-amount-live-guard
     qs('ref-withdraw-amount')?.addEventListener('input', () => {
@@ -2732,10 +2788,10 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
 
     const rewardBody = qs('admin-referral-rewards-body');
     if (rewardBody) {
-      rewardBody.innerHTML = !(rewards || []).length ? '<tr><td colspan="7">No referral rewards yet.</td></tr>' : (rewards || []).map((r) => `
+      rewardBody.innerHTML = !adminRewardPageRows.length ? '<tr><td colspan="7">No referral rewards yet.</td></tr>' : adminRewardPageRows.map((r) => `
         <tr>
           <td>${escapeHtml(r.referrer?.full_name || r.referrer?.email || '-')}<div class="tiny-note">${escapeHtml(r.referrer?.mobile || '')}</div></td>
-          <td>${escapeHtml(r.referred?.full_name || r.referred?.email || '-')}<div class="tiny-note">${escapeHtml(r.referred?.mobile || '')}</div></td>
+          <td>${escapeHtml(r.referred_user?.full_name || r.referred_user?.email || '-')}<div class="tiny-note">${escapeHtml(r.referred_user?.mobile || '')}</div></td>
           <td class="code-small">${escapeHtml(r.order_id || '-')}</td>
           <td>${fmtInr(r.order_inr_amount || 0)}</td>
           <td>${fmtInr(r.reward_amount_inr || 0)}</td>
@@ -2752,11 +2808,19 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
       rewardBody.querySelectorAll('.js-ref-approve').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'approved')));
       rewardBody.querySelectorAll('.js-ref-paid').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'paid')));
       rewardBody.querySelectorAll('.js-ref-reject').forEach((btn) => btn.addEventListener('click', async () => updateReferralReward(btn.dataset.id, 'rejected')));
+      renderMiniPagination('admin-ref-rewards-pagination', (rewards || []).length, window.__adminReferralRewardsPage, adminRewardPageSize, (page) => {
+        window.__adminReferralRewardsPage = page;
+        loadAdminReferralPanel();
+      });
     }
+
+    const adminWithdrawalPageSize = 5;
+    window.__adminReferralWithdrawalsPage = Math.min(window.__adminReferralWithdrawalsPage || 1, Math.max(1, Math.ceil((withdrawals || []).length / adminWithdrawalPageSize)));
+    const adminWithdrawalPageRows = paginateItems(withdrawals || [], window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize);
 
     const withdrawBody = qs('admin-ref-withdrawals-body');
     if (withdrawBody) {
-      withdrawBody.innerHTML = !(withdrawals || []).length ? '<tr><td colspan="6">No referral withdrawal requests.</td></tr>' : (withdrawals || []).map((w) => `
+      withdrawBody.innerHTML = !adminWithdrawalPageRows.length ? '<tr><td colspan="6">No referral withdrawal requests.</td></tr>' : adminWithdrawalPageRows.map((w) => `
         <tr>
           <td>${escapeHtml(w.user?.full_name || w.user?.email || '-')}<div class="tiny-note">${escapeHtml(w.user?.mobile || '')}</div></td>
           <td>${fmtInr(w.amount_inr || 0)}</td>
@@ -2788,6 +2852,10 @@ async function updateAdminOrderStatus(id, status, triggerButton = null) {
           alert('Payout details not found');
         }
       }));
+      renderMiniPagination('admin-ref-withdrawals-pagination', (withdrawals || []).length, window.__adminReferralWithdrawalsPage, adminWithdrawalPageSize, (page) => {
+        window.__adminReferralWithdrawalsPage = page;
+        loadAdminReferralPanel();
+      });
     }
   }
 

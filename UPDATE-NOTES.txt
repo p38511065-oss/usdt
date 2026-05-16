@@ -283,3 +283,9 @@ Referral remaining balance card final fix:
 - Supports alternate reward amount column names safely.
 - Withdrawal validation re-fetches fresh rewards/withdrawals and blocks above remaining balance.
 - Added final simple balance SQL trigger.
+
+Referral pagination update:
+- Seller referral rewards list now shows 5 per page with page numbers.
+- Seller referral withdrawal requests now show 5 per page with page numbers.
+- Admin referral rewards list now shows 5 per page with page numbers.
+- Admin referral withdrawal requests now show 5 per page with page numbers.

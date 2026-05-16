@@ -1098,3 +1098,51 @@ body[data-page="seller-dashboard"] .panel-section.active{
     font-size:12px;
   }
 }
+
+
+/* Mini pagination for referral sections */
+.mini-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:12px 2px 0;
+}
+.mini-page-info{
+  color:#9facbd;
+  font-size:13px;
+  font-weight:800;
+}
+.mini-page-controls{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.mini-page-btn{
+  min-width:34px;
+  height:34px;
+  border-radius:11px;
+  border:1px solid rgba(119,190,255,.18);
+  background:rgba(8,26,52,.72);
+  color:#dce9ff;
+  font-weight:900;
+}
+.mini-page-btn.active{
+  background:linear-gradient(90deg,#25e7ff,#37ffc1);
+  color:#02101d;
+  border-color:transparent;
+}
+.mini-page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+@media(max-width:640px){
+  .mini-pagination{
+    display:grid;
+    justify-items:center;
+  }
+  .mini-page-controls{
+    justify-content:center;
+  }
+}

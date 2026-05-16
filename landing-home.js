@@ -10,6 +10,18 @@
   const marketChange = document.getElementById('lpMarketChange');
   const marketChangeMirror = document.getElementById('lpMarketChangeMirror');
 
+  const terminalTooltipRate = document.getElementById('lpTerminalTooltipRate');
+  const currentRateStat = document.getElementById('lpCurrentRateStat');
+  const highRateStat = document.getElementById('lpHighRateStat');
+  const lowRateStat = document.getElementById('lpLowRateStat');
+  const volumeStat = document.getElementById('lpVolumeStat');
+  const batchPercent = document.getElementById('lpBatchPercent');
+  const batchCapacity = document.getElementById('lpBatchCapacity');
+  const batchRemaining = document.getElementById('lpBatchRemaining');
+  const batchSlots = document.getElementById('lpBatchSlots');
+  const batchOrders = document.getElementById('lpBatchOrders');
+
+
   function money(n) {
     const num = Number(n || 0);
     return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -107,11 +119,20 @@
       return;
     }
 
-    const highestRate = Math.max(...rows.map((row) => Number(row.rate_inr || 0)));
+    const rates = rows.map((row) => Number(row.rate_inr || 0)).filter(Boolean);
+    const highestRate = Math.max(...rates);
+    const lowestRate = Math.min(...rates);
+    const avgRate = rates.reduce((s, r) => s + r, 0) / rates.length;
     if (marketPrice) marketPrice.textContent = money(highestRate);
     if (marketPriceMirror) marketPriceMirror.textContent = money(highestRate);
     if (marketChange) marketChange.textContent = '+ Admin live slabs';
-    if (marketChangeMirror) marketChangeMirror.textContent = 'Loaded from admin quote slabs';
+    if (marketChangeMirror) marketChangeMirror.textContent = 'Based on active admin quote slabs';
+    if (terminalTooltipRate) terminalTooltipRate.textContent = money(highestRate);
+    if (currentRateStat) currentRateStat.textContent = money(highestRate);
+    if (highRateStat) highRateStat.textContent = money(highestRate);
+    if (lowRateStat) lowRateStat.textContent = money(lowestRate);
+    if (volumeStat) volumeStat.textContent = 'Admin Slabs';
+
 
     ratesBody.innerHTML = rows.map((row) => {
       const [label, cls] = quoteLabel(row.quote_type);
@@ -126,6 +147,39 @@
     }).join('');
   }
 
+
+  async function loadLandingBatchStatus() {
+    if (!client) return;
+    try {
+      const { data: batch, error } = await client
+        .from('order_batches')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !batch) return;
+
+      const limit = Number(batch.order_limit || 0);
+      const usedOrders = Number(batch.used_orders || 0);
+      const capacity = Number(batch.usdt_capacity || 0);
+      const usedUsdt = Number(batch.used_usdt || 0);
+      const remainingUsdt = Math.max(0, capacity - usedUsdt);
+      const remainingSlots = Math.max(0, limit - usedOrders);
+      const percent = capacity ? Math.min(100, Math.round((usedUsdt / capacity) * 100)) : 0;
+
+      if (batchPercent) batchPercent.textContent = `${percent}%`;
+      if (batchCapacity) batchCapacity.textContent = `${amount(capacity)} USDT`;
+      if (batchRemaining) batchRemaining.textContent = `${amount(remainingUsdt)} USDT`;
+      if (batchSlots) batchSlots.textContent = `${remainingSlots} / ${limit}`;
+      if (batchOrders) batchOrders.textContent = `${usedOrders}`;
+    } catch (err) {
+      console.warn('Landing batch status load error:', err);
+    }
+  }
+
+
   async function initLandingRates() {
     if (ratesBody) {
       ratesBody.innerHTML = '<tr><td colspan="4">Loading admin-created USDT quote slabs...</td></tr>';
@@ -134,6 +188,7 @@
     try {
       const rows = await fetchAdminSlabs();
       renderRows(rows);
+      await loadLandingBatchStatus();
     } catch (error) {
       console.warn('Landing admin quote slabs load error:', error);
       renderEmpty('Could not load admin-created quote slabs. Please check Supabase RLS/select permission for quote_slabs.');
@@ -141,4 +196,5 @@
   }
 
   initLandingRates();
+  loadLandingBatchStatus();
 })();

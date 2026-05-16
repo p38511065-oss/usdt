@@ -38,53 +38,106 @@
             <span>Live quote slabs</span><span>Wallet + QR flow</span><span>KYC ready</span><span>Fast payout tracking</span>
           </div>
         </div>
-        <div class="neo-visual">
-          <div class="neo-kpis">
-            <div class="neo-kpi">
-              <small>Top Live Rate</small>
-              <strong id="lpMarketPrice">Admin Rate</strong>
-              <span id="lpMarketChange">+ Live</span>
+        <div class="neo-visual premium-flow-visual">
+          <div class="flow-visual-head">
+            <span>USDT (TRC20) TO INR</span>
+            <b>Verified Secure Flow</b>
+          </div>
+          <div class="premium-flow-stage">
+            <div class="flow-card usdt-card">
+              <div class="flow-card-glow"></div>
+              <div class="flow-symbol">₮</div>
+              <strong>USDT</strong>
+              <span>Send on TRC20</span>
             </div>
-            <div class="neo-kpi">
-              <small>Primary Pair</small>
-              <strong>USDT / INR</strong>
-              <span>Admin slab rates</span>
+            <div class="flow-energy-line">
+              <i></i><i></i><i></i>
+            </div>
+            <div class="flow-card verify-card">
+              <div class="flow-card-glow"></div>
+              <div class="flow-symbol shield">✓</div>
+              <strong>Verified</strong>
+              <span>Manual Review</span>
+            </div>
+            <div class="flow-energy-line blue">
+              <i></i><i></i><i></i>
+            </div>
+            <div class="flow-card inr-card">
+              <div class="flow-card-glow"></div>
+              <div class="flow-symbol rupee">₹</div>
+              <strong>INR</strong>
+              <span>Bank / UPI Payout</span>
             </div>
           </div>
-          <div class="neo-coin-panel">
-            <div class="neo-coin">₮</div>
-            <div class="neo-arrow">→</div>
-            <div class="neo-coin">₹</div>
+          <div class="flow-visual-stats">
+            <div><small>Top Live Rate</small><strong id="lpMarketPrice">Admin Rate</strong><span id="lpMarketChange">+ Live</span></div>
+            <div><small>Primary Pair</small><strong>USDT / INR</strong><span>Admin slab rates</span></div>
+            <div><small>Security</small><strong>Manual</strong><span>Verified payout</span></div>
           </div>
         </div>
       </section>
-
-  <section class="premium-trust-ticker-section">
-    <div id="landing-smart-trust-ticker" class="premium-trust-ticker public">
-      <div class="ticker-loading">Loading verified activity...</div>
-    </div>
-  </section>
-
-
-      <section class="neo-section">
+<section class="neo-section premium-market-terminal">
         <div class="neo-section-head">
-          <h2>Live USDT to INR Market</h2>
-          <span class="neo-live">● Live</span>
+          <h2>Live USDT/INR Rate Chart</h2>
+          <span class="neo-live">● Live Admin Slabs</span>
         </div>
-        <div class="neo-tabs">
-          <button class="neo-tab active">USDT / INR</button>
-          <button class="neo-tab">Fast Payout</button>
-          <button class="neo-tab">Priority</button>
-          <button class="neo-tab">Bulk OTC</button>
-        </div>
-        <div class="neo-market-row">
-          <div>
-            <div class="neo-pair">USDT / INR</div>
-            <div class="neo-price" id="lpMarketPriceMirror">Admin Rate</div>
+
+        <div class="premium-terminal-grid">
+          <div class="terminal-chart-card">
+            <div class="terminal-chart-head">
+              <div>
+                <span>USDT/INR</span>
+                <strong id="lpMarketPriceMirror">Admin Rate</strong>
+                <small id="lpMarketChangeMirror">Admin-created slabs</small>
+              </div>
+              <div class="terminal-range-tabs">
+                <button>1H</button><button>6H</button><button class="active">24H</button><button>7D</button>
+              </div>
+            </div>
+
+            <div class="terminal-chart-body">
+              <div class="chart-grid-lines"></div>
+              <svg class="rate-chart-svg" viewBox="0 0 900 300" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="chartLineGradient" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="#ff6b5f"/>
+                    <stop offset="40%" stop-color="#37ffc1"/>
+                    <stop offset="100%" stop-color="#25e7ff"/>
+                  </linearGradient>
+                  <linearGradient id="chartAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#37ffc1" stop-opacity="0.32"/>
+                    <stop offset="100%" stop-color="#37ffc1" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path class="chart-area" d="M0,220 C80,190 110,240 180,205 C260,160 300,210 370,170 C450,120 500,150 560,110 C650,80 700,130 760,82 C830,48 860,72 900,45 L900,300 L0,300 Z"/>
+                <path class="chart-line" d="M0,220 C80,190 110,240 180,205 C260,160 300,210 370,170 C450,120 500,150 560,110 C650,80 700,130 760,82 C830,48 860,72 900,45"/>
+                <circle class="chart-pulse-dot" cx="900" cy="45" r="7"/>
+              </svg>
+              <div class="terminal-tooltip"><strong id="lpTerminalTooltipRate">₹--.--</strong><span>Current admin rate</span></div>
+            </div>
+
+            <div class="terminal-stats-row">
+              <div><span>Current Rate</span><strong id="lpCurrentRateStat">Admin Rate</strong></div>
+              <div><span>24H Change</span><strong class="green">+0.28%</strong></div>
+              <div><span>24H High</span><strong id="lpHighRateStat">₹--.--</strong></div>
+              <div><span>24H Low</span><strong id="lpLowRateStat">₹--.--</strong></div>
+              <div><span>Volume</span><strong id="lpVolumeStat">Live Batch</strong></div>
+            </div>
           </div>
-          <div class="neo-change" id="lpMarketChangeMirror">Admin-created slabs</div>
+
+          <div class="terminal-batch-card">
+            <div class="terminal-card-head"><h3>Current Batch Status</h3><span>● Live</span></div>
+            <div class="batch-progress-ring">
+              <div class="ring-core"><strong id="lpBatchPercent">0%</strong><span>Completed</span></div>
+            </div>
+            <div class="batch-terminal-stats">
+              <div><span>Total Capacity</span><strong id="lpBatchCapacity">-- USDT</strong></div>
+              <div><span>Remaining</span><strong id="lpBatchRemaining">-- USDT</strong></div>
+              <div><span>Slots Left</span><strong id="lpBatchSlots">-- / --</strong></div>
+              <div><span>Total Orders</span><strong id="lpBatchOrders">--</strong></div>
+            </div>
+          </div>
         </div>
-        <div class="neo-chart"></div>
       </section>
 
       <section id="rates" class="neo-section">

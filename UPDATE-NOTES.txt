@@ -435,3 +435,11 @@ Homepage restore + safe ticker fix:
 - Removed risky inline ticker script from index.html.
 - Added safe main.js landing ticker fallback so ticker does not stay on Loading.
 - No SQL required beyond realtime SQL already provided.
+
+Landing page animation + chart final update:
+- Removed Smart Trust Ticker from landing page completely. Seller dashboard ticker remains.
+- Replaced USDT/INR icon box with realistic premium flow animation: USDT -> Verified -> INR payout.
+- Replaced simple chart with premium trading-terminal style USDT/INR admin rate chart.
+- Added current batch status card on landing page.
+- Landing chart uses existing quote_slabs and order_batches data where available.
+- No new SQL required.

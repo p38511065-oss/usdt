@@ -1084,15 +1084,25 @@ async function loadReferralsSection(profile) {
     setText('stat-total-referrals', String((referredUsers || []).length));
     setText('stat-active-referrals', String((referredUsers || []).filter((u) => u.user_status === 'active').length));
 
-    const totalEarned = (rewards || []).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
-    const pendingRewards = (rewards || []).filter((r) => ['pending','approved','earned'].includes(r.reward_status)).reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
-    const paidRewards = (rewards || []).filter((r) => r.reward_status === 'paid').reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+    const totalEarned = (rewards || [])
+      .filter((r) => !['rejected','cancelled'].includes(String(r.reward_status || '').toLowerCase()))
+      .reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+
+    const pendingRewards = (rewards || [])
+      .filter((r) => ['pending','approved','earned'].includes(String(r.reward_status || '').toLowerCase()))
+      .reduce((s, r) => s + Number(r.reward_amount_inr || 0), 0);
+
+    const withdrawnOrLocked = (withdrawals || [])
+      .filter((w) => !['rejected','cancelled'].includes(String(w.status || '').toLowerCase()))
+      .reduce((s, w) => s + Number(w.amount_inr || 0), 0);
+
     const available = availableReferralBalance(rewards || [], withdrawals || []);
 
     setText('stat-ref-earnings', fmtInr(totalEarned));
     setText('stat-ref-available', fmtInr(available));
     setText('stat-pending-rewards', fmtInr(pendingRewards));
-    setText('stat-ref-paid', fmtInr(paidRewards));
+    setText('stat-ref-paid', fmtInr(withdrawnOrLocked));
+    setText('ref-balance-breakdown', `Total Earned: ${fmtInr(totalEarned)} • Withdrawn/Locked: ${fmtInr(withdrawnOrLocked)} • Remaining: ${fmtInr(available)}`);
 
     const activeWithdrawal = (withdrawals || []).find((w) => ['requested','approved','processing'].includes(String(w.status || '').toLowerCase()));
     const withdrawBtn = qs('request-ref-withdrawal');
@@ -1101,9 +1111,14 @@ async function loadReferralsSection(profile) {
       withdrawBtn.disabled = true;
       withdrawBtn.textContent = 'Withdrawal Request Pending';
       if (withdrawMsg) withdrawMsg.textContent = `Your withdrawal request of ${fmtInr(activeWithdrawal.amount_inr || 0)} is already ${activeWithdrawal.status}. Wait for admin action before new request.`;
+    } else if (available < 2000 && withdrawBtn) {
+      withdrawBtn.disabled = true;
+      withdrawBtn.textContent = 'Not Enough Balance';
+      if (withdrawMsg) withdrawMsg.textContent = `Remaining balance is ${fmtInr(available)}. Minimum withdrawal is ₹2,000. New withdrawal will unlock after balance reaches ₹2,000.`;
     } else if (withdrawBtn) {
       withdrawBtn.disabled = false;
       withdrawBtn.textContent = 'Request Withdrawal';
+      if (withdrawMsg && /not enough|minimum|available referral balance/i.test(withdrawMsg.textContent || '')) withdrawMsg.textContent = '';
     }
 
     const payoutSelect = qs('ref-withdraw-payout-select');
@@ -1190,6 +1205,22 @@ async function loadReferralsSection(profile) {
         </tr>`).join('');
     }
 
+    // ref-withdraw-amount-live-guard
+    qs('ref-withdraw-amount')?.addEventListener('input', () => {
+      const amount = Number(val('ref-withdraw-amount') || 0);
+      const btn = qs('request-ref-withdrawal');
+      if (!btn || btn.textContent === 'Withdrawal Request Pending') return;
+      if (available < 2000) {
+        btn.disabled = true;
+        btn.textContent = 'Not Enough Balance';
+        setText('ref-withdraw-message', `Available referral balance is ${fmtInr(available)}. Minimum withdrawal is ₹2,000.`);
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Request Withdrawal';
+        if (amount > available) setText('ref-withdraw-message', `Available referral balance is ${fmtInr(available)}.`);
+      }
+    });
+
     qs('request-ref-withdrawal')?.addEventListener('click', async () => {
       const btn = qs('request-ref-withdrawal');
       if (btn) {
@@ -1199,7 +1230,10 @@ async function loadReferralsSection(profile) {
 
       const freshState = await getFreshReferralWithdrawalState(profile.id);
       if (freshState.activeWithdrawal) {
-        if (btn) btn.textContent = 'Withdrawal Request Pending';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Withdrawal Request Pending';
+        }
         return setText('ref-withdraw-message', `You already have a pending withdrawal request of ${fmtInr(freshState.activeWithdrawal.amount_inr || 0)}. Please wait for admin action.`);
       }
 
@@ -1215,8 +1249,11 @@ async function loadReferralsSection(profile) {
         return setText('ref-withdraw-message', 'Minimum referral withdrawal is ₹2,000.');
       }
       if (amount > freshAvailable) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Request Withdrawal'; }
-        return setText('ref-withdraw-message', `Available referral balance is ${fmtInr(freshAvailable)} after pending withdrawals.`);
+        if (btn) {
+          btn.disabled = freshAvailable < 2000;
+          btn.textContent = freshAvailable < 2000 ? 'Not Enough Balance' : 'Request Withdrawal';
+        }
+        return setText('ref-withdraw-message', `Remaining balance is ${fmtInr(freshAvailable)} after withdrawals/locked requests.`);
       }
 
       const payoutId = val('ref-withdraw-payout-select');

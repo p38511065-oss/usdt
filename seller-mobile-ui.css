@@ -1066,3 +1066,35 @@ body[data-page="seller-dashboard"] .panel-section.active{
   opacity:.62!important;
   cursor:not-allowed!important;
 }
+
+
+/* Referral withdrawal final guard */
+#request-ref-withdrawal[disabled]{
+  opacity:.55!important;
+  cursor:not-allowed!important;
+  filter:saturate(.75);
+}
+
+
+/* Referral remaining balance clarity */
+.remaining-balance-card{
+  border-color:rgba(55,255,193,.24)!important;
+  background:
+    radial-gradient(circle at 90% 15%,rgba(55,255,193,.12),transparent 34%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(4,17,36,.94))!important;
+}
+.ref-balance-breakdown{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(119,190,255,.16);
+  background:rgba(5,18,39,.60);
+  color:#aebbd0;
+  font-size:13px;
+  line-height:1.45;
+}
+@media(max-width:760px){
+  .ref-balance-breakdown{
+    font-size:12px;
+  }
+}

@@ -258,3 +258,15 @@ Referral withdrawal strong lock:
 - Submit now re-fetches latest rewards/withdrawals from database before allowing request.
 - Active pending withdrawal blocks new request even if page had old balance.
 - Database SQL added to reject duplicate active requests and create unique active-withdrawal lock.
+
+Referral withdrawal final balance guard:
+- Withdrawal button now disables when available balance is below ₹2,000.
+- Fresh database balance is checked again before insert.
+- Added SQL trigger to block withdrawal if amount is greater than real available balance.
+- Trigger also blocks multiple active withdrawal requests.
+
+Referral remaining balance UI:
+- Available card renamed to Remaining Balance.
+- Paid card renamed to Withdrawn / Locked.
+- Shows Total Earned, Withdrawn/Locked and Remaining breakdown.
+- Remaining Balance stays visible even if it is below ₹2,000.

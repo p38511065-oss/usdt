@@ -298,9 +298,9 @@
         </div>
         <div class="referral-wallet-grid">
           <div class="card referral-wallet-card"><span>Total Earned</span><strong id="stat-ref-earnings">₹0</strong><small>All referral rewards</small></div>
-          <div class="card referral-wallet-card"><span>Available</span><strong id="stat-ref-available">₹0</strong><small>Can request after ₹2,000</small></div>
-          <div class="card referral-wallet-card"><span>Pending</span><strong id="stat-pending-rewards">₹0</strong><small>Approval / unpaid</small></div>
-          <div class="card referral-wallet-card"><span>Paid</span><strong id="stat-ref-paid">₹0</strong><small>Already paid</small></div>
+          <div class="card referral-wallet-card remaining-balance-card"><span>Remaining Balance</span><strong id="stat-ref-available">₹0</strong><small>After withdrawals / locked requests</small></div>
+          <div class="card referral-wallet-card"><span>Pending Rewards</span><strong id="stat-pending-rewards">₹0</strong><small>Rewards not marked paid</small></div>
+          <div class="card referral-wallet-card"><span>Withdrawn / Locked</span><strong id="stat-ref-paid">₹0</strong><small>Requested + approved + paid</small></div>
         </div>
         <div class="grid-2 top-gap">
           <div class="card">
@@ -312,6 +312,7 @@
           <div class="card referral-withdraw-card">
             <div class="section-head"><h3>Withdraw Referral Reward</h3></div>
             <div class="minimum-box"><span>Minimum Withdrawal</span><strong>₹2,000</strong></div>
+            <div id="ref-balance-breakdown" class="ref-balance-breakdown">Remaining balance will appear here.</div>
             <div class="form-group top-gap-sm"><label>Withdrawal Amount</label><input id="ref-withdraw-amount" type="number" placeholder="Enter amount" /></div>
             <div class="form-group top-gap-sm"><label>Payout Method</label><select id="ref-withdraw-payout-select"></select></div>
             <div id="ref-withdraw-payout-preview" class="ref-withdraw-payout-preview empty-state">Select payout method for referral withdrawal.</div>

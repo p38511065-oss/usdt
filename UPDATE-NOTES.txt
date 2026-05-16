@@ -340,3 +340,9 @@ Seller dashboard TRC20 quote preview:
 - Added Admin Quote Slabs preview for USDT / TRC20.
 - Quote slabs are scrollable if many rates exist.
 - Clicking a slab prefills Sell USDT form.
+
+Dashboard rate range fix:
+- Seller dashboard no longer shows highest quantity rate as single Best Rate.
+- Preview now shows USDT/TRC20 rate range: lowest to highest admin slab.
+- Note explains higher quantity may get higher rate.
+- Admin slabs preview still shows each quantity range with its own rate.

@@ -1509,3 +1509,21 @@ body[data-page="seller-dashboard"] .panel-section.active{
     max-height:320px;
   }
 }
+
+
+/* Dashboard rate range fix */
+#seller-preview-rate{
+  font-size:clamp(20px,2.3vw,28px)!important;
+  line-height:1.18!important;
+  word-break:keep-all;
+}
+#seller-preview-rate-note{
+  color:#9facbd!important;
+  line-height:1.35!important;
+  display:block;
+  margin-top:6px;
+}
+.seller-rate-card.featured .best-rate{
+  background:rgba(37,231,255,.10)!important;
+  color:#25e7ff!important;
+}

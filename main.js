@@ -993,12 +993,37 @@ function renderSellerOrders(orders) {
 
   async function updateSellerPreviewRate() {
     try {
-      const { data } = await sellerClient.from('quote_slabs').select('*').eq('coin_symbol', 'USDT').order('min_amount', { ascending: true });
-      const rows = (data || []).filter((r) => (r.is_enabled === true || r.is_enabled === null || r.is_enabled === undefined) && Number(r.rate_inr || 0) > 0);
-      if (!rows.length) return;
-      const highest = Math.max(...rows.map((r) => Number(r.rate_inr || 0)));
-      setText('seller-preview-rate', fmtInr(highest).replace('.00',''));
-    } catch (e) {}
+      const { data } = await sellerClient
+        .from('quote_slabs')
+        .select('*')
+        .eq('coin_symbol', 'USDT')
+        .eq('network', 'TRC20')
+        .order('min_amount', { ascending: true });
+
+      const rows = (data || [])
+        .filter((r) => (r.is_enabled === true || r.is_enabled === null || r.is_enabled === undefined) && Number(r.rate_inr || 0) > 0)
+        .sort((a, b) => Number(a.min_amount ?? a.min_crypto_amount ?? 0) - Number(b.min_amount ?? b.min_crypto_amount ?? 0));
+
+      if (!rows.length) {
+        setText('seller-preview-rate', 'Admin Rates');
+        setText('seller-preview-rate-note', 'No active USDT / TRC20 slab');
+        return;
+      }
+
+      const minRate = Math.min(...rows.map((r) => Number(r.rate_inr || 0)));
+      const maxRate = Math.max(...rows.map((r) => Number(r.rate_inr || 0)));
+      const firstMin = Number(rows[0].min_amount ?? rows[0].min_crypto_amount ?? 0);
+
+      const rateText = minRate === maxRate
+        ? `₹${minRate.toFixed(4)}`
+        : `₹${minRate.toFixed(4)} – ₹${maxRate.toFixed(4)}`;
+
+      setText('seller-preview-rate', rateText);
+      setText('seller-preview-rate-note', `Starting from ${firstMin} USDT • Higher quantity may get higher rate`);
+    } catch (e) {
+      setText('seller-preview-rate', 'Admin Rates');
+      setText('seller-preview-rate-note', 'Rate board unavailable');
+    }
   }
   
   function setSellStep(step) {

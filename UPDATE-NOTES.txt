@@ -443,3 +443,11 @@ Landing page animation + chart final update:
 - Added current batch status card on landing page.
 - Landing chart uses existing quote_slabs and order_batches data where available.
 - No new SQL required.
+
+Landing final polish:
+- Hero animation upgraded with more realistic glass/fintech depth.
+- Chart made more compact and premium.
+- Landing chart now shows Admin Rate Range instead of misleading single highest rate.
+- Market wording changed to Admin Quote Trend / Active Admin Slabs.
+- Batch card made more compact with action note.
+- Landing ticker remains removed; seller ticker remains unchanged.

@@ -78,20 +78,20 @@
       </section>
 <section class="neo-section premium-market-terminal">
         <div class="neo-section-head">
-          <h2>Live USDT/INR Rate Chart</h2>
-          <span class="neo-live">● Live Admin Slabs</span>
+          <h2>Admin USDT/INR Quote Trend</h2>
+          <span class="neo-live">● Active Admin Slabs</span>
         </div>
 
         <div class="premium-terminal-grid">
           <div class="terminal-chart-card">
             <div class="terminal-chart-head">
               <div>
-                <span>USDT/INR</span>
-                <strong id="lpMarketPriceMirror">Admin Rate</strong>
-                <small id="lpMarketChangeMirror">Admin-created slabs</small>
+                <span>Admin Rate Range</span>
+                <strong id="lpMarketPriceMirror">Admin Range</strong>
+                <small id="lpMarketChangeMirror">Based on active quantity slabs</small>
               </div>
               <div class="terminal-range-tabs">
-                <button>1H</button><button>6H</button><button class="active">24H</button><button>7D</button>
+                <button>Low</button><button class="active">Range</button><button>High</button>
               </div>
             </div>
 
@@ -113,15 +113,15 @@
                 <path class="chart-line" d="M0,220 C80,190 110,240 180,205 C260,160 300,210 370,170 C450,120 500,150 560,110 C650,80 700,130 760,82 C830,48 860,72 900,45"/>
                 <circle class="chart-pulse-dot" cx="900" cy="45" r="7"/>
               </svg>
-              <div class="terminal-tooltip"><strong id="lpTerminalTooltipRate">₹--.--</strong><span>Current admin rate</span></div>
+              <div class="terminal-tooltip"><strong id="lpTerminalTooltipRate">₹--.--</strong><span>Best rate for higher slabs</span></div>
             </div>
 
             <div class="terminal-stats-row">
-              <div><span>Current Rate</span><strong id="lpCurrentRateStat">Admin Rate</strong></div>
-              <div><span>24H Change</span><strong class="green">+0.28%</strong></div>
-              <div><span>24H High</span><strong id="lpHighRateStat">₹--.--</strong></div>
-              <div><span>24H Low</span><strong id="lpLowRateStat">₹--.--</strong></div>
-              <div><span>Volume</span><strong id="lpVolumeStat">Live Batch</strong></div>
+              <div><span>Rate Range</span><strong id="lpCurrentRateStat">Admin Range</strong></div>
+              <div><span>Slab Logic</span><strong class="green">Qty Based</strong></div>
+              <div><span>Highest Slab</span><strong id="lpHighRateStat">₹--.--</strong></div>
+              <div><span>Starting Slab</span><strong id="lpLowRateStat">₹--.--</strong></div>
+              <div><span>Exact Rate</span><strong id="lpVolumeStat">After Amount</strong></div>
             </div>
           </div>
 
@@ -136,6 +136,7 @@
               <div><span>Slots Left</span><strong id="lpBatchSlots">-- / --</strong></div>
               <div><span>Total Orders</span><strong id="lpBatchOrders">--</strong></div>
             </div>
+            <div class="batch-action-note" id="lpBatchActionNote">Orders open for verified sellers</div>
           </div>
         </div>
       </section>

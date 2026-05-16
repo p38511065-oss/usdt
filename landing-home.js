@@ -20,6 +20,7 @@
   const batchRemaining = document.getElementById('lpBatchRemaining');
   const batchSlots = document.getElementById('lpBatchSlots');
   const batchOrders = document.getElementById('lpBatchOrders');
+  const batchActionNote = document.getElementById('lpBatchActionNote');
 
 
   function money(n) {
@@ -123,15 +124,16 @@
     const highestRate = Math.max(...rates);
     const lowestRate = Math.min(...rates);
     const avgRate = rates.reduce((s, r) => s + r, 0) / rates.length;
-    if (marketPrice) marketPrice.textContent = money(highestRate);
-    if (marketPriceMirror) marketPriceMirror.textContent = money(highestRate);
-    if (marketChange) marketChange.textContent = '+ Admin live slabs';
-    if (marketChangeMirror) marketChangeMirror.textContent = 'Based on active admin quote slabs';
+    const rangeText = highestRate === lowestRate ? money(highestRate) : `${money(lowestRate)} – ${money(highestRate)}`;
+    if (marketPrice) marketPrice.textContent = rangeText;
+    if (marketPriceMirror) marketPriceMirror.textContent = rangeText;
+    if (marketChange) marketChange.textContent = 'Rate range by quantity slabs';
+    if (marketChangeMirror) marketChangeMirror.textContent = 'Exact rate shows after seller enters amount';
     if (terminalTooltipRate) terminalTooltipRate.textContent = money(highestRate);
-    if (currentRateStat) currentRateStat.textContent = money(highestRate);
+    if (currentRateStat) currentRateStat.textContent = rangeText;
     if (highRateStat) highRateStat.textContent = money(highestRate);
     if (lowRateStat) lowRateStat.textContent = money(lowestRate);
-    if (volumeStat) volumeStat.textContent = 'Admin Slabs';
+    if (volumeStat) volumeStat.textContent = 'After Amount';
 
 
     ratesBody.innerHTML = rows.map((row) => {
@@ -174,6 +176,7 @@
       if (batchRemaining) batchRemaining.textContent = `${amount(remainingUsdt)} USDT`;
       if (batchSlots) batchSlots.textContent = `${remainingSlots} / ${limit}`;
       if (batchOrders) batchOrders.textContent = `${usedOrders}`;
+      if (batchActionNote) batchActionNote.textContent = remainingSlots > 0 && remainingUsdt > 0 ? 'Orders open for verified sellers' : 'Batch full or paused';
     } catch (err) {
       console.warn('Landing batch status load error:', err);
     }

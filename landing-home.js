@@ -172,6 +172,8 @@
       const percent = capacity ? Math.min(100, Math.round((usedUsdt / capacity) * 100)) : 0;
 
       if (batchPercent) batchPercent.textContent = `${percent}%`;
+      const ring = document.querySelector('.mockup-ring');
+      if (ring) ring.style.background = `conic-gradient(#37ffc1 0 ${percent}%, rgba(119,190,255,.14) ${percent}% 100%)`;
       if (batchCapacity) batchCapacity.textContent = `${amount(capacity)} USDT`;
       if (batchRemaining) batchRemaining.textContent = `${amount(remainingUsdt)} USDT`;
       if (batchSlots) batchSlots.textContent = `${remainingSlots} / ${limit}`;

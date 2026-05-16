@@ -457,3 +457,9 @@ Customer-facing wording polish:
 - Replaced with premium customer-facing terms: Live Rate, Verified Rate Slabs, Active Rate Slabs, Assigned Wallet.
 - Admin panel/internal function names remain unchanged.
 - No SQL required.
+
+Landing mockup-close update:
+- Rebuilt hero animation panel to closely match the requested mockup style: glass nodes, glowing stream, particles, bottom stats strip.
+- Rebuilt chart section to a closer trading-dashboard style: left rate panel, animated SVG trend line, tooltip, stats row and batch status card.
+- Landing ticker remains removed; seller ticker remains.
+- No SQL required.

@@ -1455,3 +1455,454 @@ tbody tr:hover{background:rgba(37,231,255,.035)}
     font-size:28px!important;
   }
 }
+
+
+/* Mockup-close landing animation and chart */
+.mockup-flow-visual{
+  min-height:430px;
+  padding:0!important;
+  position:relative;
+  overflow:hidden;
+  border-radius:28px!important;
+  border:1px solid rgba(84,176,255,.28)!important;
+  background:
+    radial-gradient(circle at 18% 42%, rgba(55,255,193,.18), transparent 34%),
+    radial-gradient(circle at 82% 38%, rgba(83,115,255,.22), transparent 36%),
+    linear-gradient(135deg, rgba(8,31,60,.96), rgba(3,13,29,.98))!important;
+  box-shadow:0 26px 82px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.035)!important;
+}
+.mockup-flow-title{
+  position:relative;
+  z-index:3;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px 22px;
+  border-bottom:1px solid rgba(119,190,255,.14);
+  background:linear-gradient(90deg,rgba(3,13,29,.35),rgba(37,231,255,.06),rgba(3,13,29,.35));
+  color:#aebbd0;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  font-size:13px;
+}
+.mockup-flow-title b{
+  color:#37ffc1;
+}
+.mockup-flow-scene{
+  position:relative;
+  min-height:290px;
+  display:grid;
+  grid-template-columns:1fr .62fr 1fr .62fr 1fr;
+  align-items:center;
+  gap:10px;
+  padding:34px 28px 24px;
+}
+.mockup-flow-scene::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(119,190,255,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(119,190,255,.055) 1px,transparent 1px);
+  background-size:54px 54px;
+  opacity:.65;
+}
+.mockup-orbit-particles{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 24% 38%,rgba(55,255,193,.65) 0 2px,transparent 3px),
+    radial-gradient(circle at 36% 48%,rgba(55,255,193,.45) 0 1px,transparent 3px),
+    radial-gradient(circle at 62% 33%,rgba(37,231,255,.55) 0 2px,transparent 3px),
+    radial-gradient(circle at 73% 47%,rgba(123,97,255,.55) 0 2px,transparent 3px);
+  animation:mockParticleFloat 8s ease-in-out infinite;
+}
+.mockup-flow-node{
+  position:relative;
+  z-index:2;
+  min-height:190px;
+  border-radius:28px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  padding:18px 14px;
+  border:1px solid rgba(119,190,255,.24);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.015) 35%,rgba(255,255,255,.035)),
+    linear-gradient(180deg,rgba(14,42,75,.82),rgba(5,18,39,.92));
+  backdrop-filter:blur(12px);
+  box-shadow:0 24px 65px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.04);
+  transform:perspective(900px) rotateX(3deg);
+}
+.node-glass-shine{
+  position:absolute;
+  inset:12px;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,255,255,.20),transparent 32%);
+  opacity:.55;
+}
+.mockup-flow-node::before{
+  content:"";
+  position:absolute;
+  inset:14px;
+  border-radius:22px;
+  filter:blur(18px);
+  opacity:.42;
+}
+.usdt-node::before{background:#37ffc1}
+.verify-node::before{background:#25e7ff}
+.inr-node::before{background:#7b61ff}
+.node-icon{
+  position:relative;
+  width:82px;
+  height:82px;
+  border-radius:30px;
+  display:grid;
+  place-items:center;
+  font-size:44px;
+  font-weight:950;
+  border:1px solid rgba(255,255,255,.18);
+  animation:mockNodeFloat 5.5s ease-in-out infinite;
+}
+.usdt-icon{
+  color:#fff;
+  background:rgba(55,255,193,.16);
+  box-shadow:0 0 42px rgba(55,255,193,.33);
+}
+.verify-icon{
+  color:#25e7ff;
+  background:rgba(37,231,255,.13);
+  box-shadow:0 0 42px rgba(37,231,255,.33);
+}
+.inr-icon{
+  color:#d5c8ff;
+  background:rgba(123,97,255,.16);
+  box-shadow:0 0 42px rgba(123,97,255,.35);
+}
+.mockup-flow-node strong{
+  position:relative;
+  color:#fff;
+  font-size:20px;
+  margin-top:10px;
+}
+.mockup-flow-node span{
+  position:relative;
+  color:#aebbd0;
+  font-weight:800;
+  font-size:13px;
+}
+.mockup-stream{
+  position:relative;
+  z-index:1;
+  height:12px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(55,255,193,.85),rgba(37,231,255,.45),transparent);
+  box-shadow:0 0 34px rgba(55,255,193,.38);
+  overflow:hidden;
+}
+.mockup-stream.stream-blue{
+  background:linear-gradient(90deg,transparent,rgba(37,231,255,.85),rgba(123,97,255,.55),transparent);
+  box-shadow:0 0 34px rgba(37,231,255,.38);
+}
+.mockup-stream i{
+  position:absolute;
+  top:50%;
+  left:-24%;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:rgba(255,255,255,.88);
+  filter:blur(6px);
+  animation:mockStreamMove 2.8s linear infinite;
+}
+.mockup-stream i:nth-child(2){animation-delay:.7s}
+.mockup-stream i:nth-child(3){animation-delay:1.4s}
+.mockup-stream em{
+  position:absolute;
+  inset:-14px 0;
+  background:repeating-linear-gradient(90deg,transparent 0 20px,rgba(255,255,255,.10) 20px 23px);
+  animation:mockStreamBands 3s linear infinite;
+}
+.mockup-flow-stats{
+  position:relative;
+  z-index:3;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border-top:1px solid rgba(119,190,255,.14);
+  background:rgba(3,13,29,.24);
+}
+.mockup-flow-stats div{
+  padding:15px 16px;
+  border-right:1px solid rgba(119,190,255,.10);
+}
+.mockup-flow-stats small{
+  display:block;
+  color:#9facbd;
+  font-size:12px;
+}
+.mockup-flow-stats strong{
+  display:block;
+  color:#fff;
+  font-size:18px;
+  margin:4px 0;
+}
+.mockup-flow-stats span{
+  color:#37ffc1;
+  font-size:12px;
+  font-weight:900;
+}
+@keyframes mockNodeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes mockStreamMove{from{left:-30%;opacity:0}15%{opacity:1}85%{opacity:1}to{left:110%;opacity:0}}
+@keyframes mockStreamBands{from{transform:translateX(0)}to{transform:translateX(44px)}}
+@keyframes mockParticleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.mockup-market-terminal{
+  padding:26px!important;
+}
+.mockup-market-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.72fr) minmax(320px,.82fr);
+  gap:18px;
+}
+.mockup-chart-card,
+.mockup-batch-card{
+  border-radius:24px;
+  border:1px solid rgba(119,190,255,.17);
+  background:
+    radial-gradient(circle at 92% 12%,rgba(55,255,193,.10),transparent 33%),
+    linear-gradient(180deg,rgba(7,27,55,.94),rgba(4,17,36,.97));
+  overflow:hidden;
+}
+.mockup-chart-top{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+  padding:18px 20px;
+  border-bottom:1px solid rgba(119,190,255,.10);
+}
+.mockup-rate-panel span{
+  display:block;
+  color:#37ffc1;
+  font-weight:950;
+  font-size:13px;
+  letter-spacing:.04em;
+}
+.mockup-rate-panel strong{
+  display:block;
+  color:#fff;
+  font-size:38px;
+  line-height:1.08;
+  margin:7px 0;
+  letter-spacing:-.04em;
+}
+.mockup-rate-panel small{
+  color:#9facbd;
+  font-weight:850;
+}
+.mockup-tabs{
+  display:flex;
+  gap:8px;
+}
+.mockup-tabs button{
+  height:36px;
+  padding:0 13px;
+  border-radius:13px;
+  border:1px solid rgba(119,190,255,.14);
+  background:rgba(3,13,29,.72);
+  color:#aebbd0;
+  font-weight:950;
+}
+.mockup-tabs .active{
+  color:#fff;
+  background:linear-gradient(90deg,#1677ff,#7b61ff);
+}
+.mockup-chart-stage{
+  position:relative;
+  height:290px;
+  overflow:hidden;
+  background-image:
+    linear-gradient(rgba(119,190,255,.075) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(119,190,255,.075) 1px,transparent 1px);
+  background-size:88px 58px;
+}
+.mockup-y-axis{
+  position:absolute;
+  left:14px;
+  top:24px;
+  bottom:24px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  color:#5f7897;
+  font-size:11px;
+  z-index:3;
+}
+.mockup-rate-chart-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.mock-chart-area{fill:url(#mockChartArea)}
+.mock-chart-line{
+  fill:none;
+  stroke:url(#mockChartLine);
+  stroke-width:5;
+  filter:drop-shadow(0 0 12px rgba(55,255,193,.58));
+  stroke-dasharray:1200;
+  stroke-dashoffset:1200;
+  animation:mockChartDraw 2.3s ease forwards;
+}
+.mock-chart-dot{
+  fill:#37ffc1;
+  filter:drop-shadow(0 0 18px rgba(55,255,193,.95));
+  animation:mockPulseDot 1.6s ease-in-out infinite;
+}
+.mock-chart-tooltip{
+  position:absolute;
+  right:22px;
+  top:104px;
+  padding:12px 14px;
+  border-radius:16px;
+  background:rgba(3,13,29,.84);
+  border:1px solid rgba(55,255,193,.22);
+  box-shadow:0 14px 35px rgba(0,0,0,.25);
+}
+.mock-chart-tooltip strong{
+  display:block;
+  color:#fff;
+}
+.mock-chart-tooltip span{
+  color:#9facbd;
+  font-size:12px;
+}
+.mock-chart-stats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  border-top:1px solid rgba(119,190,255,.10);
+}
+.mock-chart-stats div{
+  padding:13px 14px;
+  border-right:1px solid rgba(119,190,255,.08);
+}
+.mock-chart-stats span,
+.mockup-batch-stats span{
+  display:block;
+  color:#9facbd;
+  font-size:12px;
+}
+.mock-chart-stats strong,
+.mockup-batch-stats strong{
+  display:block;
+  color:#fff;
+  margin-top:5px;
+  font-size:15px;
+}
+.mock-chart-stats .green{color:#37ffc1}
+.mockup-batch-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:18px 20px;
+  border-bottom:1px solid rgba(119,190,255,.10);
+}
+.mockup-batch-head h3{
+  margin:0;
+  color:#fff;
+}
+.mockup-batch-head span{
+  color:#37ffc1;
+  font-size:12px;
+  font-weight:950;
+}
+.mockup-ring-wrap{
+  padding:24px 0 16px;
+  display:grid;
+  place-items:center;
+}
+.mockup-ring{
+  width:166px;
+  height:166px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:conic-gradient(#37ffc1 0 58%,rgba(119,190,255,.14) 58% 100%);
+  box-shadow:0 0 45px rgba(55,255,193,.16);
+}
+.mockup-ring div{
+  width:112px;
+  height:112px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#061425;
+  border:1px solid rgba(119,190,255,.14);
+}
+.mockup-ring strong{
+  color:#fff;
+  font-size:32px;
+  line-height:1;
+}
+.mockup-ring span{
+  color:#9facbd;
+  font-size:12px;
+}
+.mockup-batch-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:16px;
+}
+.mockup-batch-stats div{
+  padding:13px;
+  border-radius:16px;
+  background:rgba(5,18,39,.62);
+  border:1px solid rgba(119,190,255,.12);
+}
+@keyframes mockChartDraw{to{stroke-dashoffset:0}}
+@keyframes mockPulseDot{0%,100%{r:8;opacity:1}50%{r:13;opacity:.62}}
+@media(max-width:1040px){
+  .mockup-flow-scene,
+  .mockup-market-grid{
+    grid-template-columns:1fr;
+  }
+  .mockup-stream{
+    width:8px;
+    height:44px;
+    margin:auto;
+  }
+  .mockup-stream i{
+    left:50%;
+    top:-25%;
+    transform:translateX(-50%);
+    animation:mockStreamMoveDown 2.8s linear infinite;
+  }
+  @keyframes mockStreamMoveDown{from{top:-30%;opacity:0}15%{opacity:1}85%{opacity:1}to{top:110%;opacity:0}}
+}
+@media(max-width:640px){
+  .mockup-flow-stats,
+  .mock-chart-stats,
+  .mockup-batch-stats{
+    grid-template-columns:1fr 1fr;
+  }
+  .mockup-chart-top{
+    display:grid;
+  }
+  .mockup-rate-panel strong{
+    font-size:30px;
+  }
+  .mockup-chart-stage{
+    height:240px;
+  }
+}
+@media(max-width:460px){
+  .mockup-flow-stats,
+  .mock-chart-stats,
+  .mockup-batch-stats{
+    grid-template-columns:1fr;
+  }
+}

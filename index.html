@@ -38,85 +38,96 @@
             <span>Live quote slabs</span><span>Wallet + QR flow</span><span>KYC ready</span><span>Fast payout tracking</span>
           </div>
         </div>
-        <div class="neo-visual premium-flow-visual">
-          <div class="flow-visual-head">
+        <div class="neo-visual premium-flow-visual mockup-flow-visual">
+          <div class="mockup-flow-title">
             <span>USDT (TRC20) TO INR</span>
-            <b>Verified Secure Flow</b>
+            <b>Verified & Secure Flow</b>
           </div>
-          <div class="premium-flow-stage">
-            <div class="flow-card usdt-card">
-              <div class="flow-card-glow"></div>
-              <div class="flow-symbol">₮</div>
+
+          <div class="mockup-flow-scene">
+            <div class="mockup-orbit-particles"></div>
+
+            <div class="mockup-flow-node usdt-node">
+              <div class="node-glass-shine"></div>
+              <div class="node-icon usdt-icon">₮</div>
               <strong>USDT</strong>
               <span>Send on TRC20</span>
             </div>
-            <div class="flow-energy-line">
-              <i></i><i></i><i></i>
+
+            <div class="mockup-stream stream-green">
+              <i></i><i></i><i></i><em></em>
             </div>
-            <div class="flow-card verify-card">
-              <div class="flow-card-glow"></div>
-              <div class="flow-symbol shield">✓</div>
+
+            <div class="mockup-flow-node verify-node">
+              <div class="node-glass-shine"></div>
+              <div class="node-icon verify-icon">✓</div>
               <strong>Verified</strong>
-              <span>Manual Review</span>
+              <span>Secure transaction</span>
             </div>
-            <div class="flow-energy-line blue">
-              <i></i><i></i><i></i>
+
+            <div class="mockup-stream stream-blue">
+              <i></i><i></i><i></i><em></em>
             </div>
-            <div class="flow-card inr-card">
-              <div class="flow-card-glow"></div>
-              <div class="flow-symbol rupee">₹</div>
+
+            <div class="mockup-flow-node inr-node">
+              <div class="node-glass-shine"></div>
+              <div class="node-icon inr-icon">₹</div>
               <strong>INR</strong>
-              <span>Bank / UPI Payout</span>
+              <span>Bank / UPI payout</span>
             </div>
           </div>
-          <div class="flow-visual-stats">
+
+          <div class="mockup-flow-stats">
             <div><small>Top Live Rate</small><strong id="lpMarketPrice">Live Rate</strong><span id="lpMarketChange">+ Live</span></div>
             <div><small>Primary Pair</small><strong>USDT / INR</strong><span>Verified rate slabs</span></div>
             <div><small>Security</small><strong>Manual</strong><span>Verified payout</span></div>
+            <div><small>Support</small><strong>24/7</strong><span>Telegram help</span></div>
           </div>
         </div>
       </section>
-<section class="neo-section premium-market-terminal">
+<section class="neo-section premium-market-terminal mockup-market-terminal">
         <div class="neo-section-head">
           <h2>USDT/INR Quote Trend</h2>
           <span class="neo-live">● Active Rate Slabs</span>
         </div>
 
-        <div class="premium-terminal-grid">
-          <div class="terminal-chart-card">
-            <div class="terminal-chart-head">
-              <div>
-                <span>Live Rate Range</span>
+        <div class="mockup-market-grid">
+          <div class="mockup-chart-card">
+            <div class="mockup-chart-top">
+              <div class="mockup-rate-panel">
+                <span>USDT/INR Rate Range</span>
                 <strong id="lpMarketPriceMirror">Live Range</strong>
                 <small id="lpMarketChangeMirror">Based on active quantity slabs</small>
               </div>
-              <div class="terminal-range-tabs">
-                <button>Low</button><button class="active">Range</button><button>High</button>
+              <div class="mockup-tabs">
+                <button>Low</button>
+                <button class="active">Range</button>
+                <button>High</button>
               </div>
             </div>
 
-            <div class="terminal-chart-body">
-              <div class="chart-grid-lines"></div>
-              <svg class="rate-chart-svg" viewBox="0 0 900 300" preserveAspectRatio="none" aria-hidden="true">
+            <div class="mockup-chart-stage">
+              <div class="mockup-y-axis"><span>High</span><span>Mid</span><span>Low</span></div>
+              <svg class="mockup-rate-chart-svg" viewBox="0 0 960 360" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
-                  <linearGradient id="chartLineGradient" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stop-color="#ff6b5f"/>
-                    <stop offset="40%" stop-color="#37ffc1"/>
+                  <linearGradient id="mockChartLine" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="#ff786d"/>
+                    <stop offset="38%" stop-color="#37ffc1"/>
                     <stop offset="100%" stop-color="#25e7ff"/>
                   </linearGradient>
-                  <linearGradient id="chartAreaGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#37ffc1" stop-opacity="0.32"/>
-                    <stop offset="100%" stop-color="#37ffc1" stop-opacity="0"/>
+                  <linearGradient id="mockChartArea" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#37ffc1" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#37ffc1" stop-opacity="0.02"/>
                   </linearGradient>
                 </defs>
-                <path class="chart-area" d="M0,220 C80,190 110,240 180,205 C260,160 300,210 370,170 C450,120 500,150 560,110 C650,80 700,130 760,82 C830,48 860,72 900,45 L900,300 L0,300 Z"/>
-                <path class="chart-line" d="M0,220 C80,190 110,240 180,205 C260,160 300,210 370,170 C450,120 500,150 560,110 C650,80 700,130 760,82 C830,48 860,72 900,45"/>
-                <circle class="chart-pulse-dot" cx="900" cy="45" r="7"/>
+                <path class="mock-chart-area" d="M0,260 C55,235 95,245 135,260 C195,285 245,250 295,230 C355,205 415,218 465,190 C525,145 570,156 630,130 C690,98 760,122 810,88 C875,46 915,72 960,38 L960,360 L0,360 Z"/>
+                <path class="mock-chart-line" d="M0,260 C55,235 95,245 135,260 C195,285 245,250 295,230 C355,205 415,218 465,190 C525,145 570,156 630,130 C690,98 760,122 810,88 C875,46 915,72 960,38"/>
+                <circle class="mock-chart-dot" cx="960" cy="38" r="8"/>
               </svg>
-              <div class="terminal-tooltip"><strong id="lpTerminalTooltipRate">₹--.--</strong><span>Best rate for higher slabs</span></div>
+              <div class="mock-chart-tooltip"><strong id="lpTerminalTooltipRate">₹--.--</strong><span>Best higher-slab rate</span></div>
             </div>
 
-            <div class="terminal-stats-row">
+            <div class="mock-chart-stats">
               <div><span>Rate Range</span><strong id="lpCurrentRateStat">Live Range</strong></div>
               <div><span>Slab Logic</span><strong class="green">Qty Based</strong></div>
               <div><span>Highest Slab</span><strong id="lpHighRateStat">₹--.--</strong></div>
@@ -125,12 +136,14 @@
             </div>
           </div>
 
-          <div class="terminal-batch-card">
-            <div class="terminal-card-head"><h3>Current Batch Status</h3><span>● Live</span></div>
-            <div class="batch-progress-ring">
-              <div class="ring-core"><strong id="lpBatchPercent">0%</strong><span>Completed</span></div>
+          <div class="mockup-batch-card">
+            <div class="mockup-batch-head"><h3>Current Batch Status</h3><span>● Live</span></div>
+            <div class="mockup-ring-wrap">
+              <div class="mockup-ring">
+                <div><strong id="lpBatchPercent">0%</strong><span>Completed</span></div>
+              </div>
             </div>
-            <div class="batch-terminal-stats">
+            <div class="mockup-batch-stats">
               <div><span>Total Capacity</span><strong id="lpBatchCapacity">-- USDT</strong></div>
               <div><span>Remaining</span><strong id="lpBatchRemaining">-- USDT</strong></div>
               <div><span>Slots Left</span><strong id="lpBatchSlots">-- / --</strong></div>

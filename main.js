@@ -2741,6 +2741,15 @@ async function renderDepositOrderBox(order) {
     });
   }
 
+
+  // telegram-support-copy-delegated
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('#copy-telegram-support');
+    if (!btn) return;
+    const ok = await copyText('@anmolaro');
+    flashInlineCopyState(btn, ok, '✓');
+  });
+
   switch (page) {
     case 'login':
       loadLoginPage();

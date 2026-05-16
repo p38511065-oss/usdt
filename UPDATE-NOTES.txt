@@ -225,3 +225,8 @@ Telegram support update:
 Telegram support real link update:
 - Telegram support link changed to https://t.me/anmolaro
 - Telegram username changed to @anmolaro
+
+Telegram support visible fix:
+- Correctly inserted seller Support section before Profile.
+- Fixed bottom nav Support label visibility.
+- Added robust copy handler for @anmolaro.

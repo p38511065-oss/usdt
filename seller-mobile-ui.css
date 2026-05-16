@@ -960,3 +960,67 @@ body[data-page="seller-dashboard"] .panel-section.active{
     font-size:22px!important;
   }
 }
+
+
+/* Telegram support blank page fix */
+#seller-support.panel-section.active{
+  display:block!important;
+  min-height:calc(100vh - 190px);
+}
+.seller-support-wrap{
+  display:grid;
+  gap:14px;
+}
+.support-hero-card{
+  margin-bottom:0!important;
+  padding:18px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(37,231,255,.18)!important;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(37,231,255,.16),transparent 32%),
+    linear-gradient(180deg,rgba(7,27,55,.92),rgba(3,14,31,.96))!important;
+}
+.support-main-btn{
+  margin-top:14px!important;
+}
+.support-warning-card{
+  border-radius:22px!important;
+}
+.support-safe-note{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,199,45,.24);
+  background:rgba(255,199,45,.08);
+  color:#ffe3a3;
+  font-weight:850;
+}
+.seller-bottom-nav .support-nav-btn small,
+.seller-bottom-nav .center-action small{
+  color:#dce9ff!important;
+  opacity:1!important;
+  font-weight:950!important;
+}
+.seller-bottom-nav .support-nav-btn span,
+.seller-bottom-nav .center-action span{
+  color:#02101d!important;
+}
+.seller-bottom-nav .support-nav-btn.active small{
+  color:#37ffc1!important;
+}
+.seller-bottom-nav .support-nav-btn{
+  overflow:visible!important;
+}
+@media(max-width:760px){
+  .seller-support-section .support-grid{
+    grid-template-columns:1fr!important;
+  }
+  .support-hero-card h3{
+    font-size:26px!important;
+    margin:8px 0!important;
+  }
+  .support-hero-card p{
+    font-size:14px!important;
+    line-height:1.45!important;
+  }
+}
